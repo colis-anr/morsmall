@@ -1,0 +1,3 @@
+PKG libmorbig
+S **
+B _build/**
