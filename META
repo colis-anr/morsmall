@@ -1,0 +1,7 @@
+name="libmorsmall"
+version="0.1"
+description="API of Morsmall, a concise AST for POSIX shell based on the parser Morbig"
+requires="libmorbig"
+archive(byte)="libmorsmall.cma"
+archive(native)="libmorsmall.cmxa"
+archive(native,plugin)="libmorsmall.cmxs"

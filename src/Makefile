@@ -1,6 +1,6 @@
 
 all:
-	ocamlbuild -use-ocamlfind API.byte
+	ocamlbuild -use-ocamlfind libmorsmall.cma libmorsmall.cmxa libmorsmall.cmxs
 
 clean:
 	ocamlbuild -clean
