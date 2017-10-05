@@ -25,6 +25,6 @@ open ExtPervasives
 let cst_to_ast =
   Converter.complete_command__to__command
    
-(* let parse_file = *)
-(*   API.parse_file *)
-(*   ||> CST_to_AST *)
+let parse_file =
+  Libmorbig.API.parse_file
+  ||> List.map cst_to_ast

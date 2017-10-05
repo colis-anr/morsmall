@@ -20,4 +20,4 @@
 (*                                                                            *)
 (******************************************************************************)
 
-val cst_to_ast : CST.complete_command -> AST.command
+val cst_to_ast : Libmorbig.CST.complete_command -> AST.command
