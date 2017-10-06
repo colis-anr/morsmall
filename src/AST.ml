@@ -21,90 +21,41 @@
 (******************************************************************************)
 
 type word = string
-type name = string
+ and name = string
+ and pattern = word list
+ and assignment = name * word
 
-type assignment = {
-    name : name ;
-    word : word
-  }
-                
-type redirection = {
-    channel : int option ;
-    container : container
-  }
-                 
- and container =
-   | Here of {
-       trim : bool ;
-       word : word
-     }
-   | File of {
-       kind : file_kind ;
-       word : word
-     }
+ and redirection_kind =
+  | Output (* > *)
+  | OutputDuplicate (* >& *)
+  | OutputAppend (* >> *)
+  | OutputClobber (* >| *)
+  | Input (* < *)
+  | InputDuplicate (* <& *)
+  | InputOutput (* <> *)
 
- (*FIXME: those are syntactic names. we want semantic ones.*)
- and file_kind = Less | LessAnd | Great | GreatAnd | DGreat | LessGreat | Clobber
-           
-          
-type command =
-  | Nop
-
+ and command =
   | Async of command
-
   | Seq of command * command
-
   | And of command * command
   | Or of command * command
-
   | Not of command
-
   | Pipe of command * command
-
   | Subshell of command
+  | If of command * command * command option
+  | For of name * word list option * command
+  | Case of word * (pattern * command option) list
+  | While of command * command
+  | Function of name * command
+  | Assignment of assignment list
+  | Simple of assignment list * word * word list
+  | Redirection of command * int option * redirection_kind * word
+  | HereDocument of command * int option * bool * word
 
-  | If of {
-      test : command ;
-      then_branch : command ;
-      else_branch : command
-    }
-
-  | For of {
-      name : name ;
-      word_list : word list option ;
-      body : command
-    }
-
-  | Case of {
-      word : word ;
-      cases : case list
-    }
-
-  | While of {
-      test : command ;
-      body : command
-    }
- (* no until, it is replaced by while not *)
-
-  | Function of {
-      name : name ;
-      body : command
-    }
-
-  | Simple of {
-      assignments : assignment list ;
-      words : word list ;
-      redirections : redirection list
-    }
-
-  | Redirection of {
-      command : command ;
-      redirection : redirection
-    }
-
-
-                 
- and case = {
-     pattern : word list ;
-     body : command
-   }
+[@@deriving
+   visitors { variety = "iter";    polymorphic = true },
+   visitors { variety = "map";     polymorphic = true },
+   visitors { variety = "reduce";  polymorphic = true },
+   visitors { variety = "iter2";   polymorphic = true },
+   visitors { variety = "map2";    polymorphic = true },
+   visitors { variety = "reduce2"; polymorphic = true }]

@@ -125,17 +125,17 @@ and for_clause__to__command = function
   | ForClause_For_Name_DoGroup (name', do_group')
   | ForClause_For_Name_SequentialSep_DoGroup (name', _, do_group')
   | ForClause_For_Name_LineBreak_In_SequentialSep_DoGroup (name', _, _, do_group') ->
-     AST.For {
-         name = name'__to__name name' ;
-         word_list = None ;
-         body = do_group'__to__command do_group'
-       }
+     AST.For (
+         name'__to__name name' ,
+         None ,
+         do_group'__to__command do_group'
+       )
   | ForClause_For_Name_LineBreak_In_WordList_SequentialSep_DoGroup (name', _, wordlist', _, do_group') ->
-     AST.For {
-         name = name'__to__name name' ;
-         word_list = Some (wordlist'__to__word_list wordlist') ;
-         body = do_group'__to__command do_group'
-       }
+     AST.For (
+         name'__to__name name' ,
+         Some (wordlist'__to__word_list wordlist') ,
+         do_group'__to__command do_group'
+       )
 
 and wordlist__to__word_list = function (*FIXME*)
   | WordList_WordList_Word (wordlist', word') ->
@@ -146,20 +146,20 @@ and wordlist__to__word_list = function (*FIXME*)
 
 and case_clause__to__command = function
   | CaseClause_Case_Word_LineBreak_In_LineBreak_CaseList_Esac (word', _, _, case_list') ->
-     AST.Case {
-         word = word'__to__word word' ;
-         cases = case_list'__to__case_list case_list'
-       }
+     AST.Case (
+         word'__to__word word' ,
+         case_list'__to__case_list case_list'
+       )
   | CaseClause_Case_Word_LineBreak_In_LineBreak_CaseListNS_Esac (word', _, _, case_list_ns') ->
-     AST.Case {
-         word = word'__to__word word' ;
-         cases = case_list_ns'__to__case_list case_list_ns'
-       }
+     AST.Case (
+         word'__to__word word' ,
+         case_list_ns'__to__case_list case_list_ns'
+       )
   | CaseClause_Case_Word_LineBreak_In_LineBreak_Esac (word', _, _) ->
-     AST.Case {
-         word = word'__to__word word' ;
-         cases = []
-       }
+     AST.Case (
+         word'__to__word word' ,
+         []
+       )
 
 and case_list_ns__to__case_list = function (*FIXME*)
   | CaseListNS_CaseList_CaseItemNS (case_list', case_item_ns') ->
@@ -178,30 +178,30 @@ and case_list__to__case_list = function
 and case_item_ns__to__case = function
   | CaseItemNS_Pattern_Rparen_LineBreak (pattern', _)
   | CaseItemNS_Lparen_Pattern_Rparen_LineBreak (pattern', _) ->
-     AST.{
-        pattern = pattern'__to__word_list pattern' ;
-        body = Nop
-     }
+     (
+        pattern'__to__word_list pattern' ,
+        None
+     )
   | CaseItemNS_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _)
   | CaseItemNS_Lparen_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _) ->
-     AST.{
-        pattern = pattern'__to__word_list pattern' ;
-        body = compound_list'__to__command compound_list'
-     }
+     (
+        pattern'__to__word_list pattern' ,
+        Some (compound_list'__to__command compound_list')
+     )
 
 and case_item__to__case = function
   | CaseItem_Pattern_Rparen_LineBreak_Dsemi_LineBreak (pattern', _, _)
   | CaseItem_Lparen_Pattern_Rparen_LineBreak_Dsemi_LineBreak (pattern', _, _) ->
-     AST.{
-        pattern = pattern'__to__word_list pattern' ;
-        body = Nop
-     }
+     (
+        pattern'__to__word_list pattern' ,
+        None
+     )
   | CaseItem_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _)
   | CaseItem_Lparen_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _) ->
-     AST.{
-        pattern = pattern'__to__word_list pattern' ;
-        body = compound_list'__to__command compound_list'
-     }
+     (
+        pattern'__to__word_list pattern' ,
+        Some (compound_list'__to__command compound_list')
+     )
 
 and pattern__to__word_list = function
   | Pattern_Word word' ->
@@ -212,54 +212,54 @@ and pattern__to__word_list = function
 
 and if_clause__to__command = function
   | IfClause_If_CompoundList_Then_CompoundList_ElsePart_Fi (compound_list', compound_list2', else_part') ->
-     AST.If {
-         test = compound_list'__to__command compound_list' ;
-         then_branch = compound_list'__to__command compound_list2' ;
-         else_branch = else_part'__to__command else_part'
-       }
+     AST.If (
+         compound_list'__to__command compound_list' ,
+         compound_list'__to__command compound_list2' ,
+         Some (else_part'__to__command else_part')
+       )
   | IfClause_If_CompoundList_Then_CompoundList_Fi (compound_list', compound_list2') ->
-     AST.If {
-         test = compound_list'__to__command compound_list' ;
-         then_branch = compound_list'__to__command compound_list2' ;
-         else_branch = AST.Nop
-       }
+     AST.If (
+         compound_list'__to__command compound_list' ,
+         compound_list'__to__command compound_list2' ,
+         None
+       )
 
 and else_part__to__command = function
   | ElsePart_Elif_CompoundList_Then_CompoundList (compound_list', compound_list2') ->
-     AST.If {
-         test = compound_list'__to__command compound_list' ;
-         then_branch = compound_list'__to__command compound_list2' ;
-         else_branch = AST.Nop
-       }
+     AST.If (
+         compound_list'__to__command compound_list' ,
+         compound_list'__to__command compound_list2' ,
+         None
+       )
   | ElsePart_Elif_CompoundList_Then_CompoundList_ElsePart (compound_list', compound_list2', else_part') ->
-     AST.If {
-         test = compound_list'__to__command compound_list' ;
-         then_branch = compound_list'__to__command compound_list2' ;
-         else_branch = else_part'__to__command else_part'
-       }
+     AST.If (
+         compound_list'__to__command compound_list' ,
+         compound_list'__to__command compound_list2' ,
+         Some (else_part'__to__command else_part')
+       )
   | ElsePart_Else_CompoundList compound_list' ->
      compound_list'__to__command compound_list'
 
 and while_clause__to__command = function
   | WhileClause_While_CompoundList_DoGroup (compound_list', do_group') ->
-     AST.While {
-         test = compound_list'__to__command compound_list' ;
-         body = do_group'__to__command do_group'
-       }
+     AST.While (
+         compound_list'__to__command compound_list' ,
+         do_group'__to__command do_group'
+       )
 
 and until_clause__to__command = function
   | UntilClause_Until_CompoundList_DoGroup (compound_list', do_group') ->
-     AST.While {
-         test = AST.Not (compound_list'__to__command compound_list') ;
-         body = do_group'__to__command do_group'
-       }
+     AST.While (
+         AST.Not (compound_list'__to__command compound_list') ,
+         do_group'__to__command do_group'
+       )
 
 and function_definition__to__command = function
   | FunctionDefinition_Fname_Lparen_Rparen_LineBreak_FunctionBody (fname', _, function_body') ->
-     AST.Function {
-         name = fname'__to__name fname' ;
-         body = function_body'__to__command function_body'
-       }
+     AST.Function (
+         fname'__to__name fname' ,
+         function_body'__to__command function_body'
+       )
 
 and function_body__to__command = function
   | FunctionBody_CompoundCommand compound_command' ->
@@ -279,43 +279,43 @@ and do_group__to__command = function
   | DoGroup_Do_CompoundList_Done compound_list' ->
      compound_list'__to__command compound_list'
 
-and simple_command__to__command = function
-  | SimpleCommand_CmdPrefix_CmdWord_CmdSuffix (cmd_prefix', cmd_word', cmd_suffix') ->
-     let assignments, redirections = cmd_prefix'__to__assignments_redirections [] [] cmd_prefix' in
-     let words, redirections = cmd_suffix'__to__words_redirections [] redirections cmd_suffix' in
-     AST.Simple {
-         assignments ;
-         words = (cmd_word'__to__word cmd_word') :: words ;
-         redirections
-       }
-  | SimpleCommand_CmdPrefix_CmdWord (cmd_prefix', cmd_word') ->
-     let assignments, redirections = cmd_prefix'__to__assignments_redirections [] [] cmd_prefix' in
-     AST.Simple {
-         assignments ;
-         words = [cmd_word'__to__word cmd_word'] ;
-         redirections
-       }
-  | SimpleCommand_CmdPrefix cmd_prefix' ->
-     let assignments, redirections = cmd_prefix'__to__assignments_redirections [] [] cmd_prefix' in
-     AST.Simple {
-         assignments ;
-         words = [] ;
-         redirections
-       }
-  | SimpleCommand_CmdName_CmdSuffix (cmd_name', cmd_suffix') ->
-     let words, redirections = cmd_suffix'__to__words_redirections [] [] cmd_suffix' in
-     AST.Simple {
-         assignments = [] ;
-         words = (cmd_name'__to__word cmd_name') :: words ;
-         redirections
-       }
-  | SimpleCommand_CmdName cmd_name' ->
-     AST.Simple {
-         assignments = [] ;
-         words = [cmd_name'__to__word cmd_name'] ;
-         redirections = []
-       }
+and simple_command__to__command simple_command =
+  let assignments, words, io_redirect_list =
+    
+    match simple_command with
+    | SimpleCommand_CmdPrefix_CmdWord_CmdSuffix (cmd_prefix', cmd_word', cmd_suffix') ->
+       let assignments, io_redirect_list = cmd_prefix'__to__assignments_io_redirect_list [] [] cmd_prefix' in
+       let words, io_redirect_list = cmd_suffix'__to__words_io_redirect_list [] io_redirect_list cmd_suffix' in
+       (assignments, cmd_word'__to__word cmd_word' :: words, io_redirect_list)
+       
+    | SimpleCommand_CmdPrefix_CmdWord (cmd_prefix', cmd_word') ->
+       let assignments, io_redirect_list = cmd_prefix'__to__assignments_io_redirect_list [] [] cmd_prefix' in
+       (assignments, [cmd_word'__to__word cmd_word'], io_redirect_list)
 
+    | SimpleCommand_CmdPrefix cmd_prefix' ->
+       let assignments, io_redirect_list = cmd_prefix'__to__assignments_io_redirect_list [] [] cmd_prefix' in
+       (assignments, [], io_redirect_list)
+
+    | SimpleCommand_CmdName_CmdSuffix (cmd_name', cmd_suffix') ->
+       let words, io_redirect_list = cmd_suffix'__to__words_io_redirect_list [] [] cmd_suffix' in
+       ([], cmd_name'__to__word cmd_name' :: words, io_redirect_list)
+
+    | SimpleCommand_CmdName cmd_name' ->
+       ([], [cmd_name'__to__word cmd_name'], [])
+  in
+  List.fold_left
+    (
+      fun command io_redirect ->
+      io_redirect__to__command io_redirect command
+    )
+    (
+      match words with
+      | [] -> AST.Assignment assignments
+      | word :: words -> AST.Simple (assignments, word, words)
+    )
+    io_redirect_list
+
+  
 and cmd_name__to__word = function
   | CmdName_Word word' ->
      word'__to__word word'
@@ -324,93 +324,95 @@ and cmd_word__to__word = function
   | CmdWord_Word word' ->
      word'__to__word word'
 
-and cmd_prefix__to__assignments_redirections assignments redirections = function
+and cmd_prefix__to__assignments_io_redirect_list assignments io_redirect_list = function
   | CmdPrefix_IoRedirect io_redirect' ->
-     assignments, (io_redirect'__to__redirection io_redirect') :: redirections
-  | CmdPrefix_CmdPrefix_IoRedirect (cmd_prefix', io_redirect') ->
-     cmd_prefix'__to__assignments_redirections assignments ((io_redirect'__to__redirection io_redirect') :: redirections) cmd_prefix'
-  | CmdPrefix_AssignmentWord assignment_word' ->
-     (assignment_word'__to__assignment assignment_word') :: assignments, redirections
-  | CmdPrefix_CmdPrefix_AssignmentWord (cmd_prefix', assignment_word') ->
-     cmd_prefix'__to__assignments_redirections ((assignment_word'__to__assignment assignment_word') :: assignments) redirections cmd_prefix'
+     assignments,
+     io_redirect'.value :: io_redirect_list
 
-and cmd_suffix__to__words_redirections words redirections = function
+  | CmdPrefix_CmdPrefix_IoRedirect (cmd_prefix', io_redirect') ->
+     cmd_prefix'__to__assignments_io_redirect_list
+       assignments
+       (io_redirect'.value :: io_redirect_list)
+       cmd_prefix'
+
+  | CmdPrefix_AssignmentWord assignment_word' ->
+     (assignment_word'__to__assignment assignment_word') :: assignments,
+     io_redirect_list
+
+  | CmdPrefix_CmdPrefix_AssignmentWord (cmd_prefix', assignment_word') ->
+     cmd_prefix'__to__assignments_io_redirect_list
+       ((assignment_word'__to__assignment assignment_word') :: assignments)
+       io_redirect_list
+       cmd_prefix'
+
+and cmd_suffix__to__words_io_redirect_list words io_redirect_list = function
   | CmdSuffix_IoRedirect io_redirect' ->
-     words, (io_redirect'__to__redirection io_redirect') :: redirections
+     words,
+     io_redirect'.value :: io_redirect_list
+    
   | CmdSuffix_CmdSuffix_IoRedirect (cmd_suffix', io_redirect') ->
-     cmd_suffix'__to__words_redirections words ((io_redirect'__to__redirection io_redirect') :: redirections) cmd_suffix'
+     cmd_suffix'__to__words_io_redirect_list
+       words
+       (io_redirect'.value :: io_redirect_list)
+       cmd_suffix'
+
   | CmdSuffix_Word word' ->
-     (word'__to__word word') :: words, redirections
+     (word'__to__word word') :: words,
+     io_redirect_list
+
   | CmdSuffix_CmdSuffix_Word (cmd_suffix', word') ->
-     cmd_suffix'__to__words_redirections ((word'__to__word word') :: words) redirections cmd_suffix'
+     cmd_suffix'__to__words_io_redirect_list
+       ((word'__to__word word') :: words)
+       io_redirect_list
+       cmd_suffix'
 
 and redirect_list__to__command redirect_list command =
   match redirect_list with
   | RedirectList_IoRedirect io_redirect' ->
-     AST.Redirection {
-         command ;
-         redirection = io_redirect'__to__redirection io_redirect'
-       }
+     command
+     |> io_redirect'__to__command io_redirect'
   | RedirectList_RedirectList_IoRedirect (redirect_list', io_redirect') ->
-     AST.Redirection {
-         command ;
-         redirection = io_redirect'__to__redirection io_redirect'
-       }
-     |> redirect_list'__to__command redirect_list'
+     command
+     |> io_redirect'__to__command io_redirect'
+     |> redirect_list'__to__command redirect_list' (*FIXME: check order of the redirections*)
      
-and io_redirect__to__redirection = function
+and io_redirect__to__command io_redirect command =
+  match io_redirect with
   | IoRedirect_IoFile io_file' ->
-     AST.{
-        channel = None ;
-        container = io_file'__to__container io_file'
-     }
+     let kind, word = io_file'__to__kind_word io_file' in
+     AST.Redirection (command, None, kind, word)
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
-     AST.{
-        channel = Some (io_number__to__int io_number) ;
-        container = io_file'__to__container io_file'
-     }
+     let kind, word = io_file'__to__kind_word io_file' in
+     AST.Redirection (command, Some (io_number__to__int io_number), kind, word)
   | IoRedirect_IoHere io_here' ->
-     AST.{
-        channel = None ;
-        container = io_here'__to__container io_here'
-     }
+     let trim, word = io_here'__to__trim_word io_here' in
+     AST.HereDocument (command, None, trim, word)
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
-     AST.{
-        channel = Some (io_number__to__int io_number) ;
-        container = io_here'__to__container io_here'
-     }
+     let trim, word = io_here'__to__trim_word io_here' in
+     AST.HereDocument (command, Some (io_number__to__int io_number), trim, word)
 
-and io_file__to__container io_file =
+and io_file__to__kind_word io_file =
   let kind, filename' = 
     AST.(match io_file with
-    | IoFile_Less_FileName filename' -> Less, filename'
-    | IoFile_LessAnd_FileName filename' -> LessAnd, filename'
-    | IoFile_Great_FileName filename' -> Great, filename'
-    | IoFile_GreatAnd_FileName filename' -> GreatAnd, filename'
-    | IoFile_DGreat_FileName filename' -> DGreat, filename'
-    | IoFile_LessGreat_FileName filename' -> LessGreat, filename'
-    | IoFile_Clobber_FileName filename' -> Clobber, filename')
+    | IoFile_Less_FileName filename' -> AST.Input, filename'
+    | IoFile_LessAnd_FileName filename' -> AST.InputDuplicate, filename'
+    | IoFile_Great_FileName filename' -> AST.Output, filename'
+    | IoFile_GreatAnd_FileName filename' -> AST.OutputDuplicate, filename'
+    | IoFile_DGreat_FileName filename' -> AST.OutputAppend, filename'
+    | IoFile_LessGreat_FileName filename' -> AST.InputOutput, filename'
+    | IoFile_Clobber_FileName filename' -> AST.OutputClobber, filename')
   in
-  AST.File {
-      kind ;
-      word = filename'__to__word filename'
-    }
+  ( kind , filename'__to__word filename' )
 
 and filename__to__word = function
   | Filename_Word word' ->
      word'__to__word word'
 
-and io_here__to__container = function
+and io_here__to__trim_word = function
   | IoHere_DLess_HereEnd (_, word'_ref) ->
-     AST.Here {
-         trim = false ;
-         word = word'__to__word !word'_ref
-       }
+     (false, word'__to__word !word'_ref)
   | IoHere_DLessDash_HereEnd (_, word'_ref) ->
-     AST.Here {
-         trim = true ;
-         word = word'__to__word !word'_ref
-       }
+     (true, word'__to__word !word'_ref)
 
 and separator_op__to__command sep_op command =
   match sep_op with
@@ -434,10 +436,7 @@ and name__to__name = function
 
 and assignment_word__to__assignment = function
   | AssignmentWord (name, word) ->
-     AST.{
-        name = name__to__name name ;
-        word = word__to__word word
-     }
+     (name__to__name name, word__to__word word)
 
 and io_number__to__int = function
   | IONumber io_number -> int_of_string io_number
@@ -541,23 +540,23 @@ and cmd_name'__to__word cmd_name' =
 and cmd_word'__to__word cmd_word' =
   on_located cmd_word__to__word cmd_word'
 
-and cmd_prefix'__to__assignments_redirections assignments redirections cmd_prefix' =
-  on_located (cmd_prefix__to__assignments_redirections assignments redirections) cmd_prefix'
+and cmd_prefix'__to__assignments_io_redirect_list assignments io_redirect_list cmd_prefix' =
+  on_located (cmd_prefix__to__assignments_io_redirect_list assignments io_redirect_list) cmd_prefix'
   
-and cmd_suffix'__to__words_redirections words redirections cmd_suffix' =
-  on_located (cmd_suffix__to__words_redirections words redirections) cmd_suffix'
+and cmd_suffix'__to__words_io_redirect_list words io_redirect_list cmd_suffix' =
+  on_located (cmd_suffix__to__words_io_redirect_list words io_redirect_list) cmd_suffix'
 
 and redirect_list'__to__command redirect_list' command =
   on_located redirect_list__to__command redirect_list' command
 
-and io_redirect'__to__redirection io_redirect' =
-  on_located io_redirect__to__redirection io_redirect'
+and io_redirect'__to__command io_redirect' =
+  on_located io_redirect__to__command io_redirect'
 
-and io_file'__to__container io_file' =
-  on_located io_file__to__container io_file'
+and io_file'__to__kind_word io_file' =
+  on_located io_file__to__kind_word io_file'
 
-and io_here'__to__container io_here' =
-  on_located io_here__to__container io_here'
+and io_here'__to__trim_word io_here' =
+  on_located io_here__to__trim_word io_here'
 
 and filename'__to__word filename' =
   on_located filename__to__word filename'

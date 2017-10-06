@@ -1,2 +1,4 @@
 true: package(libmorbig)
+<ext>: include
+<printer>: include
 <*.cmx> and not <libmorsmall.cmx>: for-pack(Libmorsmall)

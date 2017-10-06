@@ -1,9 +1,9 @@
 (******************************************************************************)
 (*                                                                            *)
-(*                                  Morsmall                                  *)
-(*                       A concise AST for POSIX shell                        *)
+(*                                   RSCLI                                    *)
 (*                                                                            *)
-(*   Copyright (C) 2017  Yann Régis-Gianas, Ralf Treinen, Nicolas Jeannerod   *)
+(*                  A command-line interface for RSCDS tunes                  *)
+(*                Copyright (C) 2017 Nicolas "Niols" Jeannerod                *)
 (*                                                                            *)
 (*   This program is free software: you can redistribute it and/or modify     *)
 (*   it under the terms of the GNU General Public License as published by     *)
@@ -20,15 +20,21 @@
 (*                                                                            *)
 (******************************************************************************)
 
-open ExtPervasives
+type 'a fprintf = Format.formatter -> 'a -> unit
 
-let cst_to_ast =
-  Converter.complete_command__to__command
-   
-let parse_file =
-  Libmorbig.API.parse_file
-  ||> List.map cst_to_ast
+let to_string__of__fprintf fprintf value =
+  let buf = Buffer.create 16 in
+  let ppf = Format.formatter_of_buffer buf in
+  fprintf ppf value;
+  Format.pp_flush_formatter ppf;
+  Buffer.contents buf
 
-let print_to_string = ExtFormat.to_string__of__fprintf Printer.Safe.pp_command
-let print_to_channel = ExtFormat.to_channel__of__fprintf Printer.Safe.pp_command
-let print_to_file = ExtFormat.to_channel__of__fprintf Printer.Safe.pp_command
+let to_channel__of__fprintf fprintf channel value =
+  let ppf = Format.formatter_of_out_channel channel in
+  fprintf ppf value;
+  Format.pp_flush_formatter ppf
+  
+let to_file__of__fprintf fprintf filename value =
+  let oc = open_out filename in
+  to_channel__of__fprintf fprintf oc value;
+  close_out oc
