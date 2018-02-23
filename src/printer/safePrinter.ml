@@ -71,6 +71,9 @@ let rec pp_command ppf command =
   (
     match command with
 
+    | Empty ->
+       ()
+      
     | Async command ->
        pp_command ppf command
 

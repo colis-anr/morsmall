@@ -26,13 +26,13 @@ let to_string__of__fprintf fprintf value =
   let buf = Buffer.create 16 in
   let ppf = Format.formatter_of_buffer buf in
   fprintf ppf value;
-  Format.pp_flush_formatter ppf;
+  Format.fprintf ppf "@?";
   Buffer.contents buf
 
 let to_channel__of__fprintf fprintf channel value =
   let ppf = Format.formatter_of_out_channel channel in
   fprintf ppf value;
-  Format.pp_flush_formatter ppf
+  Format.fprintf ppf "@?"
   
 let to_file__of__fprintf fprintf filename value =
   let oc = open_out filename in

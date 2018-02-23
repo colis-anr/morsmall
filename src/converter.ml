@@ -23,6 +23,8 @@
 open Libmorbig.CST
 
 let rec complete_command__to__command = function
+  | CompleteCommand_Empty ->
+     AST.Empty
   | CompleteCommand_CList_Separator (clist', sep') ->
      clist'__to__command clist'
      |> separator'__to__command sep'

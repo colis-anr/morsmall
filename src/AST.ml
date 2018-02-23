@@ -21,11 +21,11 @@
 (******************************************************************************)
 
 type word = string
- and name = string
- and pattern = word list
- and assignment = name * word
+and name = string
+and pattern = word list
+and assignment = name * word
 
- and redirection_kind =
+and redirection_kind =
   | Output (* > *)
   | OutputDuplicate (* >& *)
   | OutputAppend (* >> *)
@@ -34,7 +34,8 @@ type word = string
   | InputDuplicate (* <& *)
   | InputOutput (* <> *)
 
- and command =
+and command =
+  | Empty
   | Async of command
   | Seq of command * command
   | And of command * command
