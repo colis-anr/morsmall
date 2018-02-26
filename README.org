@@ -24,6 +24,8 @@ There is no release yet.
 Morsmall depends on the following software:
 - OCaml
 - [[https://gitlab.inria.fr/regisgia/morbig/][Morbig]]
+- jbuilder
+- OPAM
 ** Build
 #+BEGIN_SRC sh
 make
