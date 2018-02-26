@@ -22,4 +22,4 @@
 
 val cst_to_ast : Libmorbig.CST.complete_command -> AST.command
 
-val parse_file : string -> AST.command list
+val pp_print_safe : Format.formatter -> AST.command -> unit

@@ -182,13 +182,13 @@ and case_item_ns__to__case = function
   | CaseItemNS_Lparen_Pattern_Rparen_LineBreak (pattern', _) ->
      (
         pattern'__to__word_list pattern' ,
-        None
+        AST.Empty
      )
   | CaseItemNS_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _)
   | CaseItemNS_Lparen_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _) ->
      (
         pattern'__to__word_list pattern' ,
-        Some (compound_list'__to__command compound_list')
+        compound_list'__to__command compound_list'
      )
 
 and case_item__to__case = function
@@ -196,13 +196,13 @@ and case_item__to__case = function
   | CaseItem_Lparen_Pattern_Rparen_LineBreak_Dsemi_LineBreak (pattern', _, _) ->
      (
         pattern'__to__word_list pattern' ,
-        None
+        AST.Empty
      )
   | CaseItem_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _)
   | CaseItem_Lparen_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _) ->
      (
         pattern'__to__word_list pattern' ,
-        Some (compound_list'__to__command compound_list')
+        compound_list'__to__command compound_list'
      )
 
 and pattern__to__word_list = function
@@ -217,13 +217,13 @@ and if_clause__to__command = function
      AST.If (
          compound_list'__to__command compound_list' ,
          compound_list'__to__command compound_list2' ,
-         Some (else_part'__to__command else_part')
+         else_part'__to__command else_part'
        )
   | IfClause_If_CompoundList_Then_CompoundList_Fi (compound_list', compound_list2') ->
      AST.If (
          compound_list'__to__command compound_list' ,
          compound_list'__to__command compound_list2' ,
-         None
+         Empty
        )
 
 and else_part__to__command = function
@@ -231,13 +231,13 @@ and else_part__to__command = function
      AST.If (
          compound_list'__to__command compound_list' ,
          compound_list'__to__command compound_list2' ,
-         None
+         Empty
        )
   | ElsePart_Elif_CompoundList_Then_CompoundList_ElsePart (compound_list', compound_list2', else_part') ->
      AST.If (
          compound_list'__to__command compound_list' ,
          compound_list'__to__command compound_list2' ,
-         Some (else_part'__to__command else_part')
+         else_part'__to__command else_part'
        )
   | ElsePart_Else_CompoundList compound_list' ->
      compound_list'__to__command compound_list'
@@ -251,8 +251,8 @@ and while_clause__to__command = function
 
 and until_clause__to__command = function
   | UntilClause_Until_CompoundList_DoGroup (compound_list', do_group') ->
-     AST.While (
-         AST.Not (compound_list'__to__command compound_list') ,
+     AST.Until (
+         compound_list'__to__command compound_list' ,
          do_group'__to__command do_group'
        )
 
@@ -283,13 +283,13 @@ and do_group__to__command = function
 
 and simple_command__to__command simple_command =
   let assignments, words, io_redirect_list =
-    
+
     match simple_command with
     | SimpleCommand_CmdPrefix_CmdWord_CmdSuffix (cmd_prefix', cmd_word', cmd_suffix') ->
        let assignments, io_redirect_list = cmd_prefix'__to__assignments_io_redirect_list [] [] cmd_prefix' in
        let words, io_redirect_list = cmd_suffix'__to__words_io_redirect_list [] io_redirect_list cmd_suffix' in
        (assignments, cmd_word'__to__word cmd_word' :: words, io_redirect_list)
-       
+
     | SimpleCommand_CmdPrefix_CmdWord (cmd_prefix', cmd_word') ->
        let assignments, io_redirect_list = cmd_prefix'__to__assignments_io_redirect_list [] [] cmd_prefix' in
        (assignments, [cmd_word'__to__word cmd_word'], io_redirect_list)
@@ -310,14 +310,9 @@ and simple_command__to__command simple_command =
       fun command io_redirect ->
       io_redirect__to__command io_redirect command
     )
-    (
-      match words with
-      | [] -> AST.Assignment assignments
-      | word :: words -> AST.Simple (assignments, word, words)
-    )
+    (AST.Simple (assignments, words))
     io_redirect_list
 
-  
 and cmd_name__to__word = function
   | CmdName_Word word' ->
      word'__to__word word'
@@ -351,7 +346,7 @@ and cmd_suffix__to__words_io_redirect_list words io_redirect_list = function
   | CmdSuffix_IoRedirect io_redirect' ->
      words,
      io_redirect'.value :: io_redirect_list
-    
+
   | CmdSuffix_CmdSuffix_IoRedirect (cmd_suffix', io_redirect') ->
      cmd_suffix'__to__words_io_redirect_list
        words
@@ -377,7 +372,7 @@ and redirect_list__to__command redirect_list command =
      command
      |> io_redirect'__to__command io_redirect'
      |> redirect_list'__to__command redirect_list' (*FIXME: check order of the redirections*)
-     
+
 and io_redirect__to__command io_redirect command =
   match io_redirect with
   | IoRedirect_IoFile io_file' ->
@@ -394,7 +389,7 @@ and io_redirect__to__command io_redirect command =
      AST.HereDocument (command, Some (io_number__to__int io_number), trim, word)
 
 and io_file__to__kind_word io_file =
-  let kind, filename' = 
+  let kind, filename' =
     AST.(match io_file with
     | IoFile_Less_FileName filename' -> AST.Input, filename'
     | IoFile_LessAnd_FileName filename' -> AST.InputDuplicate, filename'
@@ -442,7 +437,7 @@ and assignment_word__to__assignment = function
 
 and io_number__to__int = function
   | IONumber io_number -> int_of_string io_number
-               
+
 
 
 (* Located versions. Sadly, we have to eta-expand everything in here,
@@ -544,7 +539,7 @@ and cmd_word'__to__word cmd_word' =
 
 and cmd_prefix'__to__assignments_io_redirect_list assignments io_redirect_list cmd_prefix' =
   on_located (cmd_prefix__to__assignments_io_redirect_list assignments io_redirect_list) cmd_prefix'
-  
+
 and cmd_suffix'__to__words_io_redirect_list words io_redirect_list cmd_suffix' =
   on_located (cmd_suffix__to__words_io_redirect_list words io_redirect_list) cmd_suffix'
 
@@ -562,7 +557,7 @@ and io_here'__to__trim_word io_here' =
 
 and filename'__to__word filename' =
   on_located filename__to__word filename'
-  
+
 and separator_op'__to__command sep_op' command =
   on_located separator_op__to__command sep_op' command
 

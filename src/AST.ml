@@ -24,39 +24,66 @@ type word = string
 and name = string
 and pattern = word list
 and assignment = name * word
+and file_descr = int option
 
 and redirection_kind =
-  | Output (* > *)
+  | Output          (*  > *)
   | OutputDuplicate (* >& *)
-  | OutputAppend (* >> *)
-  | OutputClobber (* >| *)
-  | Input (* < *)
-  | InputDuplicate (* <& *)
-  | InputOutput (* <> *)
+  | OutputAppend    (* >> *)
+  | OutputClobber   (* >| *)
+  | Input           (*  < *)
+  | InputDuplicate  (* <& *)
+  | InputOutput     (* <> *)
 
 and command =
   | Empty
-  | Async of command
-  | Seq of command * command
-  | And of command * command
-  | Or of command * command
-  | Not of command
-  | Pipe of command * command
-  | Subshell of command
-  | If of command * command * command option
-  | For of name * word list option * command
-  | Case of word * (pattern * command option) list
-  | While of command * command
-  | Function of name * command
-  | Assignment of assignment list
-  | Simple of assignment list * word * word list
-  | Redirection of command * int option * redirection_kind * word
-  | HereDocument of command * int option * bool * word
 
-[@@deriving
-   visitors { variety = "iter";    polymorphic = true },
-   visitors { variety = "map";     polymorphic = true },
-   visitors { variety = "reduce";  polymorphic = true },
-   visitors { variety = "iter2";   polymorphic = true },
-   visitors { variety = "map2";    polymorphic = true },
-   visitors { variety = "reduce2"; polymorphic = true }]
+  | Async of command
+  (*  Async c          ~=  c &                          *)
+  | Seq of command * command
+  (*  Seq (c1, c2)     ~=  c1 ;  c2                     *)
+  | And of command * command
+  (*  And (c1, c2)     ~=  c1 && c2                     *)
+  | Or of command * command
+  (*  Or  (c1, c2)     ~=  c1 || c2                     *)
+  | Not of command
+  (*  Not c            ~=  ! c                          *)
+  | Pipe of command * command
+  (*  Pipe (c1, c2)    ~=  c1  | c2                     *)
+  | Subshell of command
+  (*  Subshell c       ~=  ( c )                        *)
+  | If of command * command * command
+  (*  If (c1, c2, c3)  ~=  if c1; then c2; else c3; fi  *)
+
+  | For of name * word list option * command
+  (*  For (x, l, c)    ~=  for x in l; do c; done       *)
+
+  | Case of word * (pattern * command) list
+  (*
+      Case (x, [ (p1, c1); (p2, c2); ... ])
+      ~=  case x in
+              p1) c1;;
+              p2) c2;;
+              ...
+          esac
+   *)
+
+  | While of command * command
+  (*  While (c1, c2)  ~=  while c1; do c2; done  *)
+  | Until of command * command
+  (*  Until (c1, c2)  ~=  until c1; do c2; done  *)
+
+  | Function of name * command
+  (*  Function (n, c)  ~=  n () c  *)
+
+  | Simple of assignment list * word list
+  (*
+      Simple ([ (n1, w1); (n2, w2); ... ], [w1'; w2'; ...])
+      ~= n1=w1 n2=w2 ... w1' w2' ...
+   *)
+
+  | Redirection of command * file_descr * redirection_kind * word
+  (*  Redirection (c, n, k, w)  ~=  c n k w  *)
+
+  | HereDocument of command * file_descr * bool * word
+  (*  HereDocument (c, n, b, w)  ~=  c n <<b w  *)

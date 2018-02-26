@@ -24,11 +24,5 @@ open ExtPervasives
 
 let cst_to_ast =
   Converter.complete_command__to__command
-   
-let parse_file =
-  Libmorbig.API.parse_file
-  ||> List.map cst_to_ast
 
-let print_to_string = ExtFormat.to_string__of__fprintf Printer.Safe.pp_command
-let print_to_channel = ExtFormat.to_channel__of__fprintf Printer.Safe.pp_command
-let print_to_file = ExtFormat.to_channel__of__fprintf Printer.Safe.pp_command
+let pp_print_safe = Printer.Safe.pp_command
