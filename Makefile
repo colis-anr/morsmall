@@ -1,4 +1,4 @@
-.PHONY: all install remove clean
+.PHONY: build install uninstall doc clean
 
 EXPORTED_SOURCES=                                                              \
         src/AST.ml                                                             \
@@ -13,5 +13,10 @@ install:
 uninstall:
 	jbuilder uninstall
 
+doc:
+	jbuilder build @doc
+	ln -s _build/default/_doc doc
+
 clean:
 	jbuilder clean
+	rm -f doc

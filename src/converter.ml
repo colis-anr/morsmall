@@ -24,12 +24,12 @@ open Libmorbig.CST
 
 let rec complete_command__to__command = function
   | CompleteCommand_Empty ->
-     AST.Empty
+     None
   | CompleteCommand_CList_Separator (clist', sep') ->
-     clist'__to__command clist'
-     |> separator'__to__command sep'
+     Some (clist'__to__command clist'
+           |> separator'__to__command sep')
   | CompleteCommand_CList clist' ->
-     clist'__to__command clist'
+     Some (clist'__to__command clist')
 
 and complete_command_list__to__command_list x =
   List.map complete_command__to__command x
@@ -182,13 +182,13 @@ and case_item_ns__to__case = function
   | CaseItemNS_Lparen_Pattern_Rparen_LineBreak (pattern', _) ->
      (
         pattern'__to__word_list pattern' ,
-        AST.Empty
+        None
      )
   | CaseItemNS_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _)
   | CaseItemNS_Lparen_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _) ->
      (
         pattern'__to__word_list pattern' ,
-        compound_list'__to__command compound_list'
+        Some (compound_list'__to__command compound_list')
      )
 
 and case_item__to__case = function
@@ -196,13 +196,13 @@ and case_item__to__case = function
   | CaseItem_Lparen_Pattern_Rparen_LineBreak_Dsemi_LineBreak (pattern', _, _) ->
      (
         pattern'__to__word_list pattern' ,
-        AST.Empty
+        None
      )
   | CaseItem_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _)
   | CaseItem_Lparen_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _) ->
      (
         pattern'__to__word_list pattern' ,
-        compound_list'__to__command compound_list'
+        Some (compound_list'__to__command compound_list')
      )
 
 and pattern__to__word_list = function
@@ -217,13 +217,13 @@ and if_clause__to__command = function
      AST.If (
          compound_list'__to__command compound_list' ,
          compound_list'__to__command compound_list2' ,
-         else_part'__to__command else_part'
+         Some (else_part'__to__command else_part')
        )
   | IfClause_If_CompoundList_Then_CompoundList_Fi (compound_list', compound_list2') ->
      AST.If (
          compound_list'__to__command compound_list' ,
          compound_list'__to__command compound_list2' ,
-         Empty
+         None
        )
 
 and else_part__to__command = function
@@ -231,13 +231,13 @@ and else_part__to__command = function
      AST.If (
          compound_list'__to__command compound_list' ,
          compound_list'__to__command compound_list2' ,
-         Empty
+         None
        )
   | ElsePart_Elif_CompoundList_Then_CompoundList_ElsePart (compound_list', compound_list2', else_part') ->
      AST.If (
          compound_list'__to__command compound_list' ,
          compound_list'__to__command compound_list2' ,
-         else_part'__to__command else_part'
+         Some (else_part'__to__command else_part')
        )
   | ElsePart_Else_CompoundList compound_list' ->
      compound_list'__to__command compound_list'

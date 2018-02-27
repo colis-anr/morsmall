@@ -71,9 +71,6 @@ let rec pp_command ppf command =
   (
     match command with
 
-    | Empty ->
-       failwith "SafePrinter.pp_command"
-      
     | Async command ->
        pp_command ppf command
 
@@ -105,11 +102,11 @@ let rec pp_command ppf command =
        fpf ppf "(%a)"
          pp_command command
 
-    | If (test, then_branch, Empty) ->
+    | If (test, then_branch, None) ->
        fpf ppf "if %a;then %a;fi"
          pp_command test
          pp_command then_branch
-    | If (test, then_branch, else_branch) ->
+    | If (test, then_branch, Some else_branch) ->
        fpf ppf "if %a;then %a;else %a;fi"
          pp_command test
          pp_command then_branch
@@ -129,8 +126,8 @@ let rec pp_command ppf command =
        fpf ppf "case %a in" pp_word word;
        List.iter
          (function
-          | (pattern, Empty) -> fpf ppf " %a) ;;" pp_pattern pattern
-          | (pattern, body) -> fpf ppf " %a) %a;;" pp_pattern pattern pp_command body)
+          | (pattern, None) -> fpf ppf " %a) ;;" pp_pattern pattern
+          | (pattern, Some body) -> fpf ppf " %a) %a;;" pp_pattern pattern pp_command body)
          items;
        fpf ppf "esac"
 
