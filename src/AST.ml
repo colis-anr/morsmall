@@ -20,9 +20,11 @@
 (*                                                                            *)
 (******************************************************************************)
 
-(** This module contains an AST for POSIX Shell.
+(** This module contains an AST for POSIX Shell. *)
 
-   The following description does contain all the semantic subtleties
+type 'a located = 'a Libmorbig.CST.located
+
+(** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
    {{:http://pubs.opengroup.org/onlinepubs/9699919799.2016edition/}IEEE
    Std 1003.1™-2008, 2016 Edition}. In the following, we will refer to
@@ -140,32 +142,34 @@
 
 type command =
   (* Simple Commands *)
-  | Simple of assignment list * word list
+  | Simple of assignment' list * word' list
 
   (* Lists *)
-  | Async of command
-  | Seq of command * command
-  | And of command * command
-  | Or of command * command
+  | Async of command'
+  | Seq of command' * command'
+  | And of command' * command'
+  | Or of command' * command'
 
   (* Pipelines *)
-  | Not of command
-  | Pipe of command * command
+  | Not of command'
+  | Pipe of command' * command'
 
-  (* Compound Commands *)
-  | Subshell of command
-  | For of name * word list option * command
-  | Case of word * (pattern list * command option) list
-  | If of command * command * command option
-  | While of command * command
-  | Until of command * command
+  (* Compound Command's *)
+  | Subshell of command'
+  | For of name' * word_list' option * command'
+  | Case of word' * (pattern_list' * command' option) list
+  | If of command' * command' * command' option
+  | While of command' * command'
+  | Until of command' * command'
 
-  (* Function Definition Command *)
-  | Function of name * command
+  (* Function Definition Command' *)
+  | Function of name' * command'
 
   (* Redirection *)
-  | Redirection of command * descr option * redirection_kind * word
-  | HereDocument of command * descr option * bool * word
+  | Redirection of command' * descr' option * redirection_kind' * word'
+  | HereDocument of command' * descr' option * bool * word'
+
+and command' = command located
 
 (** The type {!word} is a (for now quite concrete, but soon abstract)
    description of words in Shell. {e See POSIX, 2 Shell & Utilities,
@@ -173,22 +177,33 @@ type command =
 
 and word = string
 
+and word' = word located
+and word_list' = word list located
+
 (** Names in Shell are just strings with a few additional
    conditions. *)
 
 and name = string
 
+and name' = name located
+
 (** For now, a {!pattern} is just a {!word}. *)
 
 and pattern = word
+
+and pattern_list' = pattern list located
 
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
 and assignment = name * word
 
+and assignment' = assignment located
+
 (** A file descriptor {!descr} is an integer. *)
 
 and descr = int
+
+and descr' = descr located
 
 (** The different kinds of redirection. *)
 
@@ -200,3 +215,5 @@ and redirection_kind =
   | Input           (*  < *)
   | InputDuplicate  (* <& *)
   | InputOutput     (* <> *)
+
+and redirection_kind' = redirection_kind located
