@@ -145,7 +145,7 @@ type command =
   | Simple of assignment' list * word' list
 
   (* Lists *)
-  | Async of command'
+  | Async of command
   | Seq of command' * command'
   | And of command' * command'
   | Or of command' * command'
@@ -166,8 +166,8 @@ type command =
   | Function of name' * command'
 
   (* Redirection *)
-  | Redirection of command' * descr' option * redirection_kind' * word'
-  | HereDocument of command' * descr' option * bool * word'
+  | Redirection of command' * descr option * redirection_kind' * word'
+  | HereDocument of command' * descr option * bool * word'
 
 and command' = command located
 
@@ -198,7 +198,7 @@ and pattern_list' = pattern list located
 and assignment = name * word
 
 and assignment' = assignment located
-
+                
 (** A file descriptor {!descr} is an integer. *)
 
 and descr = int
