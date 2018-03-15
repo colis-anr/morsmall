@@ -22,7 +22,53 @@
 
 (** This module contains an AST for POSIX Shell. *)
 
-type 'a located = 'a Libmorbig.CST.located
+type 'a located =
+  { value : 'a ;
+    pos_start : Lexing.position ;
+    pos_end : Lexing.position }
+
+(** The type {!word} is a (for now quite concrete, but soon abstract)
+   description of words in Shell. {e See POSIX, 2 Shell & Utilities,
+   2.3 Token Recognition} *)
+
+type word = string
+type word' = word located
+(* type word_list' = word list located *)
+
+(** Names in Shell are just strings with a few additional
+   conditions. *)
+
+type name = string
+(* type name' = name located *)
+
+(** For now, a {!pattern} is just a {!word}. *)
+
+type pattern = word list
+ type pattern' = pattern located
+
+(** An assignment is just a pair of a {!name} and a {!word}. *)
+
+type assignment =
+  { name : name ;
+    word : word }
+type assignment' = assignment located
+
+(** A file descriptor {!descr} is an integer. *)
+
+type descr = int
+(* type descr' = descr located *)
+
+(** The different kinds of redirection. *)
+
+type redirection_kind =
+  | Output          (*  > *)
+  | OutputDuplicate (* >& *)
+  | OutputAppend    (* >> *)
+  | OutputClobber   (* >| *)
+  | Input           (*  < *)
+  | InputDuplicate  (* <& *)
+  | InputOutput     (* <> *)
+(* type redirection_kind' = redirection_kind located *)
 
 (** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
@@ -142,7 +188,7 @@ type 'a located = 'a Libmorbig.CST.located
 
 type command =
   (* Simple Commands *)
-  | Simple of assignment' list * word' list
+  | Simple of simple_command
 
   (* Lists *)
   | Async of command
@@ -156,64 +202,59 @@ type command =
 
   (* Compound Command's *)
   | Subshell of command'
-  | For of name' * word_list' option * command'
-  | Case of word' * (pattern_list' * command' option) list
-  | If of command' * command' * command' option
-  | While of command' * command'
-  | Until of command' * command'
+  | For of for_clause
+  | Case of case_clause
+  | If of if_clause
+  | While of while_clause
+  | Until of until_clause
 
   (* Function Definition Command' *)
-  | Function of name' * command'
+  | Function of function_definition
 
   (* Redirection *)
-  | Redirection of command' * descr option * redirection_kind' * word'
-  | HereDocument of command' * descr option * bool * word'
+  | Redirection of command' * redirection
+  | HereDocument of command' * here_document
 
 and command' = command located
 
-(** The type {!word} is a (for now quite concrete, but soon abstract)
-   description of words in Shell. {e See POSIX, 2 Shell & Utilities,
-   2.3 Token Recognition} *)
+and simple_command =
+  { assignments : assignment' list ;
+    words : word' list }
 
-and word = string
+and for_clause =
+  { variable : name ;
+    words : word list option ;
+    body : command' }
 
-and word' = word located
-and word_list' = word list located
+and case_clause =
+  { word : word' ;
+    items : case_item list }
 
-(** Names in Shell are just strings with a few additional
-   conditions. *)
+and case_item =
+  { patterns : pattern' ;
+    body : command' option }
 
-and name = string
+and if_clause =
+  { test : command' ;
+    body : command' ;
+    other : command' option }
 
-and name' = name located
+and while_clause =
+  { test : command' ;
+    body : command' }
 
-(** For now, a {!pattern} is just a {!word}. *)
+and until_clause = while_clause
 
-and pattern = word
+and function_definition =
+  { name : name ;
+    body : command' }
 
-and pattern_list' = pattern list located
+and redirection =
+  { descr : descr option ;
+    kind : redirection_kind ;
+    file : word }
 
-(** An assignment is just a pair of a {!name} and a {!word}. *)
-
-and assignment = name * word
-
-and assignment' = assignment located
-                
-(** A file descriptor {!descr} is an integer. *)
-
-and descr = int
-
-and descr' = descr located
-
-(** The different kinds of redirection. *)
-
-and redirection_kind =
-  | Output          (*  > *)
-  | OutputDuplicate (* >& *)
-  | OutputAppend    (* >> *)
-  | OutputClobber   (* >| *)
-  | Input           (*  < *)
-  | InputDuplicate  (* <& *)
-  | InputOutput     (* <> *)
-
-and redirection_kind' = redirection_kind located
+and here_document =
+  { descr : descr option ;
+    globber : bool ;
+    content : word' }

@@ -6,4 +6,5 @@
 (library
  ((name        morsmall)
   (public_name morsmall)
-  (libraries (libmorbig))))
+  (libraries (libmorbig))
+  (flags (:standard -w +A-30))))
