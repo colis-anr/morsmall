@@ -235,7 +235,7 @@ and case_item =
     body : command' option }
 
 and case_item' = case_item located
-  
+
 and if_clause =
   { test : command' ;
     body : command' ;
@@ -258,5 +258,7 @@ and redirection =
 
 and here_document =
   { descr : descr option ;
-    globber : bool ;
+    strip : bool ;
     content : word' }
+
+and here_document' = here_document located
