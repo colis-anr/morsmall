@@ -8,6 +8,6 @@ module Printer = struct
 end
 
 let cst_to_ast =
-  Converter.complete_command__to__command
+  Converter.complete_command__to__command_option
 
 let pp_print_safe = Printer.Safe.pp_command

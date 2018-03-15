@@ -663,14 +663,14 @@ and io_redirect'__to__command' (io_redirect' : io_redirect') (command' : AST.com
 
 and io_file__to__kind_word io_file =
   let kind, filename' =
-    AST.(match io_file with
-         | IoFile_Less_FileName filename' -> AST.Input, filename'
-         | IoFile_LessAnd_FileName filename' -> AST.InputDuplicate, filename'
-         | IoFile_Great_FileName filename' -> AST.Output, filename'
-         | IoFile_GreatAnd_FileName filename' -> AST.OutputDuplicate, filename'
-         | IoFile_DGreat_FileName filename' -> AST.OutputAppend, filename'
-         | IoFile_LessGreat_FileName filename' -> AST.InputOutput, filename'
-         | IoFile_Clobber_FileName filename' -> AST.OutputClobber, filename')
+    match io_file with
+    | IoFile_Less_FileName filename' -> AST.Input, filename'
+    | IoFile_LessAnd_FileName filename' -> AST.InputDuplicate, filename'
+    | IoFile_Great_FileName filename' -> AST.Output, filename'
+    | IoFile_GreatAnd_FileName filename' -> AST.OutputDuplicate, filename'
+    | IoFile_DGreat_FileName filename' -> AST.OutputAppend, filename'
+    | IoFile_LessGreat_FileName filename' -> AST.InputOutput, filename'
+    | IoFile_Clobber_FileName filename' -> AST.OutputClobber, filename'
   in
   ( kind , filename'__to__word filename' )
 
