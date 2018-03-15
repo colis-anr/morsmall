@@ -46,6 +46,8 @@ let erase_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b =
 
 (* Convertion functions *)
 
+(* CST.complete_command -> AST.command option *)
+
 let rec complete_command__to__command_option : complete_command -> AST.command option = function
   | CompleteCommand_Empty ->
      None
@@ -54,6 +56,8 @@ let rec complete_command__to__command_option : complete_command -> AST.command o
            |> separator'__to__command sep')
   | CompleteCommand_CList clist' ->
      Some (clist'__to__command clist')
+
+(* CST.clist -> AST.command *)
 
 and clist__to__command : clist -> AST.command = function
   | CList_CList_SeparatorOp_AndOr (clist', sep_op', and_or') ->
@@ -70,7 +74,9 @@ and clist'__to__command (clist' : clist') : AST.command =
 
 and clist'__to__command' (clist' : clist') : AST.command' =
   convert_location clist__to__command clist'
-  
+
+(* CST.and_or -> AST.command *)
+
 and and_or__to__command : and_or -> AST.command = function
   | AndOr_Pipeline pipeline' ->
      pipeline'__to__command pipeline'
@@ -87,15 +93,25 @@ and and_or__to__command : and_or -> AST.command = function
 
 and and_or'__to__command (and_or' : and_or') : AST.command =
   erase_location and_or__to__command and_or'
-    
+
 and and_or'__to__command' (and_or' : and_or') : AST.command' =
   convert_location and_or__to__command and_or'
+
+(* CST.pipeline -> AST.command *)
 
 and pipeline__to__command : pipeline -> AST.command = function
   | Pipeline_PipeSequence pipe_sequence' ->
      pipe_sequence'__to__command pipe_sequence'
   | Pipeline_Bang_PipeSequence pipe_sequence' ->
      AST.Not (pipe_sequence'__to__command' pipe_sequence')
+
+and pipeline'__to__command (pipeline' : pipeline') : AST.command =
+  erase_location pipeline__to__command pipeline'
+
+and pipeline'__to__command' (pipeline' : pipeline') : AST.command' =
+  convert_location pipeline__to__command pipeline'
+
+(* CST.pipe_sequence -> AST.command *)
 
 and pipe_sequence__to__command : pipe_sequence -> AST.command = function
   | PipeSequence_Command command' ->
@@ -105,6 +121,14 @@ and pipe_sequence__to__command : pipe_sequence -> AST.command = function
          pipe_sequence'__to__command' pipe_sequence',
          command'__to__command' command'
        )
+
+and pipe_sequence'__to__command (pipe_sequence') : AST.command =
+  erase_location pipe_sequence__to__command pipe_sequence'
+
+and pipe_sequence'__to__command' (pipe_sequence') : AST.command' =
+  convert_location pipe_sequence__to__command pipe_sequence'
+
+(* CST.command -> AST.command *)
 
 and command__to__command : command -> AST.command = function
   | Command_SimpleCommand simple_command' ->
@@ -117,6 +141,14 @@ and command__to__command : command -> AST.command = function
   | Command_FunctionDefinition function_definition' ->
      function_definition'__to__command function_definition'
 
+and command'__to__command (command' : command') : AST.command =
+  erase_location command__to__command command'
+
+and command'__to__command' (command' : command') : AST.command' =
+  convert_location command__to__command command'
+
+(* CST.compound_command -> AST.command *)
+  
 and compound_command__to__command : compound_command -> AST.command = function
   | CompoundCommand_BraceGroup brace_group' ->
      brace_group'__to__command brace_group'
@@ -133,10 +165,23 @@ and compound_command__to__command : compound_command -> AST.command = function
   | CompoundCommand_UntilClause until_clause' ->
      until_clause'__to__command until_clause'
 
+and compound_command'__to__command (compound_command' : compound_command') : AST.command =
+  erase_location compound_command__to__command compound_command'
+
+and compound_command'__to__command' (compound_command' : compound_command') : AST.command' =
+  convert_location compound_command__to__command compound_command'
+  
+(* CST.subshell -> AST.command *)
+  
 and subshell__to__command : subshell -> AST.command  = function
   | Subshell_Lparen_CompoundList_Rparen compound_list' ->
      AST.Subshell (compound_list'__to__command' compound_list')
 
+and subshell'__to__command (subshell' : subshell') : AST.command =
+  erase_location subshell__to__command subshell'
+  
+(* CST.compound_list -> AST.command *)
+  
 and compound_list__to__command : compound_list -> AST.command = function
   | CompoundList_Term term'
   | CompoundList_NewLineList_Term (_, term') ->
@@ -146,6 +191,11 @@ and compound_list__to__command : compound_list -> AST.command = function
      term'__to__command term'
      |> separator'__to__command sep'
 
+and compound_list'__to__command' (compound_list' : compound_list') : AST.command' =
+  convert_location compound_list__to__command compound_list'
+  
+(* CST.term -> AST.command *)
+  
 and term__to__command : term -> AST.command = function
   | Term_Term_Separator_AndOr (term', sep', and_or') ->
      AST.Seq (
@@ -156,22 +206,32 @@ and term__to__command : term -> AST.command = function
   | Term_AndOr and_or' ->
      and_or'__to__command and_or'
 
+and term'__to__command (term' : term') : AST.command =
+  erase_location term__to__command term'
+
+and term'__to__command' (term' : term') : AST.command' =
+  convert_location term__to__command term'
+  
+(* CST.for_clause -> AST.command *)
+  
 and for_clause__to__command : for_clause -> AST.command = function
   | ForClause_For_Name_DoGroup (name', do_group')
   | ForClause_For_Name_SequentialSep_DoGroup (name', _, do_group')
   | ForClause_For_Name_LineBreak_In_SequentialSep_DoGroup (name', _, _, do_group') ->
-     AST.For (
-         name'__to__name' name' ,
-         None ,
-         do_group'__to__command' do_group'
-       )
+     AST.(For {
+       variable = name'__to__name name' ;
+       words = None ;
+       body = do_group'__to__command' do_group'
+     })
   | ForClause_For_Name_LineBreak_In_WordList_SequentialSep_DoGroup (name', _, wordlist', _, do_group') ->
-     AST.For (
-         name'__to__name' name' ,
-         Some (wordlist'__to__word_list' wordlist') ,
-         do_group'__to__command' do_group'
-       )
+     AST.(For {
+       variable = name'__to__name name' ;
+       words = Some (wordlist'__to__word_list wordlist') ;
+       body = do_group'__to__command' do_group'
+     })
 
+(* CST.wordlist -> AST.word list *)
+    
 and wordlist__to__word_list : wordlist -> AST.word list = function (*FIXME*)
   | WordList_WordList_Word (wordlist', word') ->
      (wordlist'__to__word_list wordlist')
@@ -179,86 +239,115 @@ and wordlist__to__word_list : wordlist -> AST.word list = function (*FIXME*)
   | WordList_Word word' ->
      [word'__to__word word']
 
+and wordlist'__to__word_list (wordlist' : wordlist') : AST.word list =
+  erase_location wordlist__to__word_list wordlist'
+
+(* CST.case_clause -> AST.command *)
+  
 and case_clause__to__command : case_clause -> AST.command = function
   | CaseClause_Case_Word_LineBreak_In_LineBreak_CaseList_Esac (word', _, _, case_list') ->
-     AST.Case (
-         word'__to__word' word' ,
-         case_list'__to__case_list case_list'
-       )
+     AST.(Case {
+       word = word'__to__word word' ;
+       items = case_list'__to__case_item_list case_list'
+     })
   | CaseClause_Case_Word_LineBreak_In_LineBreak_CaseListNS_Esac (word', _, _, case_list_ns') ->
-     AST.Case (
-         word'__to__word' word' ,
-         case_list_ns'__to__case_list case_list_ns'
-       )
+     AST.(Case {
+       word = word'__to__word word' ;
+       items = case_list_ns'__to__case_item_list case_list_ns'
+     })
   | CaseClause_Case_Word_LineBreak_In_LineBreak_Esac (word', _, _) ->
-     AST.Case (
-         word'__to__word' word' ,
-         []
-       )
+     AST.(Case {
+       word = word'__to__word word' ;
+       items = []
+     })
 
-and case_list_ns__to__case_list : case_list_ns -> (AST.pattern_list' * AST.command' option) list = function (*FIXME*)
+and case_clause'__to__command (case_clause' : case_clause') : AST.command =
+  erase_location case_clause__to__command case_clause'
+    
+(* CST.case_list_ns -> AST.case list *)
+    
+and case_list_ns__to__case_item'_list : case_list_ns -> AST.case_item' list = function (*FIXME*)
   | CaseListNS_CaseList_CaseItemNS (case_list', case_item_ns') ->
-     (case_list'__to__case_list case_list')
-     @ [case_item_ns'__to__case case_item_ns']
+     (case_list'__to__case_item'_list case_list')
+     @ [case_item_ns'__to__case_item' case_item_ns']
   | CaseListNS_CaseItemNS case_item_ns' ->
-     [case_item_ns'__to__case case_item_ns']
+     [case_item_ns'__to__case_item' case_item_ns']
 
-and case_list__to__case_list : case_list -> (AST.pattern_list' * AST.command' option) list = function (*FIXME*)
+(* CST.case_list -> AST.case list *)
+    
+and case_list__to__case_item'_list : case_list -> AST.case_item' list = function (*FIXME*)
   | CaseList_CaseList_CaseItem (case_list', case_item') ->
-     (case_list'__to__case_list case_list')
-     @ [case_item'__to__case case_item']
+     (case_list'__to__case_item'_list case_list')
+     @ [case_item'__to__case_item' case_item']
   | CaseList_CaseItem case_item' ->
-     [case_item'__to__case case_item']
+     [case_item'__to__case_item' case_item']
 
-and case_item_ns__to__case : case_item_ns -> AST.pattern_list' * AST.command' option = function
+and case_list'__to__case_item'_list (case_list' : case_list') : AST.case_item' list =
+  erase_location case_list__to__case_item'_list case_list'
+
+(* CST.case_item_ns -> AST.case_item *)
+  
+and case_item_ns__to__case_item : case_item_ns -> AST.case_item = function
   | CaseItemNS_Pattern_Rparen_LineBreak (pattern', _)
   | CaseItemNS_Lparen_Pattern_Rparen_LineBreak (pattern', _) ->
-     (
-        pattern'__to__pattern_list' pattern' ,
-        None
-     )
+     AST.{ pattern = pattern'__to__pattern' pattern' ;
+           body = None }
   | CaseItemNS_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _)
   | CaseItemNS_Lparen_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _) ->
-     (
-        pattern'__to__pattern_list' pattern' ,
-        Some (compound_list'__to__command' compound_list')
-     )
+     AST.{ pattern = pattern'__to__pattern' pattern' ;
+           body = Some (compound_list'__to__command' compound_list') }
 
-and case_item__to__case : case_item -> AST.pattern_list' * AST.command' option = function
+and case_item_ns'__to__case_item' (case_item_ns' : case_item_ns') : AST.case_item' =
+  convert_location case_item_ns__to__case_item case_item_ns'
+    
+(* CST.case_item -> AST.case_item *)
+    
+and case_item__to__case_item : case_item -> AST.case_item = function
   | CaseItem_Pattern_Rparen_LineBreak_Dsemi_LineBreak (pattern', _, _)
   | CaseItem_Lparen_Pattern_Rparen_LineBreak_Dsemi_LineBreak (pattern', _, _) ->
-     (
-        pattern'__to__pattern_list' pattern' ,
-        None
-     )
+     AST.{ pattern = pattern'__to__pattern' pattern' ;
+           body = None }
   | CaseItem_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _)
   | CaseItem_Lparen_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _) ->
-     (
-        pattern'__to__pattern_list' pattern' ,
-        Some (compound_list'__to__command' compound_list')
-     )
+     AST.{ pattern = pattern'__to__pattern' pattern' ;
+           body = Some (compound_list'__to__command' compound_list') }
 
-and pattern__to__pattern_list : pattern -> AST.pattern list = function
+and case_item'__to__case_item' (case_item' : case_item') : AST.case_item' =
+  convert_location case_item__to__case_item case_item'
+    
+(* CST.pattern -> AST.pattern *)
+    
+and pattern__to__pattern : pattern -> AST.pattern = function
   | Pattern_Word word' ->
      [word'__to__word word']
   | Pattern_Pattern_Pipe_Word (pattern', word') ->
-     (pattern'__to__pattern_list pattern')
+     (pattern'__to__pattern pattern')
      @ [word'__to__word word']
 
+and pattern'__to__pattern (pattern' : pattern') : AST.pattern =
+  erase_location pattern__to__pattern pattern'
+
+and pattern'__to__pattern' (pattern' : pattern') : AST.pattern' =
+  convert_location pattern__to__pattern pattern'
+
+(* CST.if_clause -> AST.command *)
+    
 and if_clause__to__command : if_clause -> AST.command = function
   | IfClause_If_CompoundList_Then_CompoundList_ElsePart_Fi (compound_list', compound_list2', else_part') ->
-     AST.If (
-         compound_list'__to__command' compound_list' ,
-         compound_list'__to__command' compound_list2' ,
-         Some (else_part'__to__command' else_part')
-       )
+     AST.(If {
+       test = compound_list'__to__command' compound_list' ;
+       body = compound_list'__to__command' compound_list2' ;
+       rest = Some (else_part'__to__command' else_part')
+     })
   | IfClause_If_CompoundList_Then_CompoundList_Fi (compound_list', compound_list2') ->
-     AST.If (
-         compound_list'__to__command' compound_list' ,
-         compound_list'__to__command' compound_list2' ,
-         None
-       )
+     AST.(If {
+       test = compound_list'__to__command' compound_list' ;
+       body = compound_list'__to__command' compound_list2' ;
+       rest = None
+     })
 
+(* CST.else_part -> AST.command *)
+    
 and else_part__to__command : else_part -> AST.command = function
   | ElsePart_Elif_CompoundList_Then_CompoundList (compound_list', compound_list2') ->
      AST.If (
@@ -425,13 +514,13 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
 and io_file__to__kind_word io_file =
   let kind, filename' =
     AST.(match io_file with
-    | IoFile_Less_FileName filename' -> AST.Input, filename'
-    | IoFile_LessAnd_FileName filename' -> AST.InputDuplicate, filename'
-    | IoFile_Great_FileName filename' -> AST.Output, filename'
-    | IoFile_GreatAnd_FileName filename' -> AST.OutputDuplicate, filename'
-    | IoFile_DGreat_FileName filename' -> AST.OutputAppend, filename'
-    | IoFile_LessGreat_FileName filename' -> AST.InputOutput, filename'
-    | IoFile_Clobber_FileName filename' -> AST.OutputClobber, filename')
+         | IoFile_Less_FileName filename' -> AST.Input, filename'
+         | IoFile_LessAnd_FileName filename' -> AST.InputDuplicate, filename'
+         | IoFile_Great_FileName filename' -> AST.Output, filename'
+         | IoFile_GreatAnd_FileName filename' -> AST.OutputDuplicate, filename'
+         | IoFile_DGreat_FileName filename' -> AST.OutputAppend, filename'
+         | IoFile_LessGreat_FileName filename' -> AST.InputOutput, filename'
+         | IoFile_Clobber_FileName filename' -> AST.OutputClobber, filename')
   in
   ( kind , filename'__to__word filename' )
 
@@ -445,19 +534,25 @@ and io_here__to__trim_word = function
   | IoHere_DLessDash_HereEnd (_, word'_ref) ->
      (true, word'__to__word !word'_ref)
 
+(* CST.separator_op -> AST.command -> AST.command *)
+    
 and separator_op__to__command (sep_op : separator_op) (command : AST.command) : AST.command =
   match sep_op with
   | SeparatorOp_Uppersand -> AST.Async command
   | SeparatorOp_Semicolon -> command
 
+and separator_op'__to__command (sep_op' : separator_op') (command : AST.command) : AST.command =
+  erase_location separator_op__to__command sep_op' command
+                           
 and separator_op'__to__command' (sep_op' : separator_op') (command' : AST.command') : AST.command' =
-(* We do not want to convert the separator's location here but rather use
-   the command's location! *)
+  (* We do not want to convert the separator's location here but
+     rather use the command's location! *)  
   { AST.value = separator_op__to__command sep_op'.value command'.AST.value ;
     AST.pos_start = command'.AST.pos_start ;
     AST.pos_end = command'.AST.pos_end }
-  
-                           
+
+(* CST.separator -> AST.command -> AST.command *)
+
 and separator__to__command (sep : separator) (command : AST.command) : AST.command =
   match sep with
   | Separator_SeparatorOp_LineBreak (sep_op', _) ->
@@ -467,294 +562,321 @@ and separator__to__command (sep : separator) (command : AST.command) : AST.comma
 
 and separator'__to__command (sep' : separator') (command : AST.command) : AST.command =
   erase_location separator__to__command sep' command
+    
+and separator'__to__command' (sep' : separator') (command' : AST.command') : AST.command' =
+  (* We do not want to convert the separator's location here but
+     rather use the command's location! *)
+  { AST.value = separator__to__command sep'.value command'.AST.value ;
+    AST.pos_start = command'.AST.pos_start ;
+    AST.pos_end = command'.AST.pos_end }
 
+(* *)
+  
 and sequential_sep__to__command _ (command : AST.command) : AST.command =
   command
 
+(* CST.word -> AST.word *)
+  
 and word__to__word : word -> AST.word = function
   | Word word -> word
 
+and word'__to__word (word' : word') : AST.word =
+  erase_location word__to__word word'
+
+and word'__to__word' (word' : word') : AST.word' =
+  convert_location word__to__word word'
+
+(* CST.name -> AST.name *)
+  
 and name__to__name : name -> AST.name = function
   | Name name -> name
 
+and name'__to__name (name' : name') : AST.name =
+  erase_location name__to__name name'
+               
+(* CST.assignment_word -> AST.assignment *)
+               
 and assignment_word__to__assignment : assignment_word -> AST.assignment = function
   | AssignmentWord (name, word) ->
-     (name__to__name name, word__to__word word)
+     AST.{
+        variable = name__to__name name ;
+        word = word__to__word word
+     }
 
 and io_number__to__descr : io_number -> AST.descr  = function
   | IONumber io_number -> int_of_string io_number
 
 
 
-(* Located -> Located versions.
+                                        (* Located -> Located versions.
 
    Sadly, we have to eta-expand everything in here, because OCaml does
    not like values on the right-hand side of a [let rec]. Otherwise,
    one could write [let rec a = a]. *)
 
 
-(* and complete_command'__to__command'_option complete_command' =
- *   keep_located complete_command__to__command_option complete_command'
- *
- * and clist'__to__command' clist' =
- *   keep_located clist__to__command clist'
- *
- * and and_or'__to__command' (and_or': and_or') : AST.command' =
- *   keep_located and_or__to__command and_or'
- *
- * and pipeline'__to__command' pipeline' =
- *   keep_located pipeline__to__command pipeline'
- *
- * and pipe_sequence'__to__command' pipe_sequence' =
- *   keep_located pipe_sequence__to__command pipe_sequence'
- *
- * and command'__to__command' command' =
- *   keep_located command__to__command command'
- *
- * and compound_command'__to__command' (compound_command' : compound_command') : AST.command' =
- *   keep_located compound_command__to__command compound_command'
- *
- * and subshell'__to__command' subshell' =
- *   keep_located subshell__to__command subshell'
- *
- * and compound_list'__to__command' compound_list' =
- *   keep_located compound_list__to__command compound_list'
- *
- * and term'__to__command' term' =
- *   keep_located term__to__command term'
- *
- * and for_clause'__to__command' for_clause' =
- *   keep_located for_clause__to__command for_clause'
- *
- * and wordlist'__to__word_list' wordlist' =
- *   keep_located wordlist__to__word_list wordlist'
- *
- * and case_clause'__to__command' case_clause' =
- *   keep_located case_clause__to__command case_clause'
- *
- * and case_list_ns'__to__case_list' case_list_ns' =
- *   keep_located case_list_ns__to__case_list case_list_ns'
- *
- * and case_list'__to__case_list' case_list' =
- *   keep_located case_list__to__case_list case_list'
- *
- * and case_item_ns'__to__case' case_item_ns' =
- *   keep_located case_item_ns__to__case case_item_ns'
- *
- * (\* and case_item'__to__case' (case_item' : case_item') =
- *  *   keep_located case_item__to__case case_item' *\)
- *
- * and pattern'__to__pattern_list' pattern' =
- *   keep_located pattern__to__pattern_list pattern' (\*FIXME*\)
- *
- * and if_clause'__to__command' if_clause' =
- *   keep_located if_clause__to__command if_clause'
- *
- * and else_part'__to__command' else_part' =
- *   keep_located else_part__to__command else_part'
- *
- * and while_clause'__to__command' while_clause' =
- *   keep_located while_clause__to__command while_clause'
- *
- * and until_clause'__to__command' until_clause' =
- *   keep_located until_clause__to__command until_clause'
- *
- * and function_definition'__to__command' function_definition' =
- *   keep_located function_definition__to__command function_definition'
- *
- * and function_body'__to__command' function_body' =
- *   keep_located function_body__to__command function_body'
- *
- * and fname'__to__name' fname' =
- *   keep_located fname__to__name fname'
- *
- * and brace_group'__to__command' brace_group' =
- *   keep_located brace_group__to__command brace_group'
- *
- * and do_group'__to__command' do_group' =
- *   keep_located do_group__to__command do_group'
- *
- * and simple_command'__to__command' simple_command' =
- *   keep_located simple_command__to__command simple_command'
- *
- * and cmd_name'__to__word' cmd_name' =
- *   keep_located cmd_name__to__word cmd_name'
- *
- * and cmd_word'__to__word' cmd_word' =
- *   keep_located cmd_word__to__word cmd_word'
- *
- * (\* and cmd_prefix'__to__assignments_io_redirect_list' assignments io_redirect_list cmd_prefix' =
- *  *   keep_located (cmd_prefix__to__assignments_io_redirect_list assignments io_redirect_list) cmd_prefix' *\)
- *
- * (\* and cmd_suffix'__to__words'_io_redirect_list' words' io_redirect_list cmd_suffix' : AST.word' list * io_redirect list =
- *  *   keep_located (cmd_suffix__to__words'_io_redirect_list words' io_redirect_list) cmd_suffix' *\)
- *
- * and redirect_list'__to__command' redirect_list' =
- *   keep_located redirect_list__to__command redirect_list'
- *
- * and io_redirect'__to__command' (io_redirect' : io_redirect') (command' : AST.command') : AST.command' =
- *   keep_located_1 io_redirect__to__command io_redirect' command'
- *
- * and io_file'__to__kind_word' io_file' =
- *   keep_located io_file__to__kind_word io_file'
- *
- * and io_here'__to__trim_word' io_here' =
- *   keep_located io_here__to__trim_word io_here'
- *
- * and filename'__to__word' filename' =
- *   keep_located filename__to__word filename'
- *
- * and separator_op'__to__command' (sep_op' : separator_op') (command' : AST.command') : AST.command' =
- *   keep_located_1 separator_op__to__command sep_op' command'
- *
- * and separator'__to__command' sep' command =
- *   keep_located_1 separator__to__command sep' command
- *
- * and sequential_sep'__to__command' seq_sep' command =
- *   keep_located_1 sequential_sep__to__command seq_sep' command
- *
- * and word'__to__word' word' =
- *   keep_located word__to__word word'
- *
- * and name'__to__name' name' =
- *   keep_located name__to__name name'
- *
- * and assignment_word'__to__assignment' assignment_word' =
- *   keep_located assignment_word__to__assignment assignment_word' *)
+                                        (* and complete_command'__to__command'_option complete_command' =
+                                         *   keep_located complete_command__to__command_option complete_command'
+                                         *
+                                         * and clist'__to__command' clist' =
+                                         *   keep_located clist__to__command clist'
+                                         *
+                                         * and and_or'__to__command' (and_or': and_or') : AST.command' =
+                                         *   keep_located and_or__to__command and_or'
+                                         *
+                                         * and pipeline'__to__command' pipeline' =
+                                         *   keep_located pipeline__to__command pipeline'
+                                         *
+                                         * and pipe_sequence'__to__command' pipe_sequence' =
+                                         *   keep_located pipe_sequence__to__command pipe_sequence'
+                                         *
+                                         * and command'__to__command' command' =
+                                         *   keep_located command__to__command command'
+                                         *
+                                         * and compound_command'__to__command' (compound_command' : compound_command') : AST.command' =
+                                         *   keep_located compound_command__to__command compound_command'
+                                         *
+                                         * and subshell'__to__command' subshell' =
+                                         *   keep_located subshell__to__command subshell'
+                                         *
+                                         * and compound_list'__to__command' compound_list' =
+                                         *   keep_located compound_list__to__command compound_list'
+                                         *
+                                         * and term'__to__command' term' =
+                                         *   keep_located term__to__command term'
+                                         *
+                                         * and for_clause'__to__command' for_clause' =
+                                         *   keep_located for_clause__to__command for_clause'
+                                         *
+                                         * and wordlist'__to__word_list' wordlist' =
+                                         *   keep_located wordlist__to__word_list wordlist'
+                                         *
+                                         * and case_clause'__to__command' case_clause' =
+                                         *   keep_located case_clause__to__command case_clause'
+                                         *
+                                         * and case_list_ns'__to__case_list' case_list_ns' =
+                                         *   keep_located case_list_ns__to__case_list case_list_ns'
+                                         *
+                                         * and case_list'__to__case_list' case_list' =
+                                         *   keep_located case_list__to__case_list case_list'
+                                         *
+                                         * and case_item_ns'__to__case' case_item_ns' =
+                                         *   keep_located case_item_ns__to__case case_item_ns'
+                                         *
+                                         * (\* and case_item'__to__case' (case_item' : case_item') =
+                                         *  *   keep_located case_item__to__case case_item' *\)
+                                         *
+                                         * and pattern'__to__pattern_list' pattern' =
+                                         *   keep_located pattern__to__pattern_list pattern' (\*FIXME*\)
+                                         *
+                                         * and if_clause'__to__command' if_clause' =
+                                         *   keep_located if_clause__to__command if_clause'
+                                         *
+                                         * and else_part'__to__command' else_part' =
+                                         *   keep_located else_part__to__command else_part'
+                                         *
+                                         * and while_clause'__to__command' while_clause' =
+                                         *   keep_located while_clause__to__command while_clause'
+                                         *
+                                         * and until_clause'__to__command' until_clause' =
+                                         *   keep_located until_clause__to__command until_clause'
+                                         *
+                                         * and function_definition'__to__command' function_definition' =
+                                         *   keep_located function_definition__to__command function_definition'
+                                         *
+                                         * and function_body'__to__command' function_body' =
+                                         *   keep_located function_body__to__command function_body'
+                                         *
+                                         * and fname'__to__name' fname' =
+                                         *   keep_located fname__to__name fname'
+                                         *
+                                         * and brace_group'__to__command' brace_group' =
+                                         *   keep_located brace_group__to__command brace_group'
+                                         *
+                                         * and do_group'__to__command' do_group' =
+                                         *   keep_located do_group__to__command do_group'
+                                         *
+                                         * and simple_command'__to__command' simple_command' =
+                                         *   keep_located simple_command__to__command simple_command'
+                                         *
+                                         * and cmd_name'__to__word' cmd_name' =
+                                         *   keep_located cmd_name__to__word cmd_name'
+                                         *
+                                         * and cmd_word'__to__word' cmd_word' =
+                                         *   keep_located cmd_word__to__word cmd_word'
+                                         *
+                                         * (\* and cmd_prefix'__to__assignments_io_redirect_list' assignments io_redirect_list cmd_prefix' =
+                                         *  *   keep_located (cmd_prefix__to__assignments_io_redirect_list assignments io_redirect_list) cmd_prefix' *\)
+                                         *
+                                         * (\* and cmd_suffix'__to__words'_io_redirect_list' words' io_redirect_list cmd_suffix' : AST.word' list * io_redirect list =
+                                         *  *   keep_located (cmd_suffix__to__words'_io_redirect_list words' io_redirect_list) cmd_suffix' *\)
+                                         *
+                                         * and redirect_list'__to__command' redirect_list' =
+                                         *   keep_located redirect_list__to__command redirect_list'
+                                         *
+                                         * and io_redirect'__to__command' (io_redirect' : io_redirect') (command' : AST.command') : AST.command' =
+                                         *   keep_located_1 io_redirect__to__command io_redirect' command'
+                                         *
+                                         * and io_file'__to__kind_word' io_file' =
+                                         *   keep_located io_file__to__kind_word io_file'
+                                         *
+                                         * and io_here'__to__trim_word' io_here' =
+                                         *   keep_located io_here__to__trim_word io_here'
+                                         *
+                                         * and filename'__to__word' filename' =
+                                         *   keep_located filename__to__word filename'
+                                         *
+                                         * and separator_op'__to__command' (sep_op' : separator_op') (command' : AST.command') : AST.command' =
+                                         *   keep_located_1 separator_op__to__command sep_op' command'
+                                         *
+                                         * and separator'__to__command' sep' command =
+                                         *   keep_located_1 separator__to__command sep' command
+                                         *
+                                         * and sequential_sep'__to__command' seq_sep' command =
+                                         *   keep_located_1 sequential_sep__to__command seq_sep' command
+                                         *
+                                         * and word'__to__word' word' =
+                                         *   keep_located word__to__word word'
+                                         *
+                                         * and name'__to__name' name' =
+                                         *   keep_located name__to__name name'
+                                         *
+                                         * and assignment_word'__to__assignment' assignment_word' =
+                                         *   keep_located assignment_word__to__assignment assignment_word' *)
 
 
-(* Located -> Non-located versions.
+                                        (* Located -> Non-located versions.
 
    Sadly, we have to eta-expand everything in here, because OCaml does
    not like values on the right-hand side of a [let rec]. Otherwise,
    one could write [let rec a = a]. *)
 
 
-(* and complete_command'__to__command_option complete_command' =
- *   erase_located complete_command__to__command_option complete_command'
- *
- * and clist'__to__command clist' =
- *   erase_located clist__to__command clist'
- *
- * and and_or'__to__command and_or' =
- *   erase_located and_or__to__command and_or'
- *
- * and pipeline'__to__command pipeline' =
- *   erase_located pipeline__to__command pipeline'
- *
- * and pipe_sequence'__to__command pipe_sequence' =
- *   erase_located pipe_sequence__to__command pipe_sequence'
- *
- * and command'__to__command command' =
- *   erase_located command__to__command command'
- *
- * and compound_command'__to__command compound_command' =
- *   erase_located compound_command__to__command compound_command'
- *
- * and subshell'__to__command subshell' =
- *   erase_located subshell__to__command subshell'
- *
- * and compound_list'__to__command (compound_list' : compound_list') : AST.command =
- *   erase_located compound_list__to__command compound_list'
- *
- * and term'__to__command term' =
- *   erase_located term__to__command term'
- *
- * and for_clause'__to__command for_clause' =
- *   erase_located for_clause__to__command for_clause'
- *
- * and wordlist'__to__word_list wordlist' =
- *   erase_located wordlist__to__word_list wordlist'
- *
- * and case_clause'__to__command case_clause' =
- *   erase_located case_clause__to__command case_clause'
- *
- * and case_list_ns'__to__case_list case_list_ns' =
- *   erase_located case_list_ns__to__case_list case_list_ns'
- *
- * and case_list'__to__case_list case_list' =
- *   erase_located case_list__to__case_list case_list'
- *
- * and case_item_ns'__to__case case_item_ns' =
- *   erase_located case_item_ns__to__case case_item_ns'
- *
- * and case_item'__to__case (case_item' : case_item') : AST.pattern_list' * AST.command' option =
- *   erase_located case_item__to__case case_item'
- *
- * and pattern'__to__pattern_list pattern' =
- *   erase_located pattern__to__pattern_list pattern'
- *
- * and if_clause'__to__command if_clause' =
- *   erase_located if_clause__to__command if_clause'
- *
- * and else_part'__to__command else_part' =
- *   erase_located else_part__to__command else_part'
- *
- * and while_clause'__to__command while_clause' =
- *   erase_located while_clause__to__command while_clause'
- *
- * and until_clause'__to__command until_clause' =
- *   erase_located until_clause__to__command until_clause'
- *
- * and function_definition'__to__command function_definition' =
- *   erase_located function_definition__to__command function_definition'
- *
- * and function_body'__to__command function_body' =
- *   erase_located function_body__to__command function_body'
- *
- * and fname'__to__name fname' =
- *   erase_located fname__to__name fname'
- *
- * and brace_group'__to__command brace_group' =
- *   erase_located brace_group__to__command brace_group'
- *
- * and do_group'__to__command do_group' =
- *   erase_located do_group__to__command do_group'
- *
- * and simple_command'__to__command simple_command' =
- *   erase_located simple_command__to__command simple_command'
- *
- * and cmd_name'__to__word cmd_name' =
- *   erase_located cmd_name__to__word cmd_name'
- *
- * and cmd_word'__to__word cmd_word' =
- *   erase_located cmd_word__to__word cmd_word'
- *
- * and cmd_prefix'__to__assignments'_io_redirect_list (assignments' : AST.assignment' list) (io_redirect_list : io_redirect list) (cmd_prefix' : cmd_prefix') : (AST.assignment' list * io_redirect list) =
- *   erase_located (cmd_prefix__to__assignments'_io_redirect_list assignments' io_redirect_list) cmd_prefix'
- *
- * and cmd_suffix'__to__words'_io_redirect_list (words' : AST.word' list) (io_redirect_list : io_redirect list) (cmd_suffix' : cmd_suffix') : (AST.word' list * io_redirect list) =
- *   erase_located (cmd_suffix__to__words'_io_redirect_list words' io_redirect_list) cmd_suffix'
- *
- * and redirect_list'__to__command redirect_list' command =
- *   erase_located redirect_list__to__command redirect_list' command
- *
- * and io_redirect'__to__command (io_redirect' : io_redirect') (command' : AST.command') : AST.command =
- *   erase_located io_redirect__to__command io_redirect' command'
- *
- * and io_file'__to__kind_word io_file' =
- *   erase_located io_file__to__kind_word io_file'
- *
- * and io_here'__to__trim_word io_here' =
- *   erase_located io_here__to__trim_word io_here'
- *
- * and filename'__to__word filename' =
- *   erase_located filename__to__word filename'
- *
- * and separator_op'__to__command sep_op' command =
- *   erase_located separator_op__to__command sep_op' command
- *
- * and separator'__to__command sep' command =
- *   erase_located separator__to__command sep' command
- *
- * and sequential_sep'__to__command seq_sep' command =
- *   erase_located sequential_sep__to__command seq_sep' command
- *
- * and word'__to__word word' =
- *   erase_located word__to__word word'
- *
- * and name'__to__name name' =
- *   erase_located name__to__name name'
- *
- * and assignment_word'__to__assignment assignment_word' =
- *   erase_located assignment_word__to__assignment assignment_word' *)
+                                        (* and complete_command'__to__command_option complete_command' =
+                                         *   erase_located complete_command__to__command_option complete_command'
+                                         *
+                                         * and clist'__to__command clist' =
+                                         *   erase_located clist__to__command clist'
+                                         *
+                                         * and and_or'__to__command and_or' =
+                                         *   erase_located and_or__to__command and_or'
+                                         *
+                                         * and pipeline'__to__command pipeline' =
+                                         *   erase_located pipeline__to__command pipeline'
+                                         *
+                                         * and pipe_sequence'__to__command pipe_sequence' =
+                                         *   erase_located pipe_sequence__to__command pipe_sequence'
+                                         *
+                                         * and command'__to__command command' =
+                                         *   erase_located command__to__command command'
+                                         *
+                                         * and compound_command'__to__command compound_command' =
+                                         *   erase_located compound_command__to__command compound_command'
+                                         *
+                                         * and subshell'__to__command subshell' =
+                                         *   erase_located subshell__to__command subshell'
+                                         *
+                                         * and compound_list'__to__command (compound_list' : compound_list') : AST.command =
+                                         *   erase_located compound_list__to__command compound_list'
+                                         *
+                                         * and term'__to__command term' =
+                                         *   erase_located term__to__command term'
+                                         *
+                                         * and for_clause'__to__command for_clause' =
+                                         *   erase_located for_clause__to__command for_clause'
+                                         *
+                                         * and wordlist'__to__word_list wordlist' =
+                                         *   erase_located wordlist__to__word_list wordlist'
+                                         *
+                                         * and case_clause'__to__command case_clause' =
+                                         *   erase_located case_clause__to__command case_clause'
+                                         *
+                                         * and case_list_ns'__to__case_list case_list_ns' =
+                                         *   erase_located case_list_ns__to__case_list case_list_ns'
+                                         *
+                                         * and case_list'__to__case_list case_list' =
+                                         *   erase_located case_list__to__case_list case_list'
+                                         *
+                                         * and case_item_ns'__to__case case_item_ns' =
+                                         *   erase_located case_item_ns__to__case case_item_ns'
+                                         *
+                                         * and case_item'__to__case (case_item' : case_item') : AST.pattern_list' * AST.command' option =
+                                         *   erase_located case_item__to__case case_item'
+                                         *
+                                         * and pattern'__to__pattern_list pattern' =
+                                         *   erase_located pattern__to__pattern_list pattern'
+                                         *
+                                         * and if_clause'__to__command if_clause' =
+                                         *   erase_located if_clause__to__command if_clause'
+                                         *
+                                         * and else_part'__to__command else_part' =
+                                         *   erase_located else_part__to__command else_part'
+                                         *
+                                         * and while_clause'__to__command while_clause' =
+                                         *   erase_located while_clause__to__command while_clause'
+                                         *
+                                         * and until_clause'__to__command until_clause' =
+                                         *   erase_located until_clause__to__command until_clause'
+                                         *
+                                         * and function_definition'__to__command function_definition' =
+                                         *   erase_located function_definition__to__command function_definition'
+                                         *
+                                         * and function_body'__to__command function_body' =
+                                         *   erase_located function_body__to__command function_body'
+                                         *
+                                         * and fname'__to__name fname' =
+                                         *   erase_located fname__to__name fname'
+                                         *
+                                         * and brace_group'__to__command brace_group' =
+                                         *   erase_located brace_group__to__command brace_group'
+                                         *
+                                         * and do_group'__to__command do_group' =
+                                         *   erase_located do_group__to__command do_group'
+                                         *
+                                         * and simple_command'__to__command simple_command' =
+                                         *   erase_located simple_command__to__command simple_command'
+                                         *
+                                         * and cmd_name'__to__word cmd_name' =
+                                         *   erase_located cmd_name__to__word cmd_name'
+                                         *
+                                         * and cmd_word'__to__word cmd_word' =
+                                         *   erase_located cmd_word__to__word cmd_word'
+                                         *
+                                         * and cmd_prefix'__to__assignments'_io_redirect_list (assignments' : AST.assignment' list) (io_redirect_list : io_redirect list) (cmd_prefix' : cmd_prefix') : (AST.assignment' list * io_redirect list) =
+                                         *   erase_located (cmd_prefix__to__assignments'_io_redirect_list assignments' io_redirect_list) cmd_prefix'
+                                         *
+                                         * and cmd_suffix'__to__words'_io_redirect_list (words' : AST.word' list) (io_redirect_list : io_redirect list) (cmd_suffix' : cmd_suffix') : (AST.word' list * io_redirect list) =
+                                         *   erase_located (cmd_suffix__to__words'_io_redirect_list words' io_redirect_list) cmd_suffix'
+                                         *
+                                         * and redirect_list'__to__command redirect_list' command =
+                                         *   erase_located redirect_list__to__command redirect_list' command
+                                         *
+                                         * and io_redirect'__to__command (io_redirect' : io_redirect') (command' : AST.command') : AST.command =
+                                         *   erase_located io_redirect__to__command io_redirect' command'
+                                         *
+                                         * and io_file'__to__kind_word io_file' =
+                                         *   erase_located io_file__to__kind_word io_file'
+                                         *
+                                         * and io_here'__to__trim_word io_here' =
+                                         *   erase_located io_here__to__trim_word io_here'
+                                         *
+                                         * and filename'__to__word filename' =
+                                         *   erase_located filename__to__word filename'
+                                         *
+                                         * and separator_op'__to__command sep_op' command =
+                                         *   erase_located separator_op__to__command sep_op' command
+                                         *
+                                         * and separator'__to__command sep' command =
+                                         *   erase_located separator__to__command sep' command
+                                         *
+                                         * and sequential_sep'__to__command seq_sep' command =
+                                         *   erase_located sequential_sep__to__command seq_sep' command
+                                         *
+                                         * and word'__to__word word' =
+                                         *   erase_located word__to__word word'
+                                         *
+                                         * and name'__to__name name' =
+                                         *   erase_located name__to__name name'
+                                         *
+                                         * and assignment_word'__to__assignment assignment_word' =
+                                         *   erase_located assignment_word__to__assignment assignment_word' *)

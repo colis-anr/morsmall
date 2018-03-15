@@ -49,7 +49,7 @@ type pattern = word list
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
 type assignment =
-  { name : name ;
+  { variable : name ;
     word : word }
 type assignment' = assignment located
 
@@ -227,17 +227,19 @@ and for_clause =
     body : command' }
 
 and case_clause =
-  { word : word' ;
-    items : case_item list }
+  { word : word ;
+    items : case_item' list }
 
 and case_item =
-  { patterns : pattern' ;
+  { pattern : pattern' ;
     body : command' option }
 
+and case_item' = case_item located
+  
 and if_clause =
   { test : command' ;
     body : command' ;
-    other : command' option }
+    rest : command' option }
 
 and while_clause =
   { test : command' ;
