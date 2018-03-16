@@ -24,23 +24,17 @@ open Libmorbig.CST
 
 (* Helpers about locations. *)
 
-let libmorbig_lexing_position__to__lexing_position llp =
-  { Lexing.pos_fname = llp.pos_fname ;
-    Lexing.pos_lnum = llp.pos_lnum ;
-    Lexing.pos_bol = llp.pos_bol ;
-    Lexing.pos_cnum = llp.pos_cnum }
-
 let convert_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b AST.located =
   fun f x ->
   { AST.value = f x.value ;
-    AST.pos_start = libmorbig_lexing_position__to__lexing_position x.position.start_p ;
-    AST.pos_end = libmorbig_lexing_position__to__lexing_position x.position.end_p }
+    AST.pos_start = x.position.start_p ;
+    AST.pos_end = x.position.end_p }
 
 let convert_location_2 : 'a 'b 'c. ('a -> 'b -> 'c) -> 'a located -> 'b -> 'c AST.located =
   fun f x y ->
   { AST.value = f x.value y ;
-    AST.pos_start = libmorbig_lexing_position__to__lexing_position x.position.start_p ;
-    AST.pos_end = libmorbig_lexing_position__to__lexing_position x.position.end_p }
+    AST.pos_start = x.position.start_p ;
+    AST.pos_end = x.position.end_p }
 
 let erase_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b =
   fun f x -> f x.value
@@ -499,8 +493,8 @@ and simple_command'__to__command (simple_command' : simple_command') : AST.comma
       io_redirect'__to__command
         io_redirect'
         { AST.value = command ;
-          AST.pos_start = libmorbig_lexing_position__to__lexing_position simple_command'.position.start_p ;
-          AST.pos_end = libmorbig_lexing_position__to__lexing_position simple_command'.position.end_p }
+          AST.pos_start = simple_command'.position.start_p ;
+          AST.pos_end = simple_command'.position.end_p }
     )
     AST.(Simple {
       assignments = assignment'_list ;
