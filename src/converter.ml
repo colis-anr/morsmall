@@ -627,7 +627,7 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
      AST.Redirection (
          command',
          AST.{
-             descr = Some (io_number__to__descr io_number) ;
+             descr = Some (io_number__to__int io_number) ;
              kind = kind ;
              file = word
          }
@@ -647,7 +647,7 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
      AST.HereDocument (
          command',
          AST.{
-             descr = Some (io_number__to__descr io_number) ;
+             descr = Some (io_number__to__int io_number) ;
              strip = strip ;
              content = word'
          }
@@ -771,5 +771,5 @@ and assignment_word'__to__assignment' (assignment_word' : assignment_word') : AS
 
 (* CST.io_number -> AST.descr *)
 
-and io_number__to__descr : io_number -> AST.descr  = function
+and io_number__to__int  = function
   | IONumber io_number -> int_of_string io_number

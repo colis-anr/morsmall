@@ -33,18 +33,16 @@ type 'a located =
 
 type word = string
 type word' = word located
-(* type word_list' = word list located *)
 
 (** Names in Shell are just strings with a few additional
    conditions. *)
 
 type name = string
-(* type name' = name located *)
 
 (** For now, a {!pattern} is just a {!word}. *)
 
 type pattern = word list
- type pattern' = pattern located
+type pattern' = pattern located
 
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
@@ -55,8 +53,7 @@ type assignment' = assignment located
 
 (** A file descriptor {!descr} is an integer. *)
 
-type descr = int
-(* type descr' = descr located *)
+type descr = int option
 
 (** The different kinds of redirection. *)
 
@@ -68,8 +65,21 @@ type redirection_kind =
   | Input           (*  < *)
   | InputDuplicate  (* <& *)
   | InputOutput     (* <> *)
-(* type redirection_kind' = redirection_kind located *)
 
+
+type redirection =
+  { descr : descr ;
+    kind : redirection_kind ;
+    file : word }
+
+type here_document =
+  { descr : descr ;
+    strip : bool ;
+    content : word' }
+
+type here_document' = here_document located
+
+                    
 (** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
    {{:http://pubs.opengroup.org/onlinepubs/9699919799.2016edition/}IEEE
@@ -179,7 +189,7 @@ type redirection_kind =
 
    {e See POSIX, 2 Shell & Utilities, 2.7 Redirections}
 
-*)
+ *)
 
 (** {1 Type Definitions}
 
@@ -250,15 +260,3 @@ and until_clause = while_clause
 and function_definition =
   { name : name ;
     body : command' }
-
-and redirection =
-  { descr : descr option ;
-    kind : redirection_kind ;
-    file : word }
-
-and here_document =
-  { descr : descr option ;
-    strip : bool ;
-    content : word' }
-
-and here_document' = here_document located
