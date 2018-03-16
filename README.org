@@ -24,7 +24,8 @@ There is no release yet.
 Morsmall depends on the following software:
 - [[https://ocaml.org/][OCaml]]
 - [[https://gitlab.inria.fr/regisgia/morbig/][Morbig]]
-- [[https://github.com/ocaml/dune][Dune]] (ex jbuilder)
+- [[https://github.com/ocaml-ppx/ppx_deriving][ppx_deriving]] ≥ 4.2.0
+- [[https://github.com/ocaml/dune][Dune]] (ex jbuilder) with ocaml-migrate-parsetree
 - [[http://opam.ocaml.org/][OPAM]]
 ** Build
 #+BEGIN_SRC sh

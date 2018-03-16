@@ -6,5 +6,6 @@
 (library
  ((name        morsmall)
   (public_name morsmall)
+  (preprocess (pps (ppx_deriving.std)))
   (libraries (libmorbig))
   (flags (:standard -w +A-4-30-42))))
