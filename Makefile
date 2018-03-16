@@ -1,4 +1,4 @@
-.PHONY: build install uninstall doc clean
+.PHONY: build install uninstall doc clean tests
 
 EXPORTED_SOURCES=                                                              \
         src/AST.ml                                                             \
@@ -16,6 +16,10 @@ uninstall:
 doc:
 	jbuilder build @doc
 	ln -s _build/default/_doc doc
+
+tests:
+	jbuilder build tests/run.exe
+	_build/default/tests/run.exe
 
 clean:
 	jbuilder clean

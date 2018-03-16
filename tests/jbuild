@@ -1,0 +1,6 @@
+(jbuild_version 1)
+
+(executable
+ ((name run)
+  (libraries (ppx_deriving_yojson.runtime libmorbig morsmall))
+  (flags (:standard -w +A))))

@@ -54,7 +54,7 @@ let choose (a : 'a p_array) : 'a =
 type parameters =
   { depth : int }
 
-let d p = { p with depth = p.depth + 1 }
+let d p = { p with depth = p.depth - 1 }
 
 (* Generator helper functions *)
 
@@ -94,7 +94,7 @@ let g_pattern' p =
   dummy_locate g_pattern p
 
 let g_assignment p =
-  { variable = "x" ;
+  { variable = choose [|1,"x";2,"y";3,"z";4,"choucroute"|] ;
     word = g_word (d p) }
 
 let g_assignment' p =
@@ -152,14 +152,18 @@ and g_command' p =
   dummy_locate g_command p
 
 and g_simple_command p =
-  Simple {
-      assignments =
-        g_list ~prob:0.5 ~limit:5
-          (fun () -> g_assignment' (d p)) ;
-      words =
-        g_list ~prob:0.7 ~limit:10
-          (fun () -> g_word' (d p))
-    }
+  let assignments =
+    g_list ~prob:0.5 ~limit:5
+      (fun () -> g_assignment' (d p))
+  in
+  let words =
+    g_list ~prob:0.7 ~limit:10
+      (fun () -> g_word' (d p))
+  in
+  if assignments = [] && words = [] then
+    g_simple_command p
+  else
+    Simple { assignments ; words }
 
 and g_for_clause p =
   For {
