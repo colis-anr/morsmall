@@ -42,7 +42,7 @@ let () =
       (* Compare *)
       match asts with
       | [Some ast'] ->
-         if ast = ast' then
+         if Morsmall.AST.equal_command ast ast' then
            Format.printf "The two ASTs match!@."
          else
            (

@@ -28,6 +28,8 @@ type lexing_position = Lexing.position =
     pos_bol : int ;
     pos_cnum : int }                                           [@@deriving show]
 
+let equal_lexing_position _ _  = true
+
 (* FIXME: would be better with ppx_import. However, it conflicts with
    Dune. Eventually, they will fix it, and we will be able to make
    this type definition cleaner. See
@@ -36,33 +38,33 @@ type lexing_position = Lexing.position =
 type 'a located =
   { value : 'a ;
     pos_start : lexing_position ;
-    pos_end : lexing_position }                                [@@deriving show]
+    pos_end : lexing_position }                            [@@deriving eq, show]
 
 (** The type {!word} is a (for now quite concrete, but soon abstract)
    description of words in Shell. {e See POSIX, 2 Shell & Utilities,
    2.3 Token Recognition} *)
 
-type word = string                                             [@@deriving show]
-type word' = word located                                      [@@deriving show]
+type word = string                                         [@@deriving eq, show]
+type word' = word located                                  [@@deriving eq, show]
 
 (** Names in Shell are just strings with a few additional
    conditions. *)
 
-type name = string                                             [@@deriving show]
+type name = string                                         [@@deriving eq, show]
 
 (** For now, a {!pattern} is just a {!word}. *)
 
-type pattern = word list                                       [@@deriving show]
-type pattern' = pattern located                                [@@deriving show]
+type pattern = word list                                   [@@deriving eq, show]
+type pattern' = pattern located                            [@@deriving eq, show]
 
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
-type assignment = { variable : name ; word : word }            [@@deriving show]
-type assignment' = assignment located                          [@@deriving show]
+type assignment = { variable : name ; word : word }        [@@deriving eq, show]
+type assignment' = assignment located                      [@@deriving eq, show]
 
 (** A file descriptor {!descr} is an integer. *)
 
-type descr = int option                                        [@@deriving show]
+type descr = int option                                    [@@deriving eq, show]
 
 (** The different kinds of redirection. *)
 
@@ -73,19 +75,19 @@ type redirection_kind =
   | OutputClobber   (* >| *)
   | Input           (*  < *)
   | InputDuplicate  (* <& *)
-  | InputOutput     (* <> *)                                   [@@deriving show]
+  | InputOutput     (* <> *)                               [@@deriving eq, show]
 
 type redirection =
   { descr : descr ;
     kind : redirection_kind ;
-    file : word }                                              [@@deriving show]
+    file : word }                                          [@@deriving eq, show]
 
 type here_document =
   { descr : descr ;
     strip : bool ;
-    content : word' }                                          [@@deriving show]
+    content : word' }                                      [@@deriving eq, show]
 
-type here_document' = here_document located                    [@@deriving show]
+type here_document' = here_document located                [@@deriving eq, show]
 
 (** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
@@ -230,7 +232,7 @@ type command =
 
   (* Redirection *)
   | Redirection of command' * redirection
-  | HereDocument of command' * here_document                   [@@deriving show]
+  | HereDocument of command' * here_document               [@@deriving eq, show]
 
 and command' = command located
 
