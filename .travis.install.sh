@@ -29,7 +29,7 @@ fold_end prep_opam
 
 ## OPAM dependencies
 fold_start opam_deps 'Install OPAM dependencies...'
-opam install -y jbuilder ocaml-migrate-parsetree ppx_deriving
+opam install -y jbuilder opam-installer ocaml-migrate-parsetree ppx_deriving
 opam install -y ocamlbuild menhir yojson ppx_deriving_yojson visitors
 fold_end opam_deps
 

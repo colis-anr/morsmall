@@ -14,9 +14,11 @@ make
 fold_end make
 
 ## Make install
-fold_start install 'Run `make install`...'
-make install
-fold_end install
+if [ -z "$RUN_TESTS" ]; then
+    fold_start install 'Run `make install`...'
+    make install
+    fold_end install
+fi
 
 ## Run tests
 if [ -n "$RUN_TESTS" ]; then
