@@ -52,7 +52,12 @@ let choose (a : 'a p_array) : 'a =
 (* Parameters *)
 
 type parameters =
-  { depth : int }
+  { depth : int ;
+    descr_option_prob : float }
+
+let default_parameters =
+  { depth = 10 ;
+    descr_option_prob = 0.5 }
 
 let d p = { p with depth = p.depth - 1 }
 
@@ -100,9 +105,9 @@ let g_assignment p =
 let g_assignment' p =
   dummy_locate g_assignment p
 
-let g_descr _p =
+let g_descr p =
   g_option
-    ~prob:0.5
+    ~prob:p.descr_option_prob
     (fun () -> Random.int 10)
 
 let g_redirection_kind _p =

@@ -21,6 +21,9 @@
 (******************************************************************************)
 
 type parameters =
-  { depth : int }
+  { depth : int ;
+    descr_option_prob : float }
+
+val default_parameters : parameters
 
 val g_command : parameters -> AST.command

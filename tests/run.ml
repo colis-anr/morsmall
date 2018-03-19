@@ -2,13 +2,19 @@
 exception MorbigCouldntParse of Morsmall.AST.command * string
 exception ASTsDontMatch of Morsmall.AST.command * Morsmall.AST.command
 
+let generator_parameters = Morsmall__Generator.default_parameters
+
+let number_of_tests = 1000
+
+(* *)
+
 let run_one_test test_number =
   (* Create a temporary file *)
   let (filename, out_channel) = Filename.open_temp_file "morsmall_test_" ".sh" in
   let formatter = Format.formatter_of_out_channel out_channel in
 
   (* Create a random script, put it in the file *)
-  let ast = Morsmall__Generator.(g_command { depth = 10 }) in
+  let ast = Morsmall__Generator.(g_command generator_parameters) in
   Morsmall.pp_print_safe formatter ast;
 
   (* Close the file *)
@@ -42,11 +48,9 @@ let run_one_test test_number =
      Sys.remove filename;
      raise exn
 
-let number_of_tests = 10
-
 let () =
   let errors = ref 0 in
-  
+
   for i = 1 to number_of_tests do
     Format.printf "Running test #%d...\r@?" i;
     try
