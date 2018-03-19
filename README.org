@@ -22,7 +22,7 @@ git clone https://github.com/niols/morsmall
 There is no release yet.
 ** Install dependencies
 Morsmall depends on the following software:
-- [[https://ocaml.org/][OCaml]]
+- [[https://ocaml.org/][OCaml]] ≥ 4.04.0
 - [[https://gitlab.inria.fr/regisgia/morbig/][Morbig]]
 - [[https://github.com/ocaml-ppx/ppx_deriving][ppx_deriving]] ≥ 4.2.0
 - [[https://github.com/ocaml/dune][Dune]] (ex jbuilder) with ocaml-migrate-parsetree
