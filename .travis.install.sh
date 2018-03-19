@@ -15,7 +15,7 @@ mkdir -p ~/.local/bin
 wget https://raw.github.com/ocaml/opam/master/shell/opam_installer.sh -O - \
     | sh -s ~/.local/bin system
 export PATH=~/.local/bin:$PATH
-fold_end   install_opam
+fold_end install_opam
 
 ## Prepare OPAM
 fold_start prep_opam 'Prepare OPAM...'
@@ -28,7 +28,7 @@ eval $(opam config env)
 fold_end prep_opam
 
 ## OPAM dependencies
-fold_start opam_deps
+fold_start opam_deps 'Install OPAM dependencies...'
 opam install -y jbuilder ocaml-migrate-parsetree ppx_deriving
 opam install -y ocamlbuild menhir yojson ppx_deriving_yojson visitors
 fold_end opam_deps
