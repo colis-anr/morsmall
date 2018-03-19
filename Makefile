@@ -24,3 +24,4 @@ tests:
 clean:
 	jbuilder clean
 	rm -f doc
+	rm -f morsmall_test_report_*.md

@@ -214,11 +214,16 @@ and term'__to__command' (term' : term') : AST.command' =
 
 and for_clause__to__command : for_clause -> AST.command = function
   | ForClause_For_Name_DoGroup (name', do_group')
-  | ForClause_For_Name_SequentialSep_DoGroup (name', _, do_group')
-  | ForClause_For_Name_LineBreak_In_SequentialSep_DoGroup (name', _, _, do_group') ->
+  | ForClause_For_Name_SequentialSep_DoGroup (name', _, do_group') ->
      AST.(For {
               variable = name'__to__name name' ;
               words = None ;
+              body = do_group'__to__command' do_group'
+     })
+  | ForClause_For_Name_LineBreak_In_SequentialSep_DoGroup (name', _, _, do_group') ->
+     AST.(For {
+              variable = name'__to__name name' ;
+              words = Some [] ;
               body = do_group'__to__command' do_group'
      })
   | ForClause_For_Name_LineBreak_In_WordList_SequentialSep_DoGroup (name', _, wordlist', _, do_group') ->

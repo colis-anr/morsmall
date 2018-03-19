@@ -49,6 +49,9 @@ let pp_located pp_a fmt loc =
     (* The derived pp_located *)
     pp_located pp_a fmt loc
 
+let update_located_value loc upd =
+  { loc with value = upd loc.value }
+
 (** The type {!word} is a (for now quite concrete, but soon abstract)
    description of words in Shell. {e See POSIX, 2 Shell & Utilities,
    2.3 Token Recognition} *)

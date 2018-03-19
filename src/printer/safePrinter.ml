@@ -182,8 +182,10 @@ let rec pp_command ppf (command : command) =
          pp_word file
 
     | HereDocument (command, { descr ; strip ; content }) ->
+       if content.value.[String.length content.value - 1] <> '\n' then
+         failwith "SafePrinter.pp_command': ill-formed here-document: the content must end with a newline";
        let eof = "EOF" in (*FIXME*)
-       fpf ppf "%a%s%s%s\n%a\n%s\n"
+       fpf ppf "%a%s%s%s\n%a%s\n"
          pp_command' command
          (match descr with None -> "" | Some channel -> string_of_int channel)
          (if strip then "<<-" else "<<")

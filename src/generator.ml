@@ -123,7 +123,7 @@ let g_redirection p =
 let g_here_document p =
   { descr = g_descr (d p) ;
     strip = g_bool ~prob:0.5 ;
-    content = g_word' (d p) }
+    content = update_located_value (g_word' (d p)) (fun v -> v ^ "\n") }
 
 let rec g_command p =
   if p.depth <= 0 then
