@@ -1,5 +1,5 @@
 #+TITLE: Morsmall -- A concise AST for POSIX shell
-#+STARTUP: indent
+#+STARTUP: indent inlineimages
 
 This library is a small wrapper around [[https://gitlab.inria.fr/regisgia/morbig/][morbig]].  Morbig provides a
 parser and a CST representation of POSIX shell scripts which may
@@ -16,9 +16,9 @@ License, version 3. Please refer to the file [[file:LICENSE][LICENSE]].
 ** Download
 *** Clone the repository
 #+BEGIN_SRC sh
-git clone https://github.com/niols/morsmall
+git clone https://github.com/colis-anr/morsmall
 #+END_SRC
-*** Download the last release
+*** Download the latest release
 There is no release yet.
 ** Install dependencies
 Morsmall depends on the following software:
@@ -30,6 +30,10 @@ Morsmall depends on the following software:
 ** Build
 #+BEGIN_SRC sh
 make
+#+END_SRC
+** Run tests
+#+BEGIN_SRC sh
+make tests
 #+END_SRC
 ** Install
 #+BEGIN_SRC sh
