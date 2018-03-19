@@ -37,8 +37,17 @@ let equal_lexing_position _ _  = true
 
 type 'a located =
   { value : 'a ;
-    pos_start : lexing_position ;
-    pos_end : lexing_position }                            [@@deriving eq, show]
+    pos_start : lexing_position;
+    pos_end   : lexing_position }                          [@@deriving eq, show]
+
+let skip_located_when_printing = ref true
+
+let pp_located pp_a fmt loc =
+  if !skip_located_when_printing then
+    pp_a fmt loc.value
+  else
+    (* The derived pp_located *)
+    pp_located pp_a fmt loc
 
 (** The type {!word} is a (for now quite concrete, but soon abstract)
    description of words in Shell. {e See POSIX, 2 Shell & Utilities,
@@ -232,7 +241,8 @@ type command =
 
   (* Redirection *)
   | Redirection of command' * redirection
-  | HereDocument of command' * here_document               [@@deriving eq, show]
+  | HereDocument of command' * here_document
+[@@deriving eq, show{with_path=false}]
 
 and command' = command located
 
