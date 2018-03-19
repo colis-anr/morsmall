@@ -148,7 +148,7 @@ let rec pp_command ppf (command : command) =
            | { pattern ; body = Some body' } ->
               fpf ppf " %a) %a;;" pp_pattern' pattern pp_command' body')
          items;
-       fpf ppf "esac"
+       fpf ppf " esac"
 
     | While { test ; body } ->
        fpf ppf "while %a;do %a;done"
@@ -175,9 +175,13 @@ let rec pp_command ppf (command : command) =
          pp_words' words
 
     | Redirection (command, { descr ; kind ; file }) ->
-       fpf ppf "%a%s%a%a" (*WARNING: no space required only because we print a '}' at the end of each command*)
+       fpf ppf "%a%s%a%a"
          pp_command' command
-         (match descr with None -> "" | Some channel -> string_of_int channel)
+         (match descr with
+          | None -> ""
+          | Some channel -> " " ^ string_of_int channel
+         (* The space is required because "the [descriptor] must be delimited from any preceding text". *)
+         )
          pp_redirection_kind kind
          pp_word file
 
@@ -187,7 +191,9 @@ let rec pp_command ppf (command : command) =
        let eof = "EOF" in (*FIXME*)
        fpf ppf "%a%s%s%s\n%a%s\n"
          pp_command' command
-         (match descr with None -> "" | Some channel -> string_of_int channel)
+         (match descr with
+          | None -> ""
+          | Some channel -> " " ^ string_of_int channel)
          (if strip then "<<-" else "<<")
          eof
          pp_word' content

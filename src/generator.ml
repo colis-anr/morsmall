@@ -88,7 +88,7 @@ let g_name _p =
   "blah" (*FIXME*)
 
 let g_pattern p =
-  g_list ~prob:0.8 ~limit:4 (fun () -> g_word (d p))
+  g_word (d p) :: g_list ~prob:0.8 ~limit:4 (fun () -> g_word (d p))
 
 let g_pattern' p =
   dummy_locate g_pattern p
