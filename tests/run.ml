@@ -2,9 +2,9 @@
 exception MorbigCouldntParse of Morsmall.AST.command * string
 exception ASTsDontMatch of Morsmall.AST.command * Morsmall.AST.command
 
-let generator_parameters = Morsmall__Generator.default_parameters
+let generator_parameters = Generator.default_parameters
 
-let number_of_tests = 1000
+let number_of_tests = 100
 
 (* *)
 
@@ -14,7 +14,7 @@ let run_one_test test_number =
   let formatter = Format.formatter_of_out_channel out_channel in
 
   (* Create a random script, put it in the file *)
-  let ast = Morsmall__Generator.(g_command generator_parameters) in
+  let ast = Generator.(g_command generator_parameters) in
   Morsmall.pp_print_safe formatter ast;
 
   (* Close the file *)
