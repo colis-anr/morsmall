@@ -52,12 +52,10 @@ let choose (a : 'a p_array) : 'a =
 (* Parameters *)
 
 type parameters =
-  { depth : int ;
-    descr_option_prob : float }
+  { depth : int }
 
 let default_parameters =
-  { depth = 10 ;
-    descr_option_prob = 0.5 }
+  { depth = 10 }
 
 let d p = { p with depth = p.depth - 1 }
 
@@ -105,10 +103,8 @@ let g_assignment p =
 let g_assignment' p =
   dummy_locate g_assignment p
 
-let g_descr p =
-  g_option
-    ~prob:p.descr_option_prob
-    (fun () -> Random.int 10)
+let g_descr _p =
+  Random.int 10
 
 let g_redirection_kind _p =
   choose
@@ -119,16 +115,6 @@ let g_redirection_kind _p =
        1, Input ;
        1, InputDuplicate ;
        1, InputOutput |]
-
-let g_redirection p =
-  { descr = g_descr (d p) ;
-    kind = g_redirection_kind (d p) ;
-    file = g_word (d p) }
-
-let g_here_document p =
-  { descr = g_descr (d p) ;
-    strip = g_bool ~prob:0.5 ;
-    content = update_located_value (g_word' (d p)) (fun v -> v ^ "\n") }
 
 let rec g_command p =
   if p.depth <= 0 then
@@ -149,8 +135,8 @@ let rec g_command p =
          1, g_while_clause ;
          1, g_until_clause ;
          1, g_function_definition ;
-         1, (fun p -> Redirection (g_command' (d p), g_redirection (d p))) ;
-         1, (fun p -> HereDocument (g_command' (d p), g_here_document (d p))) |]
+         1, g_redirection ;
+         1, g_here_document |]
       (d p)
 
 and g_command' p =
@@ -196,18 +182,36 @@ and g_case_item' p =
   dummy_locate g_case_item p
 
 and g_if_clause p =
-  If { test = g_command' (d p) ;
-       body = g_command' (d p) ;
-       rest = g_option ~prob:0.6 (fun () -> g_command' (d p)) }
+  If
+    { test = g_command' (d p) ;
+      body = g_command' (d p) ;
+      rest = g_option ~prob:0.6 (fun () -> g_command' (d p)) }
 
 and g_while_clause p =
-  While { test = g_command' (d p) ;
-          body = g_command' (d p) }
+  While
+    { test = g_command' (d p) ;
+      body = g_command' (d p) }
 
 and g_until_clause p =
-  Until { test = g_command' (d p) ;
-          body = g_command' (d p) }
+  Until
+    { test = g_command' (d p) ;
+      body = g_command' (d p) }
 
 and g_function_definition p =
-  Function { name = g_name (d p) ;
-             body = g_command' (d p) }
+  Function
+    { name = g_name (d p) ;
+      body = g_command' (d p) }
+
+and g_redirection p =
+  Redirection
+    { command = g_command' (d p) ;
+      descr = g_descr (d p) ;
+      kind = g_redirection_kind (d p) ;
+      file = g_word (d p) }
+
+and g_here_document p =
+  HereDocument
+    { command = g_command' (d p) ;
+      descr = g_descr (d p) ;
+      strip = g_bool ~prob:0.5 ;
+      content = update_located_value (g_word' (d p)) (fun v -> v ^ "\n") }

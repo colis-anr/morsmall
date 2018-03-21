@@ -76,30 +76,7 @@ type assignment' = assignment located                      [@@deriving eq, show]
 
 (** A file descriptor {!descr} is an integer. *)
 
-type descr = int option                                           [@@deriving eq, show]
-
-(** The different kinds of redirection. *)
-
-type redirection_kind =
-  | Output          (*  > *)
-  | OutputDuplicate (* >& *)
-  | OutputAppend    (* >> *)
-  | OutputClobber   (* >| *)
-  | Input           (*  < *)
-  | InputDuplicate  (* <& *)
-  | InputOutput     (* <> *)                               [@@deriving eq, show]
-
-type redirection =
-  { descr : descr ;
-    kind : redirection_kind ;
-    file : word }                                          [@@deriving eq, show]
-
-type here_document =
-  { descr : descr ;
-    strip : bool ;
-    content : word' }                                      [@@deriving eq, show]
-
-type here_document' = here_document located                [@@deriving eq, show]
+type descr = int                                           [@@deriving eq, show]
 
 (** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
@@ -219,22 +196,32 @@ type here_document' = here_document located                [@@deriving eq, show]
 
 type command =
   (* Simple Commands *)
+
   | Simple of
       { assignments : assignment' list ;
         words : word' list }
 
   (* Lists *)
+
   | Async of command
+
   | Seq of command' * command'
+
   | And of command' * command'
+
   | Or of command' * command'
 
   (* Pipelines *)
+
   | Not of command'
+
   | Pipe of command' * command'
 
   (* Compound Command's *)
-  | Subshell of command'
+
+  | Subshell of
+      command'
+
   | For of
       { variable : name ;
         words : word list option ;
@@ -258,13 +245,25 @@ type command =
         body : command' }
 
   (* Function Definition Command' *)
+
   | Function of
       { name : name ;
         body : command' }
 
   (* Redirection *)
-  | Redirection of command' * redirection
-  | HereDocument of command' * here_document
+
+  | Redirection of
+      { command : command' ;
+        descr : descr ;
+        kind : kind ;
+        file : word }
+
+  | HereDocument of
+      { command : command' ;
+        descr : descr ;
+        strip : bool ;
+        content : word' }
+
 [@@deriving eq, show{with_path=false}]
 
 and command' = command located
@@ -274,3 +273,12 @@ and case_item =
     body : command' option }
 
 and case_item' = case_item located
+
+and kind =
+  | Output          (*  > *)
+  | OutputDuplicate (* >& *)
+  | OutputAppend    (* >> *)
+  | OutputClobber   (* >| *)
+  | Input           (*  < *)
+  | InputDuplicate  (* <& *)
+  | InputOutput     (* <> *)

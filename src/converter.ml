@@ -613,44 +613,36 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
   match io_redirect with
   | IoRedirect_IoFile io_file' ->
      let kind, word = io_file'__to__kind_word io_file' in
-     AST.Redirection (
-         command',
-         AST.{
-             descr = None ;
-             kind = kind ;
-             file = word
-         }
-       )
+     AST.Redirection {
+         command = command' ;
+         descr = Utils.default_redirection_descriptor kind ;
+         kind = kind ;
+         file = word
+       }
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
      let kind, word = io_file'__to__kind_word io_file' in
-     AST.Redirection (
-         command',
-         AST.{
-             descr = Some (io_number__to__int io_number) ;
-             kind = kind ;
-             file = word
-         }
-       )
+     AST.Redirection {
+         command = command' ;
+         descr = io_number__to__int io_number ;
+         kind = kind ;
+         file = word
+       }
   | IoRedirect_IoHere io_here' ->
      let strip, word' = io_here'__to__strip_word' io_here' in
-     AST.HereDocument (
-         command',
-         AST.{
-             descr = None ;
-             strip = strip ;
-             content = word'
-         }
-       )
+     AST.HereDocument {
+         command = command' ;
+         descr = 0 ;
+         strip = strip ;
+         content = word'
+       }
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
      let strip, word' = io_here'__to__strip_word' io_here' in
-     AST.HereDocument (
-         command',
-         AST.{
-             descr = Some (io_number__to__int io_number) ;
-             strip = strip ;
-             content = word'
-         }
-       )
+     AST.HereDocument {
+         command = command' ;
+         descr = io_number__to__int io_number ;
+         strip = strip ;
+         content = word'
+       }
 
 and io_redirect'__to__command (io_redirect' : io_redirect') (command' : AST.command') : AST.command =
   erase_location io_redirect__to__command io_redirect' command'
@@ -673,7 +665,7 @@ and io_file__to__kind_word io_file =
   in
   ( kind , filename'__to__word filename' )
 
-and io_file'__to__kind_word (io_file' : io_file') : AST.redirection_kind * AST.word =
+and io_file'__to__kind_word (io_file' : io_file') : AST.kind * AST.word =
   erase_location io_file__to__kind_word io_file'
 
 (* CST.filename -> AST.word *)
