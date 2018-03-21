@@ -76,7 +76,7 @@ type assignment' = assignment located                      [@@deriving eq, show]
 
 (** A file descriptor {!descr} is an integer. *)
 
-type descr = int option                                    [@@deriving eq, show]
+type descr = int option                                           [@@deriving eq, show]
 
 (** The different kinds of redirection. *)
 
@@ -219,7 +219,9 @@ type here_document' = here_document located                [@@deriving eq, show]
 
 type command =
   (* Simple Commands *)
-  | Simple of simple_command
+  | Simple of
+      { assignments : assignment' list ;
+        words : word' list }
 
   (* Lists *)
   | Async of command
@@ -233,14 +235,32 @@ type command =
 
   (* Compound Command's *)
   | Subshell of command'
-  | For of for_clause
-  | Case of case_clause
-  | If of if_clause
-  | While of while_clause
-  | Until of until_clause
+  | For of
+      { variable : name ;
+        words : word list option ;
+        body : command' }
+
+  | Case of
+      { word : word ;
+        items : case_item' list }
+
+  | If of
+      { test : command' ;
+        body : command' ;
+        rest : command' option }
+
+  | While of
+      { test : command' ;
+        body : command' }
+
+  | Until of
+      { test : command' ;
+        body : command' }
 
   (* Function Definition Command' *)
-  | Function of function_definition
+  | Function of
+      { name : name ;
+        body : command' }
 
   (* Redirection *)
   | Redirection of command' * redirection
@@ -249,36 +269,8 @@ type command =
 
 and command' = command located
 
-and simple_command =
-  { assignments : assignment' list ;
-    words : word' list }
-
-and for_clause =
-  { variable : name ;
-    words : word list option ;
-    body : command' }
-
-and case_clause =
-  { word : word ;
-    items : case_item' list }
-
 and case_item =
   { pattern : pattern' ;
     body : command' option }
 
 and case_item' = case_item located
-
-and if_clause =
-  { test : command' ;
-    body : command' ;
-    rest : command' option }
-
-and while_clause =
-  { test : command' ;
-    body : command' }
-
-and until_clause = while_clause
-
-and function_definition =
-  { name : name ;
-    body : command' }
