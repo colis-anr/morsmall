@@ -1,7 +1,6 @@
 (jbuild_version 1)
 
 (copy_files ext/*)
-(copy_files printer/*)
 
 (library
  ((name        morsmall)
