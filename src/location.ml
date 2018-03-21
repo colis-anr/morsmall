@@ -19,25 +19,39 @@
 (*   along with this program.  If not, see <http://www.gnu.org/licenses/>.    *)
 (*                                                                            *)
 (******************************************************************************)
-           
-(** {2 Parsers} *)
 
-exception SyntaxError of Location.position * string
+type lexing_position = Libmorbig.CST.lexing_position =
+  { pos_fname : string ;
+    pos_lnum : int ;
+    pos_bol : int ;
+    pos_cnum : int }
 
-val parse_file : string -> AST.command list
-(** Parses a whole Shell file into a list of {!AST.command}. The list
-   can be empty. Can raise {!SyntaxError}. *)
+let dummy_lexing_position =
+  { pos_fname = "" ;
+    pos_lnum = 0 ;
+    pos_bol = 0 ;
+    pos_cnum = 0 }
 
-(** {2 Printers} *)
+type position = Libmorbig.CST.position =
+  { start_p : lexing_position ;
+    end_p : lexing_position }
 
-val pp_print_safe : Format.formatter -> AST.command -> unit
-(** Prints a Shell from its AST. *)
+let dummy_position =
+  { start_p = dummy_lexing_position ;
+    end_p = dummy_lexing_position }
 
-val pp_print_debug : Format.formatter -> AST.command -> unit
-(** Prints a representation of the AST in OCaml-style. *)
+type 'a located = 'a Libmorbig.CST.located =
+  { value : 'a ;
+    position : position }
 
-(** {2 Other modules} *)
+let dummy_located value =
+  { value ; position = dummy_position }
+  
+let equal_located eq_a v1 v2 =
+  eq_a v1.value v2.value
 
-module AST = AST
-module Location = Location
-module Utils = Utils
+let pp_located pp_a fmt loc =
+  pp_a fmt loc.value
+
+let map upd loc =
+  { loc with value = upd loc.value }

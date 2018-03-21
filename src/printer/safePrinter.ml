@@ -22,12 +22,13 @@
 
 let fpf = Format.fprintf
 open AST
+open Location
 
 let pp_word ppf = fpf ppf "%s"
 
 let pp_word' ppf word' =
   pp_word ppf word'.value
-                
+
 let rec pp_words ppf = function
   | [] -> ()
   | [word] ->
@@ -40,7 +41,7 @@ let rec pp_words ppf = function
 let pp_words' ppf words' =
   List.map (fun word' -> word'.value) words'
   |> pp_words ppf
-    
+
 let rec pp_pattern ppf = function
   | [] -> ()
   | [word] ->
@@ -52,7 +53,7 @@ let rec pp_pattern ppf = function
 
 let pp_pattern' ppf pattern' =
   pp_pattern ppf pattern'.value
-    
+
 let pp_name ppf = fpf ppf "%s"
 
 let pp_assignment ppf { variable ; word } =
@@ -72,7 +73,7 @@ let rec pp_assignments ppf = function
 let pp_assignments' ppf assignments' =
   List.map (fun assignment' -> assignment'.value) assignments'
   |> pp_assignments ppf
-    
+
 let pp_redirection_kind ppf k =
   fpf ppf "%s"
     (match k with

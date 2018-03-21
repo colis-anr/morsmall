@@ -24,17 +24,13 @@ open Libmorbig.CST
 
 (* Helpers about locations. *)
 
-let convert_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b AST.located =
-  fun f x ->
-  { AST.value = f x.value ;
-    AST.pos_start = x.position.start_p ;
-    AST.pos_end = x.position.end_p }
+let convert_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b Location.located =
+  Location.map
 
-let convert_location_2 : 'a 'b 'c. ('a -> 'b -> 'c) -> 'a located -> 'b -> 'c AST.located =
+let convert_location_2 : 'a 'b 'c. ('a -> 'b -> 'c) -> 'a located -> 'b -> 'c Location.located =
   fun f x y ->
-  { AST.value = f x.value y ;
-    AST.pos_start = x.position.start_p ;
-    AST.pos_end = x.position.end_p }
+  { value = f x.value y ;
+    position = x.position }
 
 let erase_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b =
   fun f x -> f x.value
@@ -497,9 +493,9 @@ and simple_command'__to__command (simple_command' : simple_command') : AST.comma
       fun command io_redirect' ->
       io_redirect'__to__command
         io_redirect'
-        { AST.value = command ;
-          AST.pos_start = simple_command'.position.start_p ;
-          AST.pos_end = simple_command'.position.end_p }
+        Location.{
+          value = command ;
+          position = simple_command'.position }
     )
     AST.(Simple {
       assignments = assignment'_list ;
@@ -701,9 +697,9 @@ and separator_op'__to__command (sep_op' : separator_op') (command : AST.command)
 and separator_op'__to__command' (sep_op' : separator_op') (command' : AST.command') : AST.command' =
   (* We do not want to convert the separator's location here but
      rather use the command's location! *)
-  { AST.value = separator_op__to__command sep_op'.value command'.AST.value ;
-    AST.pos_start = command'.AST.pos_start ;
-    AST.pos_end = command'.AST.pos_end }
+  Location.{
+      value = separator_op__to__command sep_op'.value command'.value ;
+      position = command'.position }
 
 (* CST.separator -> AST.command -> AST.command *)
 
@@ -720,9 +716,9 @@ and separator'__to__command (sep' : separator') (command : AST.command) : AST.co
 and separator'__to__command' (sep' : separator') (command' : AST.command') : AST.command' =
   (* We do not want to convert the separator's location here but
      rather use the command's location! *)
-  { AST.value = separator__to__command sep'.value command'.AST.value ;
-    AST.pos_start = command'.AST.pos_start ;
-    AST.pos_end = command'.AST.pos_end }
+  Location.{
+      value = separator__to__command sep'.value command'.value ;
+      position = command'.position }
 
 (* *)
 

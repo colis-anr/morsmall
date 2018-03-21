@@ -21,18 +21,18 @@
 (******************************************************************************)
 
 open Morsmall.AST
-
-let dummy_position =
-  Lexing.{
-      pos_fname = "dummy" ;
-      pos_lnum = 0 ;
-      pos_bol = 0 ;
-      pos_cnum = 0 }
+open Morsmall.Location
+   
+let dummy_lexing_position =
+  { pos_fname = "dummy" ;
+    pos_lnum = 0 ;
+    pos_bol = 0 ;
+    pos_cnum = 0 }
 
 let dummy_locate f x =
   { value = f x ;
-    pos_start = dummy_position ;
-    pos_end = dummy_position }
+    position = { start_p = dummy_lexing_position ;
+                 end_p = dummy_lexing_position } }
 
 type 'a p_array = (int * 'a) array
 
@@ -214,4 +214,4 @@ and g_here_document p =
     { command = g_command' (d p) ;
       descr = g_descr (d p) ;
       strip = g_bool ~prob:0.5 ;
-      content = update_located_value (g_word' (d p)) (fun v -> v ^ "\n") }
+      content = Morsmall.Location.map (fun v -> v ^ "\n") (g_word' (d p)) }
