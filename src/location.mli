@@ -19,25 +19,28 @@
 (*   along with this program.  If not, see <http://www.gnu.org/licenses/>.    *)
 (*                                                                            *)
 (******************************************************************************)
-           
-(** {2 Parsers} *)
 
-exception SyntaxError of Location.position * string
+type lexing_position = Libmorbig.CST.lexing_position =
+  { pos_fname : string ;
+    pos_lnum : int ;
+    pos_bol : int ;
+    pos_cnum : int }
 
-val parse_file : string -> AST.command list
-(** Parses a whole Shell file into a list of {!AST.command}. The list
-   can be empty. Can raise {!SyntaxError}. *)
+type position = Libmorbig.CST.position =
+  { start_p : lexing_position ;
+    end_p : lexing_position }
 
-(** {2 Printers} *)
+type 'a located = 'a Libmorbig.CST.located =
+  { value : 'a ;
+    position : position }
 
-val pp_print_safe : Format.formatter -> AST.command -> unit
-(** Prints a Shell from its AST. *)
+val equal_located : ('a -> 'a -> bool) -> 'a located -> 'a located -> bool
 
-val pp_print_debug : Format.formatter -> AST.command -> unit
-(** Prints a representation of the AST in OCaml-style. *)
+val pp_located : (Format.formatter -> 'a -> unit)
+                 -> Format.formatter -> 'a located -> unit
 
-(** {2 Other modules} *)
+val map : ('a -> 'b) -> 'a located -> 'b located
 
-module AST = AST
-module Location = Location
-module Utils = Utils
+val dummy_lexing_position : lexing_position
+val dummy_position : position
+val dummy_located : 'a -> 'a located

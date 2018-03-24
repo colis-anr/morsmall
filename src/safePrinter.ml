@@ -22,12 +22,13 @@
 
 let fpf = Format.fprintf
 open AST
+open Location
 
 let pp_word ppf = fpf ppf "%s"
 
 let pp_word' ppf word' =
   pp_word ppf word'.value
-                
+
 let rec pp_words ppf = function
   | [] -> ()
   | [word] ->
@@ -40,7 +41,7 @@ let rec pp_words ppf = function
 let pp_words' ppf words' =
   List.map (fun word' -> word'.value) words'
   |> pp_words ppf
-    
+
 let rec pp_pattern ppf = function
   | [] -> ()
   | [word] ->
@@ -52,7 +53,7 @@ let rec pp_pattern ppf = function
 
 let pp_pattern' ppf pattern' =
   pp_pattern ppf pattern'.value
-    
+
 let pp_name ppf = fpf ppf "%s"
 
 let pp_assignment ppf { variable ; word } =
@@ -72,7 +73,7 @@ let rec pp_assignments ppf = function
 let pp_assignments' ppf assignments' =
   List.map (fun assignment' -> assignment'.value) assignments'
   |> pp_assignments ppf
-    
+
 let pp_redirection_kind ppf k =
   fpf ppf "%s"
     (match k with
@@ -174,26 +175,21 @@ let rec pp_command ppf (command : command) =
          pp_assignments' assignments
          pp_words' words
 
-    | Redirection (command, { descr ; kind ; file }) ->
-       fpf ppf "%a%s%a%a"
+    | Redirection { command ; descr ; kind ; file } ->
+       (* The space is required because "the [descriptor] must be delimited from any preceding text". *)
+       fpf ppf "%a %d%a%a"
          pp_command' command
-         (match descr with
-          | None -> ""
-          | Some channel -> " " ^ string_of_int channel
-         (* The space is required because "the [descriptor] must be delimited from any preceding text". *)
-         )
+         descr
          pp_redirection_kind kind
          pp_word file
 
-    | HereDocument (command, { descr ; strip ; content }) ->
+    | HereDocument { command ; descr ; strip ; content } ->
        if content.value.[String.length content.value - 1] <> '\n' then
          failwith "SafePrinter.pp_command': ill-formed here-document: the content must end with a newline";
        let eof = "EOF" in (*FIXME*)
-       fpf ppf "%a%s%s%s\n%a%s\n"
+       fpf ppf "%a %d%s%s\n%a%s\n"
          pp_command' command
-         (match descr with
-          | None -> ""
-          | Some channel -> " " ^ string_of_int channel)
+         descr
          (if strip then "<<-" else "<<")
          eof
          pp_word' content

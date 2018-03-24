@@ -1,8 +1,4 @@
-.PHONY: build install uninstall doc clean tests
-
-EXPORTED_SOURCES=                                                              \
-        src/AST.ml                                                             \
-        src/API.mli
+.PHONY: build install uninstall doc tests clean
 
 build:
 	jbuilder build @install

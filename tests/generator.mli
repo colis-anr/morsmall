@@ -19,25 +19,10 @@
 (*   along with this program.  If not, see <http://www.gnu.org/licenses/>.    *)
 (*                                                                            *)
 (******************************************************************************)
-           
-(** {2 Parsers} *)
 
-exception SyntaxError of Location.position * string
+type parameters =
+  { depth : int }
 
-val parse_file : string -> AST.command list
-(** Parses a whole Shell file into a list of {!AST.command}. The list
-   can be empty. Can raise {!SyntaxError}. *)
+val default_parameters : parameters
 
-(** {2 Printers} *)
-
-val pp_print_safe : Format.formatter -> AST.command -> unit
-(** Prints a Shell from its AST. *)
-
-val pp_print_debug : Format.formatter -> AST.command -> unit
-(** Prints a representation of the AST in OCaml-style. *)
-
-(** {2 Other modules} *)
-
-module AST = AST
-module Location = Location
-module Utils = Utils
+val g_command : parameters -> Morsmall.AST.command

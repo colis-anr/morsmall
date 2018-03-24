@@ -24,17 +24,13 @@ open Libmorbig.CST
 
 (* Helpers about locations. *)
 
-let convert_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b AST.located =
-  fun f x ->
-  { AST.value = f x.value ;
-    AST.pos_start = x.position.start_p ;
-    AST.pos_end = x.position.end_p }
+let convert_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b Location.located =
+  Location.map
 
-let convert_location_2 : 'a 'b 'c. ('a -> 'b -> 'c) -> 'a located -> 'b -> 'c AST.located =
+let convert_location_2 : 'a 'b 'c. ('a -> 'b -> 'c) -> 'a located -> 'b -> 'c Location.located =
   fun f x y ->
-  { AST.value = f x.value y ;
-    AST.pos_start = x.position.start_p ;
-    AST.pos_end = x.position.end_p }
+  { value = f x.value y ;
+    position = x.position }
 
 let erase_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b =
   fun f x -> f x.value
@@ -497,9 +493,9 @@ and simple_command'__to__command (simple_command' : simple_command') : AST.comma
       fun command io_redirect' ->
       io_redirect'__to__command
         io_redirect'
-        { AST.value = command ;
-          AST.pos_start = simple_command'.position.start_p ;
-          AST.pos_end = simple_command'.position.end_p }
+        Location.{
+          value = command ;
+          position = simple_command'.position }
     )
     AST.(Simple {
       assignments = assignment'_list ;
@@ -613,44 +609,36 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
   match io_redirect with
   | IoRedirect_IoFile io_file' ->
      let kind, word = io_file'__to__kind_word io_file' in
-     AST.Redirection (
-         command',
-         AST.{
-             descr = None ;
-             kind = kind ;
-             file = word
-         }
-       )
+     AST.Redirection {
+         command = command' ;
+         descr = Utils.default_redirection_descriptor kind ;
+         kind = kind ;
+         file = word
+       }
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
      let kind, word = io_file'__to__kind_word io_file' in
-     AST.Redirection (
-         command',
-         AST.{
-             descr = Some (io_number__to__int io_number) ;
-             kind = kind ;
-             file = word
-         }
-       )
+     AST.Redirection {
+         command = command' ;
+         descr = io_number__to__int io_number ;
+         kind = kind ;
+         file = word
+       }
   | IoRedirect_IoHere io_here' ->
      let strip, word' = io_here'__to__strip_word' io_here' in
-     AST.HereDocument (
-         command',
-         AST.{
-             descr = None ;
-             strip = strip ;
-             content = word'
-         }
-       )
+     AST.HereDocument {
+         command = command' ;
+         descr = 0 ;
+         strip = strip ;
+         content = word'
+       }
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
      let strip, word' = io_here'__to__strip_word' io_here' in
-     AST.HereDocument (
-         command',
-         AST.{
-             descr = Some (io_number__to__int io_number) ;
-             strip = strip ;
-             content = word'
-         }
-       )
+     AST.HereDocument {
+         command = command' ;
+         descr = io_number__to__int io_number ;
+         strip = strip ;
+         content = word'
+       }
 
 and io_redirect'__to__command (io_redirect' : io_redirect') (command' : AST.command') : AST.command =
   erase_location io_redirect__to__command io_redirect' command'
@@ -673,7 +661,7 @@ and io_file__to__kind_word io_file =
   in
   ( kind , filename'__to__word filename' )
 
-and io_file'__to__kind_word (io_file' : io_file') : AST.redirection_kind * AST.word =
+and io_file'__to__kind_word (io_file' : io_file') : AST.kind * AST.word =
   erase_location io_file__to__kind_word io_file'
 
 (* CST.filename -> AST.word *)
@@ -709,9 +697,9 @@ and separator_op'__to__command (sep_op' : separator_op') (command : AST.command)
 and separator_op'__to__command' (sep_op' : separator_op') (command' : AST.command') : AST.command' =
   (* We do not want to convert the separator's location here but
      rather use the command's location! *)
-  { AST.value = separator_op__to__command sep_op'.value command'.AST.value ;
-    AST.pos_start = command'.AST.pos_start ;
-    AST.pos_end = command'.AST.pos_end }
+  Location.{
+      value = separator_op__to__command sep_op'.value command'.value ;
+      position = command'.position }
 
 (* CST.separator -> AST.command -> AST.command *)
 
@@ -728,9 +716,9 @@ and separator'__to__command (sep' : separator') (command : AST.command) : AST.co
 and separator'__to__command' (sep' : separator') (command' : AST.command') : AST.command' =
   (* We do not want to convert the separator's location here but
      rather use the command's location! *)
-  { AST.value = separator__to__command sep'.value command'.AST.value ;
-    AST.pos_start = command'.AST.pos_start ;
-    AST.pos_end = command'.AST.pos_end }
+  Location.{
+      value = separator__to__command sep'.value command'.value ;
+      position = command'.position }
 
 (* *)
 

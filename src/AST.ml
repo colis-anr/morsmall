@@ -20,44 +20,12 @@
 (*                                                                            *)
 (******************************************************************************)
 
-(** This module contains an AST for POSIX Shell. *)
-
-type lexing_position = Lexing.position =
-  { pos_fname : string ;
-    pos_lnum : int ;
-    pos_bol : int ;
-    pos_cnum : int }                                           [@@deriving show]
-
-let equal_lexing_position _ _  = true
-
-(* FIXME: would be better with ppx_import. However, it conflicts with
-   Dune. Eventually, they will fix it, and we will be able to make
-   this type definition cleaner. See
-   https://github.com/ocaml/dune/issues/193 *)
-
-type 'a located =
-  { value : 'a ;
-    pos_start : lexing_position;
-    pos_end   : lexing_position }                          [@@deriving eq, show]
-
-let skip_located_when_printing = ref true
-
-let pp_located pp_a fmt loc =
-  if !skip_located_when_printing then
-    pp_a fmt loc.value
-  else
-    (* The derived pp_located *)
-    pp_located pp_a fmt loc
-
-let update_located_value loc upd =
-  { loc with value = upd loc.value }
-
 (** The type {!word} is a (for now quite concrete, but soon abstract)
    description of words in Shell. {e See POSIX, 2 Shell & Utilities,
    2.3 Token Recognition} *)
 
 type word = string                                         [@@deriving eq, show]
-type word' = word located                                  [@@deriving eq, show]
+type word' = word Location.located                         [@@deriving eq, show]
 
 (** Names in Shell are just strings with a few additional
    conditions. *)
@@ -67,39 +35,16 @@ type name = string                                         [@@deriving eq, show]
 (** For now, a {!pattern} is just a {!word}. *)
 
 type pattern = word list                                   [@@deriving eq, show]
-type pattern' = pattern located                            [@@deriving eq, show]
+type pattern' = pattern Location.located                   [@@deriving eq, show]
 
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
 type assignment = { variable : name ; word : word }        [@@deriving eq, show]
-type assignment' = assignment located                      [@@deriving eq, show]
+type assignment' = assignment Location.located             [@@deriving eq, show]
 
 (** A file descriptor {!descr} is an integer. *)
 
-type descr = int option                                    [@@deriving eq, show]
-
-(** The different kinds of redirection. *)
-
-type redirection_kind =
-  | Output          (*  > *)
-  | OutputDuplicate (* >& *)
-  | OutputAppend    (* >> *)
-  | OutputClobber   (* >| *)
-  | Input           (*  < *)
-  | InputDuplicate  (* <& *)
-  | InputOutput     (* <> *)                               [@@deriving eq, show]
-
-type redirection =
-  { descr : descr ;
-    kind : redirection_kind ;
-    file : word }                                          [@@deriving eq, show]
-
-type here_document =
-  { descr : descr ;
-    strip : bool ;
-    content : word' }                                      [@@deriving eq, show]
-
-type here_document' = here_document located                [@@deriving eq, show]
+type descr = int                                           [@@deriving eq, show]
 
 (** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
@@ -219,66 +164,89 @@ type here_document' = here_document located                [@@deriving eq, show]
 
 type command =
   (* Simple Commands *)
-  | Simple of simple_command
+
+  | Simple of
+      { assignments : assignment' list ;
+        words : word' list }
 
   (* Lists *)
+
   | Async of command
+
   | Seq of command' * command'
+
   | And of command' * command'
+
   | Or of command' * command'
 
   (* Pipelines *)
+
   | Not of command'
+
   | Pipe of command' * command'
 
   (* Compound Command's *)
-  | Subshell of command'
-  | For of for_clause
-  | Case of case_clause
-  | If of if_clause
-  | While of while_clause
-  | Until of until_clause
+
+  | Subshell of
+      command'
+
+  | For of
+      { variable : name ;
+        words : word list option ;
+        body : command' }
+
+  | Case of
+      { word : word ;
+        items : case_item' list }
+
+  | If of
+      { test : command' ;
+        body : command' ;
+        rest : command' option }
+
+  | While of
+      { test : command' ;
+        body : command' }
+
+  | Until of
+      { test : command' ;
+        body : command' }
 
   (* Function Definition Command' *)
-  | Function of function_definition
+
+  | Function of
+      { name : name ;
+        body : command' }
 
   (* Redirection *)
-  | Redirection of command' * redirection
-  | HereDocument of command' * here_document
+
+  | Redirection of
+      { command : command' ;
+        descr : descr ;
+        kind : kind ;
+        file : word }
+
+  | HereDocument of
+      { command : command' ;
+        descr : descr ;
+        strip : bool ;
+        content : word' }
+
 [@@deriving eq, show{with_path=false}]
 
-and command' = command located
-
-and simple_command =
-  { assignments : assignment' list ;
-    words : word' list }
-
-and for_clause =
-  { variable : name ;
-    words : word list option ;
-    body : command' }
-
-and case_clause =
-  { word : word ;
-    items : case_item' list }
+and command' = command Location.located
 
 and case_item =
   { pattern : pattern' ;
     body : command' option }
 
-and case_item' = case_item located
+and case_item' = case_item Location.located
 
-and if_clause =
-  { test : command' ;
-    body : command' ;
-    rest : command' option }
-
-and while_clause =
-  { test : command' ;
-    body : command' }
-
-and until_clause = while_clause
-
-and function_definition =
-  { name : name ;
-    body : command' }
+and kind =
+  | Output          (*  > *)
+  | OutputDuplicate (* >& *)
+  | OutputAppend    (* >> *)
+  | OutputClobber   (* >| *)
+  | Input           (*  < *)
+  | InputDuplicate  (* <& *)
+  | InputOutput     (* <> *)

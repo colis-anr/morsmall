@@ -1,6 +1,12 @@
 
-exception MorbigCouldntParse of Morsmall.AST.command * string
+exception CouldntParse of Morsmall.AST.command * string
 exception ASTsDontMatch of Morsmall.AST.command * Morsmall.AST.command
+
+let generator_parameters = Generator.default_parameters
+
+let number_of_tests = 100
+
+(* *)
 
 let run_one_test test_number =
   (* Create a temporary file *)
@@ -8,7 +14,7 @@ let run_one_test test_number =
   let formatter = Format.formatter_of_out_channel out_channel in
 
   (* Create a random script, put it in the file *)
-  let ast = Morsmall__Generator.(g_command { depth = 10 }) in
+  let ast = Generator.(g_command generator_parameters) in
   Morsmall.pp_print_safe formatter ast;
 
   (* Close the file *)
@@ -18,17 +24,15 @@ let run_one_test test_number =
   try
     (
       (* Parse the file with Morbig *)
-      let csts =
-        try Libmorbig.API.parse_file filename
-        with _ -> raise (MorbigCouldntParse (ast, "FIXME: catch error message"))
+      let asts' =
+        try Morsmall.parse_file filename
+        with Morsmall.SyntaxError (_pos, msg) ->
+          raise (CouldntParse(ast, msg))
       in
 
-      (* Import it with Morsmall *)
-      let asts = List.map Morsmall.cst_to_ast csts in
-
       (* Compare *)
-      match asts with
-      | [Some ast'] ->
+      match asts' with
+      | [ast'] ->
          if not (Morsmall.AST.equal_command ast ast') then
            raise (ASTsDontMatch (ast, ast'))
       | _ ->
@@ -42,11 +46,9 @@ let run_one_test test_number =
      Sys.remove filename;
      raise exn
 
-let number_of_tests = 10
-
 let () =
   let errors = ref 0 in
-  
+
   for i = 1 to number_of_tests do
     Format.printf "Running test #%d...\r@?" i;
     try
@@ -64,7 +66,7 @@ let () =
          let ast =
            (
              match exn with
-             | MorbigCouldntParse (ast, error) ->
+             | CouldntParse (ast, error) ->
                 Format.fprintf formatter "\nMorbig could not parse the file produced by Morsmall's printer.\n";
                 Format.fprintf formatter "It failed with the following error message:\n> %s\n" error;
                 ast
