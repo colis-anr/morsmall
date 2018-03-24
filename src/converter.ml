@@ -740,7 +740,7 @@ and sequential_sep__to__command _ (command : AST.command) : AST.command =
 (* CST.word -> AST.word *)
 
 and word__to__word : word -> AST.word = function
-  | Word word -> word
+  | Word (word, _) -> word (*FIXME: use second parameter*)
 
 and word'__to__word (word' : word') : AST.word =
   erase_location word__to__word word'
