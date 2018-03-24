@@ -26,27 +26,20 @@ type lexing_position = Libmorbig.CST.lexing_position =
     pos_bol : int ;
     pos_cnum : int }
 
-let dummy_lexing_position =
-  { pos_fname = "" ;
-    pos_lnum = 0 ;
-    pos_bol = 0 ;
-    pos_cnum = 0 }
-
 type position = Libmorbig.CST.position =
   { start_p : lexing_position ;
     end_p : lexing_position }
-
-let dummy_position =
-  { start_p = dummy_lexing_position ;
-    end_p = dummy_lexing_position }
 
 type 'a located = 'a Libmorbig.CST.located =
   { value : 'a ;
     position : position }
 
+let dummy_lexing_position = Libmorbig.CSTHelpers.dummy_lexing_position
+let dummy_position = Libmorbig.CSTHelpers.dummy_position
+
 let dummy_located value =
   { value ; position = dummy_position }
-  
+
 let equal_located eq_a v1 v2 =
   eq_a v1.value v2.value
 
