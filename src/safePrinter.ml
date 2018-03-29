@@ -24,12 +24,39 @@ let fpf = Format.fprintf
 open AST
 open Location
 
-let pp_word ppf = fpf ppf "%s"
+(* AST.name *)
 
-let pp_word' ppf word' =
+let rec pp_name ppf =
+  fpf ppf "%s"
+
+(* AST.word_component *)
+
+and pp_word_component ppf = function (*FIXME*)
+  | Literal literal ->
+     fpf ppf "%s" literal
+  | Variable variable ->
+     fpf ppf "${%s}" variable
+  | Subshell command_list ->
+     fpf ppf "$(%a)" pp_command_list command_list
+  | GlobAll ->
+     fpf ppf "*"
+  | GlobAny ->
+     fpf ppf "?"
+  | GlobRange _char_range ->
+     assert false
+  | Other (*FIXME*) -> assert false
+
+(* AST.word *)
+
+and pp_word ppf = function
+  | [] -> assert false
+  | [e] -> pp_word_component ppf e
+  | h :: q -> fpf ppf "%a%a" pp_word_component h pp_word q
+
+and pp_word' ppf word' =
   pp_word ppf word'.value
 
-let rec pp_words ppf = function
+and pp_words ppf = function
   | [] -> ()
   | [word] ->
      pp_word ppf word
@@ -38,11 +65,13 @@ let rec pp_words ppf = function
        pp_word word
        pp_words words
 
-let pp_words' ppf words' =
+and pp_words' ppf words' =
   List.map (fun word' -> word'.value) words'
   |> pp_words ppf
 
-let rec pp_pattern ppf = function
+(* AST.pattern *)
+
+and pp_pattern ppf = function
   | [] -> ()
   | [word] ->
      pp_word ppf word
@@ -51,17 +80,17 @@ let rec pp_pattern ppf = function
        pp_word word
        pp_pattern pattern
 
-let pp_pattern' ppf pattern' =
+and pp_pattern' ppf pattern' =
   pp_pattern ppf pattern'.value
 
-let pp_name ppf = fpf ppf "%s"
+(* AST.assignement *)
 
-let pp_assignment ppf { variable ; word } =
+and pp_assignment ppf { variable ; word } =
   fpf ppf "%a=%a"
     pp_name variable
     pp_word word
 
-let rec pp_assignments ppf = function
+and pp_assignments ppf = function
   | [] -> ()
   | [assignment] ->
      pp_assignment ppf assignment
@@ -70,18 +99,20 @@ let rec pp_assignments ppf = function
        pp_assignment assignment
        pp_assignments assignments
 
-let pp_assignments' ppf assignments' =
+and pp_assignments' ppf assignments' =
   List.map (fun assignment' -> assignment'.value) assignments'
   |> pp_assignments ppf
 
-let pp_redirection_kind ppf k =
+and pp_redirection_kind ppf k =
   fpf ppf "%s"
     (match k with
      | Input -> "<" | InputDuplicate -> "<&"
      | Output -> ">" | OutputDuplicate -> ">&" | OutputAppend -> ">>"
      | InputOutput -> "<>" | OutputClobber -> ">|")
 
-let rec pp_command ppf (command : command) =
+(* AST.command *)
+
+and pp_command ppf (command : command) =
   fpf ppf "{ ";
   (
     match command with
@@ -184,8 +215,8 @@ let rec pp_command ppf (command : command) =
          pp_word file
 
     | HereDocument { command ; descr ; strip ; content } ->
-       if content.value.[String.length content.value - 1] <> '\n' then
-         failwith "SafePrinter.pp_command': ill-formed here-document: the content must end with a newline";
+       (* if content.value.[String.length content.value - 1] <> '\n' then
+        *   failwith "SafePrinter.pp_command': ill-formed here-document: the content must end with a newline"; *) (*FIXME*)
        let eof = "EOF" in (*FIXME*)
        fpf ppf "%a %d%s%s\n%a%s\n"
          pp_command' command
@@ -199,3 +230,12 @@ let rec pp_command ppf (command : command) =
 
 and pp_command' ppf (command' : command') =
   pp_command ppf command'.value
+
+and pp_command_list ppf = function
+  | [] -> ()
+  | [e] ->
+     pp_command ppf e
+  | h :: q ->
+     fpf ppf "%a@\n%a"
+       pp_command h
+       pp_command_list q

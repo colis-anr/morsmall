@@ -20,31 +20,42 @@
 (*                                                                            *)
 (******************************************************************************)
 
-(** The type {!word} is a (for now quite concrete, but soon abstract)
-   description of words in Shell. {e See POSIX, 2 Shell & Utilities,
-   2.3 Token Recognition} *)
-
-type word = string                                         [@@deriving eq, show]
-type word' = word Location.located                         [@@deriving eq, show]
 
 (** Names in Shell are just strings with a few additional
    conditions. *)
 
-type name = string                                         [@@deriving eq, show]
+type name = string
+
+(** The type {!word} is a description of words in Shell. {e See POSIX,
+   2 Shell & Utilities, 2.3 Token Recognition} *)
+
+and character_range = char list
+
+and word_component =
+  | Literal of string
+  | Variable of name
+  | Subshell of command list
+  | GlobAll
+  | GlobAny
+  | GlobRange of character_range
+  | Other (*FIXME*)
+
+and word = word_component list
+and word' = word Location.located
 
 (** For now, a {!pattern} is just a {!word}. *)
 
-type pattern = word list                                   [@@deriving eq, show]
-type pattern' = pattern Location.located                   [@@deriving eq, show]
+and pattern = word list
+and pattern' = pattern Location.located
 
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
-type assignment = { variable : name ; word : word }        [@@deriving eq, show]
-type assignment' = assignment Location.located             [@@deriving eq, show]
+and assignment = { variable : name ; word : word }
+and assignment' = assignment Location.located
 
 (** A file descriptor {!descr} is an integer. *)
 
-type descr = int                                           [@@deriving eq, show]
+and descr = int
 
 (** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
@@ -162,7 +173,7 @@ type descr = int                                           [@@deriving eq, show]
    The type [command] describes a command in the AST. All the command
    semantics are described at the top of this document. *)
 
-type command =
+and command =
   (* Simple Commands *)
 
   | Simple of
@@ -232,8 +243,6 @@ type command =
         strip : bool ;
         content : word' }
 
-[@@deriving eq, show{with_path=false}]
-
 and command' = command Location.located
 
 and case_item =
@@ -250,3 +259,5 @@ and kind =
   | Input           (*  < *)
   | InputDuplicate  (* <& *)
   | InputOutput     (* <> *)
+
+[@@deriving eq, show{with_path=false}]

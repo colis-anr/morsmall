@@ -48,6 +48,16 @@ let rec complete_command__to__command_option : complete_command -> AST.command o
   | CompleteCommand_CList clist' ->
      Some (clist'__to__command clist')
 
+(* CST.complete_command_list -> AST.command list *)
+
+and complete_command_list__to__command_list complete_command_list =
+  List.map
+    (fun complete_command ->
+      match complete_command__to__command_option complete_command with
+      | None -> assert false
+      | Some command -> command)
+    complete_command_list
+    
 (* CST.clist -> AST.command *)
 
 and clist__to__command : clist -> AST.command = function
@@ -728,14 +738,35 @@ and sequential_sep__to__command _ (command : AST.command) : AST.command =
 (* CST.word -> AST.word *)
 
 and word__to__word : word -> AST.word = function
-  | Word (word, _) -> word (*FIXME: use second parameter*)
-
+  | Word (_, word_cst) ->
+     word_cst__to__word word_cst
+                  
 and word'__to__word (word' : word') : AST.word =
   erase_location word__to__word word'
 
 and word'__to__word' (word' : word') : AST.word' =
   convert_location word__to__word word'
 
+(* CST.word_cst -> AST.word *)
+
+and word_cst__to__word (word_cst : word_cst) : AST.word =
+  List.map word_component__to__word_component word_cst
+
+(* CST.word_component -> AST.word_component *)
+
+and word_component__to__word_component = function
+  | WordSubshell (_, complete_command_list) ->
+     AST.Subshell (complete_command_list__to__command_list complete_command_list)
+  | WordName _ -> AST.Other (*FIXME*)
+  | WordAssignmentWord _ -> AST.Other (*FIXME*)
+  | WordDoubleQuoted _ -> AST.Other (*FIXME*)
+  | WordLiteral literal -> AST.Literal literal
+  | WordVariable (VariableAtom variable) -> AST.Variable variable
+  | WordGlobAll -> AST.GlobAll
+  | WordGlobAny -> AST.GlobAny
+  | WordGlobRange (Range char_range) -> AST.GlobRange char_range
+  | WordOther -> AST.Other
+  
 (* CST.name -> AST.name *)
 
 and name__to__name : name -> AST.name = function
@@ -746,12 +777,11 @@ and name'__to__name (name' : name') : AST.name =
 
 (* CST.assignment_word -> AST.assignment *)
 
-and assignment_word__to__assignment : assignment_word -> AST.assignment = function
-  | AssignmentWord (name, word) ->
-     AST.{
-        variable = name__to__name name ;
-        word = word__to__word word
-     }
+and assignment_word__to__assignment ((name, word) : assignment_word) : AST.assignment =
+  AST.{
+      variable = name__to__name name ;
+      word = word__to__word word
+  }
 
 and assignment_word'__to__assignment' (assignment_word' : assignment_word') : AST.assignment' =
   convert_location assignment_word__to__assignment assignment_word'
