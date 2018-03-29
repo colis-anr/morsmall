@@ -22,7 +22,7 @@
 
 open Morsmall.AST
 open Morsmall.Location
-   
+
 let dummy_lexing_position =
   { pos_fname = "dummy" ;
     pos_lnum = 0 ;
@@ -81,32 +81,43 @@ let rec g_list ~prob ~limit inhabitant =
 
 (* Our generators *)
 
-let g_word _p =
-  "echo" (*FIXME*)
+let rec g_word_component p : word_component =
+  choose
+    [| 1, (fun _ -> Literal "foo") ;
+       1, (fun _ -> Variable "x") ;
+       (if p.depth <= 0 then 0 else 1),
+       (fun p -> Subshell (g_command_list p)) ;
+       1, (fun _ -> GlobAll) ;
+       1, (fun _ -> GlobAny) |]
+    (d p)
 
-let g_word' p =
+and g_word p =
+  g_word_component (d p)
+  :: g_list ~prob:0.9 ~limit:4 (fun () -> g_word_component (d p))
+
+and g_word' p =
   dummy_locate g_word p
 
-let g_name _p =
+and g_name _p =
   "blah" (*FIXME*)
 
-let g_pattern p =
+and g_pattern p =
   g_word (d p) :: g_list ~prob:0.8 ~limit:4 (fun () -> g_word (d p))
 
-let g_pattern' p =
+and g_pattern' p =
   dummy_locate g_pattern p
 
-let g_assignment p =
+and g_assignment p =
   { variable = choose [|1,"x";2,"y";3,"z";4,"choucroute"|] ;
     word = g_word (d p) }
 
-let g_assignment' p =
+and g_assignment' p =
   dummy_locate g_assignment p
 
-let g_descr _p =
+and g_descr _p =
   Random.int 10
 
-let g_redirection_kind _p =
+and g_redirection_kind _p =
   choose
     [| 1, Output ;
        1, OutputDuplicate ;
@@ -116,7 +127,7 @@ let g_redirection_kind _p =
        1, InputDuplicate ;
        1, InputOutput |]
 
-let rec g_command p =
+and g_command p =
   if p.depth <= 0 then
     g_simple_command (d p)
   else
@@ -141,6 +152,9 @@ let rec g_command p =
 
 and g_command' p =
   dummy_locate g_command p
+
+and g_command_list p =
+  g_list ~prob:0.8 ~limit:10 (fun () -> g_command (d p))
 
 and g_simple_command p =
   let assignments =
@@ -168,7 +182,7 @@ and g_for_clause p =
 
 and g_case_clause p =
   Case {
-      word = "x" ;
+      word = g_word (d p) ;
       items =
         g_list ~prob:0.7 ~limit:5
           (fun () -> g_case_item' (d p) )
@@ -214,4 +228,6 @@ and g_here_document p =
     { command = g_command' (d p) ;
       descr = g_descr (d p) ;
       strip = g_bool ~prob:0.5 ;
-      content = Morsmall.Location.map (fun v -> v ^ "\n") (g_word' (d p)) }
+      content = Morsmall.Location.map
+                  (fun w -> w @ [Literal "\n"])
+                  (g_word' (d p)) }
