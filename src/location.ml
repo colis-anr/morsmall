@@ -24,27 +24,15 @@ type lexing_position = Libmorbig.CST.lexing_position =
   { pos_fname : string ;
     pos_lnum : int ;
     pos_bol : int ;
-    pos_cnum : int }
+    pos_cnum : int }                  [@@deriving eq, show{with_path=false}]
 
 type position = Libmorbig.CST.position =
   { start_p : lexing_position ;
-    end_p : lexing_position }
+    end_p : lexing_position }         [@@deriving eq, show{with_path=false}]
 
 type 'a located = 'a Libmorbig.CST.located =
   { value : 'a ;
-    position : position }
+    position : position }             [@@deriving eq, show{with_path=false}]
 
-let dummy_lexing_position = Libmorbig.CSTHelpers.dummy_lexing_position
-let dummy_position = Libmorbig.CSTHelpers.dummy_position
-
-let dummy_located value =
-  { value ; position = dummy_position }
-
-let equal_located eq_a v1 v2 =
-  eq_a v1.value v2.value
-
-let pp_located pp_a fmt loc =
-  pp_a fmt loc.value
-
-let map upd loc =
-  { loc with value = upd loc.value }
+let dummily_located value =
+  { value ; position = Libmorbig.CSTHelpers.dummy_position }

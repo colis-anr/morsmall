@@ -27,7 +27,7 @@ let parse_file filename =
     try Libmorbig.API.parse_file filename
     with _ ->
       (* FIXME: when issue #22 in Morbig is fixed, match for Morbig's errors. *)
-      raise (SyntaxError (Location.dummy_position, "An error occured"))
+      raise (SyntaxError (Libmorbig.CSTHelpers.dummy_position, "An error occured"))
   in
   let asts =
     List.map
@@ -43,9 +43,9 @@ let parse_file filename =
        | Some ast -> ast)
       asts
 
+
+module LAST = AST.LAST
+module AST = AST.AST
+
 let pp_print_safe = SafePrinter.pp_command
 let pp_print_debug = AST.pp_command
-
-module AST = AST
-module Location = Location
-module Utils = Utils

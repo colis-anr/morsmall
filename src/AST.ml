@@ -20,44 +20,72 @@
 (*                                                                            *)
 (******************************************************************************)
 
+module type Location =
+  sig
+    type 'a located
 
-(** Names in Shell are just strings with a few additional
+    val equal_located : ('a -> 'a -> bool) -> 'a located -> 'a located -> bool
+    val pp_located : (Format.formatter -> 'a -> unit)
+                     -> Format.formatter -> 'a located -> unit
+
+    val dummily_located : 'a -> 'a located
+  end
+
+module NoLocation =
+  struct
+    type 'a located = 'a
+              
+    let equal_located equal_a a a' =
+      equal_a a a'
+
+    let pp_located pp_a fmt a =
+      pp_a fmt a
+
+    let dummily_located a = a
+  end
+  
+module Make (L : Location) =
+  struct
+
+    type 'a located = 'a L.located        [@@deriving eq, show{with_path=false}]
+    
+    (** Names in Shell are just strings with a few additional
    conditions. *)
 
-type name = string
+    type name = string
 
-(** The type {!word} is a description of words in Shell. {e See POSIX,
+    (** The type {!word} is a description of words in Shell. {e See POSIX,
    2 Shell & Utilities, 2.3 Token Recognition} *)
 
-and character_range = char list
+    and character_range = char list
 
-and word_component =
-  | Literal of string
-  | Variable of name
-  | Subshell of command list
-  | GlobAll
-  | GlobAny
-  | GlobRange of character_range
-  | Other (*FIXME*)
+    and word_component =
+      | Literal of string
+      | Variable of name
+      | Subshell of command list
+      | GlobAll
+      | GlobAny
+      | GlobRange of character_range
+      | Other (*FIXME*)
 
-and word = word_component list
-and word' = word Location.located
+    and word = word_component list
+    and word' = word located
 
-(** For now, a {!pattern} is just a {!word}. *)
+    (** For now, a {!pattern} is just a {!word}. *)
 
-and pattern = word list
-and pattern' = pattern Location.located
+    and pattern = word list
+    and pattern' = pattern located
 
-(** An assignment is just a pair of a {!name} and a {!word}. *)
+    (** An assignment is just a pair of a {!name} and a {!word}. *)
 
-and assignment = { variable : name ; word : word }
-and assignment' = assignment Location.located
+    and assignment = { variable : name ; word : word }
+    and assignment' = assignment located
 
-(** A file descriptor {!descr} is an integer. *)
+    (** A file descriptor {!descr} is an integer. *)
 
-and descr = int
+    and descr = int
 
-(** The following description does contain all the semantic subtleties
+    (** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
    {{:http://pubs.opengroup.org/onlinepubs/9699919799.2016edition/}IEEE
    Std 1003.1™-2008, 2016 Edition}. In the following, we will refer to
@@ -166,98 +194,66 @@ and descr = int
 
    {e See POSIX, 2 Shell & Utilities, 2.7 Redirections}
 
- *)
+     *)
 
-(** {1 Type Definitions}
+    (** {1 Type Definitions}
 
    The type [command] describes a command in the AST. All the command
    semantics are described at the top of this document. *)
 
-and command =
-  (* Simple Commands *)
+    and command =
+      (* Simple Commands *)
+      | Simple of assignment' list * word' list
 
-  | Simple of
-      { assignments : assignment' list ;
-        words : word' list }
+      (* Lists *)
+      | Async of command
+      | Seq of command' * command'
+      | And of command' * command'
+      | Or of command' * command'
 
-  (* Lists *)
+      (* Pipelines *)
+      | Not of command'
+      | Pipe of command' * command'
 
-  | Async of command
+      (* Compound Command's *)
+      | Subshell of command'
+      | For of name * word list option * command'
+      | Case of word * case_item' list
+      | If of command' * command' * command' option
+      | While of command' * command'
+      | Until of command' * command'
 
-  | Seq of command' * command'
+      (* Function Definition Command' *)
+      | Function of name * command'
 
-  | And of command' * command'
+      (* Redirection *)
+      | Redirection of command' * descr * kind * word
+      | HereDocument of command' * descr * word'
 
-  | Or of command' * command'
+    and command' = command located
 
-  (* Pipelines *)
+    and case_item =
+      { pattern : pattern' ;
+        body : command' option }
 
-  | Not of command'
+    and case_item' = case_item located
 
-  | Pipe of command' * command'
+    and kind =
+      | Output          (*  > *)
+      | OutputDuplicate (* >& *)
+      | OutputAppend    (* >> *)
+      | OutputClobber   (* >| *)
+      | Input           (*  < *)
+      | InputDuplicate  (* <& *)
+      | InputOutput     (* <> *)
 
-  (* Compound Command's *)
+    [@@deriving eq, show{with_path=false}]
 
-  | Subshell of
-      command'
+    let default_redirection_descriptor = function
+      | Output | OutputDuplicate | OutputAppend | OutputClobber -> 1
+      | Input | InputDuplicate | InputOutput -> 0
+  end
 
-  | For of
-      { variable : name ;
-        words : word list option ;
-        body : command' }
+module LAST = Make(Location)
 
-  | Case of
-      { word : word ;
-        items : case_item' list }
-
-  | If of
-      { test : command' ;
-        body : command' ;
-        rest : command' option }
-
-  | While of
-      { test : command' ;
-        body : command' }
-
-  | Until of
-      { test : command' ;
-        body : command' }
-
-  (* Function Definition Command' *)
-
-  | Function of
-      { name : name ;
-        body : command' }
-
-  (* Redirection *)
-
-  | Redirection of
-      { command : command' ;
-        descr : descr ;
-        kind : kind ;
-        file : word }
-
-  | HereDocument of
-      { command : command' ;
-        descr : descr ;
-        strip : bool ;
-        content : word' }
-
-and command' = command Location.located
-
-and case_item =
-  { pattern : pattern' ;
-    body : command' option }
-
-and case_item' = case_item Location.located
-
-and kind =
-  | Output          (*  > *)
-  | OutputDuplicate (* >& *)
-  | OutputAppend    (* >> *)
-  | OutputClobber   (* >| *)
-  | Input           (*  < *)
-  | InputDuplicate  (* <& *)
-  | InputOutput     (* <> *)
-
-[@@deriving eq, show{with_path=false}]
+module AST = Make(NoLocation)

@@ -21,8 +21,7 @@
 (******************************************************************************)
 
 let fpf = Format.fprintf
-open AST
-open Location
+open AST.AST
 
 (* AST.name *)
 
@@ -53,9 +52,6 @@ and pp_word ppf = function
   | [e] -> pp_word_component ppf e
   | h :: q -> fpf ppf "%a%a" pp_word_component h pp_word q
 
-and pp_word' ppf word' =
-  pp_word ppf word'.value
-
 and pp_words ppf = function
   | [] -> ()
   | [word] ->
@@ -64,10 +60,6 @@ and pp_words ppf = function
      fpf ppf "%a %a"
        pp_word word
        pp_words words
-
-and pp_words' ppf words' =
-  List.map (fun word' -> word'.value) words'
-  |> pp_words ppf
 
 (* AST.pattern *)
 
@@ -79,9 +71,6 @@ and pp_pattern ppf = function
      fpf ppf "%a|%a"
        pp_word word
        pp_pattern pattern
-
-and pp_pattern' ppf pattern' =
-  pp_pattern ppf pattern'.value
 
 (* AST.assignement *)
 
@@ -98,10 +87,6 @@ and pp_assignments ppf = function
      fpf ppf "%a %a"
        pp_assignment assignment
        pp_assignments assignments
-
-and pp_assignments' ppf assignments' =
-  List.map (fun assignment' -> assignment'.value) assignments'
-  |> pp_assignments ppf
 
 and pp_redirection_kind ppf k =
   fpf ppf "%s"
@@ -122,18 +107,18 @@ and pp_command ppf (command : command) =
 
     | Seq (command1, command2) ->
        fpf ppf "%a;%a"
-         pp_command' command1
-         pp_command' command2
+         pp_command command1
+         pp_command command2
 
     | And (command1, command2) ->
        fpf ppf "%a&&%a"
-         pp_command' command1
-         pp_command' command2
+         pp_command command1
+         pp_command command2
 
     | Or (command1, command2) ->
        fpf ppf "%a||%a"
-         pp_command' command1
-         pp_command' command2
+         pp_command command1
+         pp_command command2
 
     | Not command ->
        fpf ppf "! %a"
@@ -148,33 +133,33 @@ and pp_command ppf (command : command) =
        fpf ppf "(%a)"
          pp_command' command
 
-    | If { test ; body ; rest = None } ->
+    | If (test, body, None) ->
        fpf ppf "if %a;then %a;fi"
          pp_command' test
          pp_command' body
 
-    | If { test ; body ; rest = Some rest } ->
+    | If (test, body, Some rest) ->
        fpf ppf "if %a;then %a;else %a;fi"
          pp_command' test
          pp_command' body
          pp_command' rest
 
-    | For { variable ; words = None ; body } ->
+    | For (variable, None, body) ->
        fpf ppf "for %a;do %a;done"
          pp_name variable
          pp_command' body
 
-    | For { variable ; words = Some words ; body } ->
+    | For (variable, Some words, body) ->
        fpf ppf "for %a in %a;do %a;done"
          pp_name variable
          pp_words words
          pp_command' body
 
-    | Case { word ; items } ->
+    | Case (word, items) ->
        fpf ppf "case %a in" pp_word word;
        List.iter
-         (fun item' ->
-           match item'.value with
+         (fun item ->
+           match item with
            | { pattern ; body = None } ->
               fpf ppf " %a) ;;" pp_pattern' pattern
            | { pattern ; body = Some body' } ->
@@ -182,31 +167,31 @@ and pp_command ppf (command : command) =
          items;
        fpf ppf " esac"
 
-    | While { test ; body } ->
+    | While (test, body) ->
        fpf ppf "while %a;do %a;done"
          pp_command' test
          pp_command' body
 
-    | Until { test ; body } ->
+    | Until (test, body) ->
        fpf ppf "until %a;do %a;done"
          pp_command' test
          pp_command' body
 
-    | Function { name ; body } ->
+    | Function (name, body) ->
        fpf ppf "%a()%a"
          pp_name name
          pp_command' body
 
-    | Simple { assignments = [] ; words = [] } ->
+    | Simple ([], []) ->
        failwith "SafePrinter.pp_command': ill-formed command: Simple([], [])"
-    | Simple { assignments = [] ; words } ->
-       fpf ppf "%a" pp_words' words
-    | Simple { assignments ; words } ->
+    | Simple ([], words) ->
+       fpf ppf "%a" pp_words words
+    | Simple (assignments, words) ->
        fpf ppf "%a %a"
-         pp_assignments' assignments
-         pp_words' words
+         pp_assignments assignments
+         pp_words words
 
-    | Redirection { command ; descr ; kind ; file } ->
+    | Redirection (command, descr, kind, file) ->
        (* The space is required because "the [descriptor] must be delimited from any preceding text". *)
        fpf ppf "%a %d%a%a"
          pp_command' command
@@ -214,22 +199,18 @@ and pp_command ppf (command : command) =
          pp_redirection_kind kind
          pp_word file
 
-    | HereDocument { command ; descr ; strip ; content } ->
+    | HereDocument (command, descr, content) ->
        (* if content.value.[String.length content.value - 1] <> '\n' then
         *   failwith "SafePrinter.pp_command': ill-formed here-document: the content must end with a newline"; *) (*FIXME*)
        let eof = "EOF" in (*FIXME*)
-       fpf ppf "%a %d%s%s\n%a%s\n"
+       fpf ppf "%a %d<<%s\n%a%s\n"
          pp_command' command
          descr
-         (if strip then "<<-" else "<<")
          eof
          pp_word' content
          eof
   );
   fpf ppf "%s}" (match command with Async _ -> "&" | HereDocument _ -> "" | _ -> ";")
-
-and pp_command' ppf (command' : command') =
-  pp_command ppf command'.value
 
 and pp_command_list ppf = function
   | [] -> ()

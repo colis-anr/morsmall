@@ -19,15 +19,20 @@
 (*   along with this program.  If not, see <http://www.gnu.org/licenses/>.    *)
 (*                                                                            *)
 (******************************************************************************)
-           
+
+module LAST = AST.LAST
+module AST = AST.AST
+
 (** {2 Parsers} *)
 
-exception SyntaxError of Location.position * string
+exception SyntaxError of Libmorbig.CST.position * string
 
-val parse_file : string -> AST.command list
+val parse_file : string -> LAST.command list
 (** Parses a whole Shell file into a list of {!AST.command}. The list
    can be empty. Can raise {!SyntaxError}. *)
 
+(* val strip_locations : LAST.command -> AST.command *)
+  
 (** {2 Printers} *)
 
 val pp_print_safe : Format.formatter -> AST.command -> unit
@@ -35,9 +40,3 @@ val pp_print_safe : Format.formatter -> AST.command -> unit
 
 val pp_print_debug : Format.formatter -> AST.command -> unit
 (** Prints a representation of the AST in OCaml-style. *)
-
-(** {2 Other modules} *)
-
-module AST = AST
-module Location = Location
-module Utils = Utils
