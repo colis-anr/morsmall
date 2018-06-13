@@ -20,7 +20,9 @@
 (*                                                                            *)
 (******************************************************************************)
 
-exception SyntaxError of Libmorbig.CST.position * string
+type position = Location.MorbigLocation.position
+
+exception SyntaxError of position * string
 
 let parse_file filename =
   let csts =

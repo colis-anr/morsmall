@@ -20,6 +20,8 @@
 (*                                                                            *)
 (******************************************************************************)
 
+type position = Location.MorbigLocation.position
+
 module LAST = AST.LAST
 (** Shell AST with locations. *)
 
@@ -28,7 +30,7 @@ module AST = AST.AST
 
 (** {2 Parsers} *)
 
-exception SyntaxError of Libmorbig.CST.position * string
+exception SyntaxError of position * string
 
 val parse_file : string -> LAST.command list
 (** Parses a whole Shell file into a list of {!LAST.command}. The list
