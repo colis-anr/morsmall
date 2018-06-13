@@ -34,7 +34,7 @@ module type Location =
 module NoLocation =
   struct
     type 'a located = 'a
-              
+
     let equal_located equal_a a a' =
       equal_a a a'
 
@@ -43,12 +43,12 @@ module NoLocation =
 
     let dummily_located a = a
   end
-  
+
 module Make (L : Location) =
   struct
 
     type 'a located = 'a L.located        [@@deriving eq, show{with_path=false}]
-    
+
     (** Names in Shell are just strings with a few additional
    conditions. *)
 

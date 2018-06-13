@@ -21,18 +21,21 @@
 (******************************************************************************)
 
 module LAST = AST.LAST
+(** Shell AST with locations. *)
+
 module AST = AST.AST
+(** Shell AST without locations. *)
 
 (** {2 Parsers} *)
 
 exception SyntaxError of Libmorbig.CST.position * string
 
 val parse_file : string -> LAST.command list
-(** Parses a whole Shell file into a list of {!AST.command}. The list
+(** Parses a whole Shell file into a list of {!LAST.command}. The list
    can be empty. Can raise {!SyntaxError}. *)
 
-(* val strip_locations : LAST.command -> AST.command *)
-  
+val strip_locations : LAST.command -> AST.command
+
 (** {2 Printers} *)
 
 val pp_print_safe : Format.formatter -> AST.command -> unit

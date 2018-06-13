@@ -47,5 +47,7 @@ let parse_file filename =
 module LAST = AST.LAST
 module AST = AST.AST
 
+let strip_locations = LocationMapper.command
+           
 let pp_print_safe = SafePrinter.pp_command
 let pp_print_debug = AST.pp_command
