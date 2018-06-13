@@ -211,8 +211,7 @@ module Make (L : Location.Location) =
     and command' = command located
 
     and case_item =
-      { pattern : pattern' ;
-        body : command' option }
+      pattern' * command' option
 
     and case_item' = case_item located
 

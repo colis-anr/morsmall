@@ -305,12 +305,10 @@ and case_list'__to__case_item'_list (case_list' : case_list') : LAST.case_item' 
 and case_item_ns__to__case_item : case_item_ns -> LAST.case_item = function
   | CaseItemNS_Pattern_Rparen_LineBreak (pattern', _)
   | CaseItemNS_Lparen_Pattern_Rparen_LineBreak (pattern', _) ->
-     LAST.{ pattern = pattern'__to__pattern' pattern' ;
-           body = None }
+     (pattern'__to__pattern' pattern', None)
   | CaseItemNS_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _)
   | CaseItemNS_Lparen_Pattern_Rparen_CompoundList_LineBreak (pattern', compound_list', _) ->
-     LAST.{ pattern = pattern'__to__pattern' pattern' ;
-           body = Some (compound_list'__to__command' compound_list') }
+     (pattern'__to__pattern' pattern', Some (compound_list'__to__command' compound_list'))
 
 and case_item_ns'__to__case_item' (case_item_ns' : case_item_ns') : LAST.case_item' =
   convert_location case_item_ns__to__case_item case_item_ns'
@@ -320,12 +318,10 @@ and case_item_ns'__to__case_item' (case_item_ns' : case_item_ns') : LAST.case_it
 and case_item__to__case_item : case_item -> LAST.case_item = function
   | CaseItem_Pattern_Rparen_LineBreak_Dsemi_LineBreak (pattern', _, _)
   | CaseItem_Lparen_Pattern_Rparen_LineBreak_Dsemi_LineBreak (pattern', _, _) ->
-     LAST.{ pattern = pattern'__to__pattern' pattern' ;
-           body = None }
+     (pattern'__to__pattern' pattern', None)
   | CaseItem_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _)
   | CaseItem_Lparen_Pattern_Rparen_CompoundList_Dsemi_LineBreak (pattern', compound_list', _) ->
-     LAST.{ pattern = pattern'__to__pattern' pattern' ;
-           body = Some (compound_list'__to__command' compound_list') }
+     (pattern'__to__pattern' pattern', Some (compound_list'__to__command' compound_list'))
 
 and case_item'__to__case_item' (case_item' : case_item') : LAST.case_item' =
   convert_location case_item__to__case_item case_item'

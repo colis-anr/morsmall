@@ -165,9 +165,9 @@ and pp_command ppf (command : command) =
        List.iter
          (fun item ->
            match item with
-           | { pattern ; body = None } ->
+           | (pattern, None) ->
               fpf ppf " %a) ;;" pp_pattern' pattern
-           | { pattern ; body = Some body' } ->
+           | (pattern, Some body') ->
               fpf ppf " %a) %a;;" pp_pattern' pattern pp_command' body')
          items;
        fpf ppf " esac"

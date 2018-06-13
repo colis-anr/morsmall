@@ -101,9 +101,9 @@ and command = function
 
 and command' c' = strip_location command c'
 
-and case_item ci =
-  AST.{ pattern = pattern' ci.LAST.pattern ;
-        body = optmap command' ci.LAST.body }
+and case_item (pattern, body) =
+  (pattern' pattern,
+   optmap command' body)
 
 and case_item' ci' = strip_location case_item ci'
 
