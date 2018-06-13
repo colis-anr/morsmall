@@ -20,7 +20,7 @@
 (*                                                                            *)
 (******************************************************************************)
 
-exception SyntaxError of Location.position * string
+exception SyntaxError of Libmorbig.CST.position * string
 
 let parse_file filename =
   let csts =
@@ -48,6 +48,6 @@ module LAST = AST.LAST
 module AST = AST.AST
 
 let strip_locations = LocationMapper.command
-           
+
 let pp_print_safe = SafePrinter.pp_command
 let pp_print_debug = AST.pp_command

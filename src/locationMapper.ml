@@ -28,7 +28,7 @@ let optmap f = function
   | Some x -> Some (f x)
 
 let strip_location f (l : 'a LAST.located) =
-  f l.Location.value
+  f l.Location.MorbigLocation.value
 
 let rec name n = n
 

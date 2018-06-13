@@ -20,19 +20,46 @@
 (*                                                                            *)
 (******************************************************************************)
 
-type lexing_position = Libmorbig.CST.lexing_position =
-  { pos_fname : string ;
-    pos_lnum : int ;
-    pos_bol : int ;
-    pos_cnum : int }                  [@@deriving eq, show{with_path=false}]
+module type Location =
+  sig
+    type 'a located
 
-type position = Libmorbig.CST.position =
-  { start_p : lexing_position ;
-    end_p : lexing_position }         [@@deriving eq, show{with_path=false}]
+    val equal_located : ('a -> 'a -> bool) -> 'a located -> 'a located -> bool
+    val pp_located : (Format.formatter -> 'a -> unit)
+                     -> Format.formatter -> 'a located -> unit
 
-type 'a located = 'a Libmorbig.CST.located =
-  { value : 'a ;
-    position : position }             [@@deriving eq, show{with_path=false}]
+    val dummily_located : 'a -> 'a located
+  end
 
-let dummily_located value =
-  { value ; position = Libmorbig.CSTHelpers.dummy_position }
+module NoLocation =
+  struct
+    type 'a located = 'a
+
+    let equal_located equal_a a a' =
+      equal_a a a'
+
+    let pp_located pp_a fmt a =
+      pp_a fmt a
+
+    let dummily_located a = a
+  end
+
+module MorbigLocation =
+  struct
+    type lexing_position = Libmorbig.CST.lexing_position =
+      { pos_fname : string ;
+        pos_lnum : int ;
+        pos_bol : int ;
+        pos_cnum : int }                  [@@deriving eq, show{with_path=false}]
+
+    type position = Libmorbig.CST.position =
+      { start_p : lexing_position ;
+        end_p : lexing_position }         [@@deriving eq, show{with_path=false}]
+
+    type 'a located = 'a Libmorbig.CST.located =
+      { value : 'a ;
+        position : position }             [@@deriving eq, show{with_path=false}]
+
+    let dummily_located value =
+      { value ; position = Libmorbig.CSTHelpers.dummy_position }
+  end

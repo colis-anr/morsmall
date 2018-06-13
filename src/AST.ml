@@ -20,31 +20,7 @@
 (*                                                                            *)
 (******************************************************************************)
 
-module type Location =
-  sig
-    type 'a located
-
-    val equal_located : ('a -> 'a -> bool) -> 'a located -> 'a located -> bool
-    val pp_located : (Format.formatter -> 'a -> unit)
-                     -> Format.formatter -> 'a located -> unit
-
-    val dummily_located : 'a -> 'a located
-  end
-
-module NoLocation =
-  struct
-    type 'a located = 'a
-
-    let equal_located equal_a a a' =
-      equal_a a a'
-
-    let pp_located pp_a fmt a =
-      pp_a fmt a
-
-    let dummily_located a = a
-  end
-
-module Make (L : Location) =
+module Make (L : Location.Location) =
   struct
 
     type 'a located = 'a L.located        [@@deriving eq, show{with_path=false}]
@@ -254,6 +230,5 @@ module Make (L : Location) =
       | Input | InputDuplicate | InputOutput -> 0
   end
 
-module LAST = Make(Location)
-
-module AST = Make(NoLocation)
+module LAST = Make(Location.MorbigLocation)
+module AST = Make(Location.NoLocation)
