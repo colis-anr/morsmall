@@ -740,34 +740,68 @@ and word'__to__word (word' : word') : LAST.word =
 and word'__to__word' (word' : word') : LAST.word' =
   convert_location word__to__word word'
 
+and word_double_quoted__to__word (Word (_, word_cst)) =
+  word_cst_double_quoted__to__word word_cst
+
 (* CST.word_cst -> LAST.word *)
 
 and word_cst__to__word (word_cst : word_cst) : LAST.word =
   List.map word_component__to__word_component word_cst
+
+and word_cst_double_quoted__to__word (word_cst : word_cst) : LAST.word =
+  List.map word_component_double_quoted__to__word_component word_cst
 
 (* CST.word_component -> LAST.word_component *)
 
 and word_component__to__word_component = function
   | WordSubshell (_, complete_command_list) ->
      LAST.Subshell (complete_command_list__to__command_list complete_command_list)
-  | WordName n ->
-     LAST.Name n
-  | WordAssignmentWord a ->
-     LAST.Assignment (assignment_word__to__assignment a)
-  | WordDoubleQuoted _ ->
-     assert false (* FIXME *)
+  | WordName name ->
+     LAST.Name name (* FIXME: literal? *)
+  | WordAssignmentWord assignment_word ->
+     LAST.Assignment (assignment_word__to__assignment assignment_word)
+  | WordDoubleQuoted word ->
+     LAST.DoubleQuoted (word_double_quoted__to__word word)
+  | WordSingleQuoted (Word (_, [WordLiteral literal])) ->
+     LAST.Literal literal
   | WordSingleQuoted _ ->
-     assert false (* FIXME *)
-  | WordLiteral s ->
-     LAST.Literal s
-  | WordVariable (VariableAtom v) ->
-     LAST.Variable v
+     assert false
+  | WordLiteral literal ->
+     LAST.Literal literal
+  | WordVariable (VariableAtom atom) ->
+     LAST.Variable atom
   | WordGlobAll ->
      LAST.GlobAll
   | WordGlobAny ->
      LAST.GlobAny
   | WordGlobRange (Range char_list) ->
      LAST.GlobRange char_list
+  | WordOther ->
+     assert false
+  | WordEmpty ->
+     assert false
+
+and word_component_double_quoted__to__word_component = function
+  | WordSubshell (_, complete_command_list) ->
+     LAST.Subshell (complete_command_list__to__command_list complete_command_list)
+  | WordName name ->
+     LAST.Name name (* FIXME: literal? *)
+  | WordAssignmentWord assignment_word ->
+     LAST.Assignment (assignment_word__to__assignment assignment_word)
+  | WordDoubleQuoted _ ->
+     assert false
+  | WordSingleQuoted _ ->
+     assert false
+  | WordLiteral literal ->
+     LAST.Literal literal
+  | WordVariable (VariableAtom atom) ->
+     LAST.Variable atom
+  | WordGlobAll ->
+     assert false
+  | WordGlobAny ->
+     assert false
+  | WordGlobRange _ ->
+     assert false
   | WordOther ->
      assert false
   | WordEmpty ->
