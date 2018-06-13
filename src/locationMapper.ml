@@ -36,12 +36,14 @@ and character_range cl = cl
 
 and word_component = function
   | LAST.Literal s -> AST.Literal s
+  | LAST.DoubleQuoted w -> AST.DoubleQuoted (word w)
   | LAST.Variable v -> AST.Variable v
   | LAST.Subshell cl -> AST.Subshell (List.map command cl)
+  | LAST.Name n -> AST.Name (name n)
+  | LAST.Assignment a -> AST.Assignment (assignment a)
   | LAST.GlobAll -> AST.GlobAll
   | LAST.GlobAny -> AST.GlobAny
   | LAST.GlobRange cr -> AST.GlobRange (character_range cr)
-  | LAST.Other -> AST.Other
 
 and word w = List.map word_component w
 

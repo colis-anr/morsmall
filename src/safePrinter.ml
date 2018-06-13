@@ -33,17 +33,22 @@ let rec pp_name ppf =
 and pp_word_component ppf = function (*FIXME*)
   | Literal literal ->
      fpf ppf "%s" literal
+  | DoubleQuoted _word ->
+     assert false
   | Variable variable ->
      fpf ppf "${%s}" variable
   | Subshell command_list ->
      fpf ppf "$(%a)" pp_command_list command_list
+  | Name name ->
+     fpf ppf "%s" name
+  | Assignment assignment ->
+     pp_assignment ppf assignment
   | GlobAll ->
      fpf ppf "*"
   | GlobAny ->
      fpf ppf "?"
   | GlobRange _char_range ->
      assert false
-  | Other (*FIXME*) -> assert false
 
 (* AST.word *)
 

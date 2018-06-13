@@ -37,12 +37,14 @@ module Make (L : Location.Location) =
 
     and word_component =
       | Literal of string
+      | DoubleQuoted of word
       | Variable of name
       | Subshell of command list
+      | Name of string (* FIXME: do we really want that? *)
+      | Assignment of assignment (* and that? *)
       | GlobAll
       | GlobAny
       | GlobRange of character_range
-      | Other (*FIXME*)
 
     and word = word_component list
     and word' = word located

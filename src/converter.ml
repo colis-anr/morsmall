@@ -22,7 +22,7 @@
 
 open Libmorbig.CST
 module LAST = AST.LAST
-   
+
 (* Helpers about locations. *)
 
 let convert_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b LAST.located =
@@ -57,7 +57,7 @@ and complete_command_list__to__command_list complete_command_list =
       | None -> assert false
       | Some command -> command)
     complete_command_list
-    
+
 (* CST.clist -> LAST.command *)
 
 and clist__to__command : clist -> LAST.command = function
@@ -503,8 +503,7 @@ and simple_command'__to__command (simple_command' : simple_command') : LAST.comm
       fun command io_redirect' ->
       io_redirect'__to__command
         io_redirect'
-        Location.{
-          value = command ;
+        { value = command ;
           position = simple_command'.position }
     )
     (LAST.Simple (assignment'_list, word'_list ))
@@ -703,9 +702,8 @@ and separator_op'__to__command (sep_op' : separator_op') (command : LAST.command
 and separator_op'__to__command' (sep_op' : separator_op') (command' : LAST.command') : LAST.command' =
   (* We do not want to convert the separator's location here but
      rather use the command's location! *)
-  Location.{
-      value = separator_op__to__command sep_op'.value command'.value ;
-      position = command'.position }
+  { value = separator_op__to__command sep_op'.value command'.value ;
+    position = command'.position }
 
 (* CST.separator -> LAST.command -> LAST.command *)
 
@@ -722,9 +720,8 @@ and separator'__to__command (sep' : separator') (command : LAST.command) : LAST.
 and separator'__to__command' (sep' : separator') (command' : LAST.command') : LAST.command' =
   (* We do not want to convert the separator's location here but
      rather use the command's location! *)
-  Location.{
-      value = separator__to__command sep'.value command'.value ;
-      position = command'.position }
+  { value = separator__to__command sep'.value command'.value ;
+    position = command'.position }
 
 (* *)
 
@@ -736,7 +733,7 @@ and sequential_sep__to__command _ (command : LAST.command) : LAST.command =
 and word__to__word : word -> LAST.word = function
   | Word (_, word_cst) ->
      word_cst__to__word word_cst
-                  
+
 and word'__to__word (word' : word') : LAST.word =
   erase_location word__to__word word'
 
@@ -753,16 +750,29 @@ and word_cst__to__word (word_cst : word_cst) : LAST.word =
 and word_component__to__word_component = function
   | WordSubshell (_, complete_command_list) ->
      LAST.Subshell (complete_command_list__to__command_list complete_command_list)
-  | WordName _ -> LAST.Other (*FIXME*)
-  | WordAssignmentWord _ -> LAST.Other (*FIXME*)
-  | WordDoubleQuoted _ -> LAST.Other (*FIXME*)
-  | WordLiteral literal -> LAST.Literal literal
-  | WordVariable (VariableAtom variable) -> LAST.Variable variable
-  | WordGlobAll -> LAST.GlobAll
-  | WordGlobAny -> LAST.GlobAny
-  | WordGlobRange (Range char_range) -> LAST.GlobRange char_range
-  | WordOther -> LAST.Other
-  
+  | WordName n ->
+     LAST.Name n
+  | WordAssignmentWord a ->
+     LAST.Assignment (assignment_word__to__assignment a)
+  | WordDoubleQuoted _ ->
+     assert false (* FIXME *)
+  | WordSingleQuoted _ ->
+     assert false (* FIXME *)
+  | WordLiteral s ->
+     LAST.Literal s
+  | WordVariable (VariableAtom v) ->
+     LAST.Variable v
+  | WordGlobAll ->
+     LAST.GlobAll
+  | WordGlobAny ->
+     LAST.GlobAny
+  | WordGlobRange (Range char_list) ->
+     LAST.GlobRange char_list
+  | WordOther ->
+     assert false
+  | WordEmpty ->
+     assert false
+
 (* CST.name -> LAST.name *)
 
 and name__to__name : name -> LAST.name = function
