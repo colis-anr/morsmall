@@ -1,9 +1,7 @@
-(jbuild_version 1)
-
 (copy_files ext/*)
 
 (library
- ((name        morsmall)
+ ((name morsmall)
   (public_name morsmall)
   (preprocess (pps (ppx_deriving.std)))
   (libraries (libmorbig))
