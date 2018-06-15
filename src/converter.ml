@@ -461,8 +461,10 @@ and simple_command'__to__command (simple_command' : simple_command') : LAST.comm
   let ( assignment'_list , word'_list , io_redirect'_list ) =
     match simple_command'.value with
     | SimpleCommand_CmdPrefix_CmdWord_CmdSuffix (cmd_prefix', cmd_word', cmd_suffix') ->
-       let ( assignment_word'_list , io_redirect'_list ) = sort__cmd_prefix' [] [] cmd_prefix' in
-       let ( word'_list , io_redirect'_list ) = sort__cmd_suffix' [] io_redirect'_list cmd_suffix' in
+       (* Since we are sorting right-to-left, we need to sort the
+          suffix before the prefix. *)
+       let ( word'_list , io_redirect'_list ) = sort__cmd_suffix' [] [] cmd_suffix' in
+       let ( assignment_word'_list , io_redirect'_list ) = sort__cmd_prefix' [] io_redirect'_list cmd_prefix' in
        (
          List.map assignment_word'__to__assignment' assignment_word'_list ,
          cmd_word'__to__word' cmd_word' :: List.map word'__to__word' word'_list ,
@@ -494,16 +496,18 @@ and simple_command'__to__command (simple_command' : simple_command') : LAST.comm
          cmd_name'__to__word' cmd_name' :: [] ,
          [] )
   in
-  List.fold_left
+  (* Because of the semantics of redirections, we need to handle that
+     redirection list from right to left. *)
+  List.fold_right
     (
-      fun command io_redirect' ->
+      fun io_redirect' command ->
       io_redirect'__to__command
         io_redirect'
         { value = command ;
           position = simple_command'.position }
     )
-    (LAST.Simple (assignment'_list, word'_list ))
     io_redirect'_list
+    (LAST.Simple (assignment'_list, word'_list ))
 
 (* CST.cmd_prefix -> CST.assignment_word' list * CST.io_redirect' list
 
