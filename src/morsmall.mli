@@ -45,3 +45,9 @@ val pp_print_safe : Format.formatter -> AST.command -> unit
 
 val pp_print_debug : Format.formatter -> AST.command -> unit
 (** Prints a representation of the AST in OCaml-style. *)
+
+(** {2 Interpreters} *)
+
+module Env = Env
+  
+val interpret : Env.t -> AST.command -> Env.t

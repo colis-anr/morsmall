@@ -33,7 +33,7 @@ let parse_file filename =
   in
   let asts =
     List.map
-      Converter.complete_command__to__command_option
+      CST_to_AST.complete_command__to__command_option
       csts
   in
   if asts = [None] then
@@ -45,7 +45,6 @@ let parse_file filename =
        | Some ast -> ast)
       asts
 
-
 module LAST = AST.LAST
 module AST = AST.AST
 
@@ -53,3 +52,7 @@ let strip_locations = LocationMapper.command
 
 let pp_print_safe = SafePrinter.pp_command
 let pp_print_debug = AST.pp_command
+
+module Env = Env
+
+let interpret = Interpreter.command

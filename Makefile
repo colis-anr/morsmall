@@ -2,6 +2,8 @@
 
 build:
 	jbuilder build @install
+	ln -sf _build/install/default/bin bin
+	ln -sf _build/install/default/lib lib
 
 install:
 	jbuilder install
@@ -11,7 +13,7 @@ uninstall:
 
 doc:
 	jbuilder build @doc
-	ln -s _build/default/_doc doc
+	ln -sf _build/default/_doc doc
 
 tests:
 	jbuilder build tests/run.exe
@@ -19,5 +21,5 @@ tests:
 
 clean:
 	jbuilder clean
-	rm -f doc
+	rm -f bin lib doc
 	rm -f morsmall_test_report_*.md
