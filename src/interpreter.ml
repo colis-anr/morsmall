@@ -2,7 +2,7 @@
 open AST.AST
 
 let rec command env = function
-  | Simple (al, wl) ->
+  | Simple (_al, _wl) ->
      assert false
 
   | Async _c ->

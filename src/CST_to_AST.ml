@@ -631,14 +631,14 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : LAST.comman
          word
        )
   | IoRedirect_IoHere io_here' ->
-     let strip, word' = io_here'__to__strip_word' io_here' in
+     let _strip, word' = io_here'__to__strip_word' io_here' in
      LAST.HereDocument (
          command' ,
          0 ,
          word' (* FIXME: strip that word if needed *)
        )
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
-     let strip, word' = io_here'__to__strip_word' io_here' in
+     let _strip, word' = io_here'__to__strip_word' io_here' in
      LAST.HereDocument (
          command' ,
          (io_number__to__int io_number) ,
