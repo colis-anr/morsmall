@@ -1,0 +1,15 @@
+(copy_files ext/*)
+
+(library
+ (name morsmall)
+ (public_name morsmall)
+ (preprocess (pps ppx_deriving.std))
+ (libraries libmorbig)
+ (flags :standard -w +A-4-30-42)
+ (modules :standard \ cmd))
+
+(executable
+ (name cmd)
+ (public_name morsmall)
+ (libraries ppx_deriving_yojson.runtime morsmall)
+ (modules cmd))

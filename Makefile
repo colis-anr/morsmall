@@ -1,25 +1,25 @@
 .PHONY: build install uninstall doc tests clean
 
 build:
-	jbuilder build @install
+	dune build @install
 	ln -sf _build/install/default/bin bin
 	ln -sf _build/install/default/lib lib
 
 install:
-	jbuilder install
+	dune install
 
 uninstall:
-	jbuilder uninstall
+	dune uninstall
 
 doc:
-	jbuilder build @doc
+	dune build @doc
 	ln -sf _build/default/_doc doc
 
 tests:
-	jbuilder build tests/run.exe
+	dune build tests/run.exe
 	_build/default/tests/run.exe
 
 clean:
-	jbuilder clean
+	dune clean
 	rm -f bin lib doc
 	rm -f morsmall_test_report_*.md
