@@ -21,7 +21,7 @@
 (******************************************************************************)
 
 let fpf = Format.fprintf
-open AST.AST
+open AST
 
 (* AST.name *)
 
@@ -35,10 +35,11 @@ and pp_word_component ppf = function (*FIXME*)
      fpf ppf "%s" literal
   | DoubleQuoted _word ->
      assert false
-  | Variable variable ->
+  | Variable (variable, attribute) ->
+     assert (attribute = NoAttribute);
      fpf ppf "${%s}" variable
   | Subshell command_list ->
-     fpf ppf "$(%a)" pp_command_list command_list
+     fpf ppf "$(%a)" pp_command'_list command_list
   | Name name ->
      fpf ppf "%s" name
   | Assignment assignment ->
@@ -57,6 +58,9 @@ and pp_word ppf = function
   | [e] -> pp_word_component ppf e
   | h :: q -> fpf ppf "%a%a" pp_word_component h pp_word q
 
+and pp_word' ppf word' =
+  Location.on_located (pp_word ppf) word'
+
 and pp_words ppf = function
   | [] -> ()
   | [word] ->
@@ -65,6 +69,15 @@ and pp_words ppf = function
      fpf ppf "%a %a"
        pp_word word
        pp_words words
+
+and pp_words' ppf = function
+  | [] -> ()
+  | [word'] ->
+     pp_word' ppf word'
+  | word' :: words' ->
+     fpf ppf "%a %a"
+       pp_word' word'
+       pp_words' words'
 
 (* AST.pattern *)
 
@@ -84,6 +97,9 @@ and pp_assignment ppf { variable ; word } =
     pp_name variable
     pp_word word
 
+and pp_assignment' ppf assignment' =
+  Location.on_located (pp_assignment ppf) assignment'
+
 and pp_assignments ppf = function
   | [] -> ()
   | [assignment] ->
@@ -93,12 +109,32 @@ and pp_assignments ppf = function
        pp_assignment assignment
        pp_assignments assignments
 
+and pp_assignments' ppf = function
+  | [] -> ()
+  | [assignment'] ->
+     pp_assignment' ppf assignment'
+  | assignment' :: assignments' ->
+     fpf ppf "%a %a"
+       pp_assignment' assignment'
+       pp_assignments' assignments'
+
 and pp_redirection_kind ppf k =
   fpf ppf "%s"
     (match k with
      | Input -> "<" | InputDuplicate -> "<&"
      | Output -> ">" | OutputDuplicate -> ">&" | OutputAppend -> ">>"
      | InputOutput -> "<>" | OutputClobber -> ">|")
+
+(* AST.program *)
+
+and pp_program ppf = function
+  | [] -> ()
+  | [command'] ->
+     pp_command' ppf command'
+  | command' :: program ->
+     fpf ppf "%a@\n%a"
+       pp_command' command'
+       pp_program program
 
 (* AST.command *)
 
@@ -112,18 +148,18 @@ and pp_command ppf (command : command) =
 
     | Seq (command1, command2) ->
        fpf ppf "%a;%a"
-         pp_command command1
-         pp_command command2
+         pp_command' command1
+         pp_command' command2
 
     | And (command1, command2) ->
        fpf ppf "%a&&%a"
-         pp_command command1
-         pp_command command2
+         pp_command' command1
+         pp_command' command2
 
     | Or (command1, command2) ->
        fpf ppf "%a||%a"
-         pp_command command1
-         pp_command command2
+         pp_command' command1
+         pp_command' command2
 
     | Not command ->
        fpf ppf "! %a"
@@ -164,7 +200,7 @@ and pp_command ppf (command : command) =
        fpf ppf "case %a in" pp_word word;
        List.iter
          (fun item ->
-           match item with
+           match item.Location.value with
            | (pattern, None) ->
               fpf ppf " %a) ;;" pp_pattern' pattern
            | (pattern, Some body') ->
@@ -190,11 +226,11 @@ and pp_command ppf (command : command) =
     | Simple ([], []) ->
        failwith "SafePrinter.pp_command': ill-formed command: Simple([], [])"
     | Simple ([], words) ->
-       fpf ppf "%a" pp_words words
+       fpf ppf "%a" pp_words' words
     | Simple (assignments, words) ->
        fpf ppf "%a %a"
-         pp_assignments assignments
-         pp_words words
+         pp_assignments' assignments
+         pp_words' words
 
     | Redirection (command, descr, kind, file) ->
        (* The space is required because "the [descriptor] must be delimited from any preceding text". *)
@@ -217,11 +253,22 @@ and pp_command ppf (command : command) =
   );
   fpf ppf "%s}" (match command with Async _ -> "&" | HereDocument _ -> "" | _ -> ";")
 
+and pp_command' ppf command' =
+  Location.on_located (pp_command ppf) command'
+
 and pp_command_list ppf = function
   | [] -> ()
-  | [e] ->
-     pp_command ppf e
-  | h :: q ->
+  | [command] ->
+     pp_command ppf command
+  | command :: command_list ->
      fpf ppf "%a@\n%a"
-       pp_command h
-       pp_command_list q
+       pp_command command
+       pp_command_list command_list
+
+and pp_command'_list ppf = function
+  | [] -> ()
+  | [command'] -> pp_command' ppf command'
+  | command' :: command'_list ->
+     fpf ppf "%a@\n%a"
+       pp_command' command'
+       pp_command'_list command'_list

@@ -20,34 +20,21 @@
 (*                                                                            *)
 (******************************************************************************)
 
-type position = Location.MorbigLocation.position
-
-module LAST = AST.LAST
-(** Shell AST with locations. *)
-
-module AST = AST.AST
-(** Shell AST without locations. *)
+module AST = AST
+(** Shell AST. *)
 
 (** {2 Parsers} *)
 
-exception SyntaxError of position * string
+exception SyntaxError of Location.lexing_position
 
-val parse_file : string -> LAST.command list
-(** Parses a whole Shell file into a list of {!LAST.command}. The list
+val parse_file : string -> AST.program
+(** Parses a whole Shell file into a list of {!AST.command}. The list
    can be empty. Can raise {!SyntaxError}. *)
-
-val strip_locations : LAST.command -> AST.command
 
 (** {2 Printers} *)
 
-val pp_print_safe : Format.formatter -> AST.command -> unit
+val pp_print_safe : Format.formatter -> AST.program -> unit
 (** Prints a Shell from its AST. *)
 
-val pp_print_debug : Format.formatter -> AST.command -> unit
+val pp_print_debug : Format.formatter -> AST.program -> unit
 (** Prints a representation of the AST in OCaml-style. *)
-
-(** {2 Interpreters} *)
-
-module Env = Env
-  
-val interpret : Env.t -> AST.command -> Env.t

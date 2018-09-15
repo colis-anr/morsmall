@@ -20,50 +20,58 @@
 (*                                                                            *)
 (******************************************************************************)
 
-module Make (L : Location.Location) =
-  struct
+type 'a located = 'a Location.located                      [@@deriving eq, show]
 
-    type 'a located = 'a L.located        [@@deriving eq, show{with_path=false}]
-
-    (** Names in Shell are just strings with a few additional
+(** Names in Shell are just strings with a few additional
    conditions. *)
 
-    type name = string
+type name = string
 
-    (** The type {!word} is a description of words in Shell. {e See POSIX,
+(** The type {!word} is a description of words in Shell. {e See POSIX,
    2 Shell & Utilities, 2.3 Token Recognition} *)
 
-    and character_range = char list
+and character_range = char list
 
-    and word_component =
-      | Literal of string
-      | DoubleQuoted of word
-      | Variable of name
-      | Subshell of command list
-      | Name of string (* FIXME: do we really want that? *)
-      | Assignment of assignment (* and that? *)
-      | GlobAll
-      | GlobAny
-      | GlobRange of character_range
+and attribute =
+  | NoAttribute
+  | UseDefaultValues of word
+  | AssignDefaultValues of word
+  | IndicateErrorifNullorUnset of word
+  | UseAlternativeValue of word
+  | RemoveSmallestSuffixPattern of word
+  | RemoveLargestSuffixPattern of word
+  | RemoveSmallestPrefixPattern of word
+  | RemoveLargestPrefixPattern of word
 
-    and word = word_component list
-    and word' = word located
+and word_component =
+  | Literal of string
+  | DoubleQuoted of word
+  | Variable of name * attribute
+  | Subshell of program
+  | Name of string (* FIXME: do we really want that? *)
+  | Assignment of assignment (* and that? *)
+  | GlobAll
+  | GlobAny
+  | GlobRange of character_range
 
-    (** For now, a {!pattern} is just a {!word}. *)
+and word = word_component list
+and word' = word located
 
-    and pattern = word list
-    and pattern' = pattern located
+(** For now, a {!pattern} is just a {!word}. *)
 
-    (** An assignment is just a pair of a {!name} and a {!word}. *)
+and pattern = word list
+and pattern' = pattern located
 
-    and assignment = { variable : name ; word : word }
-    and assignment' = assignment located
+(** An assignment is just a pair of a {!name} and a {!word}. *)
 
-    (** A file descriptor {!descr} is an integer. *)
+and assignment = { variable : name ; word : word }
+and assignment' = assignment located
 
-    and descr = int
+(** A file descriptor {!descr} is an integer. *)
 
-    (** The following description does contain all the semantic subtleties
+and descr = int
+
+(** The following description does contain all the semantic subtleties
    of POSIX Shell. Such a description can be found in the document
    {{:http://pubs.opengroup.org/onlinepubs/9699919799.2016edition/}IEEE
    Std 1003.1™-2008, 2016 Edition}. In the following, we will refer to
@@ -172,64 +180,62 @@ module Make (L : Location.Location) =
 
    {e See POSIX, 2 Shell & Utilities, 2.7 Redirections}
 
-     *)
+ *)
 
-    (** {1 Type Definitions}
+(** {1 Type Definitions}
 
    The type [command] describes a command in the AST. All the command
    semantics are described at the top of this document. *)
 
-    and command =
-      (* Simple Commands *)
-      | Simple of assignment' list * word' list
+and program = command' list
 
-      (* Lists *)
-      | Async of command
-      | Seq of command' * command'
-      | And of command' * command'
-      | Or of command' * command'
+and command =
+  (* Simple Commands *)
+  | Simple of assignment' list * word' list
 
-      (* Pipelines *)
-      | Not of command'
-      | Pipe of command' * command'
+  (* Lists *)
+  | Async of command
+  | Seq of command' * command'
+  | And of command' * command'
+  | Or of command' * command'
 
-      (* Compound Command's *)
-      | Subshell of command'
-      | For of name * word list option * command'
-      | Case of word * case_item' list
-      | If of command' * command' * command' option
-      | While of command' * command'
-      | Until of command' * command'
+  (* Pipelines *)
+  | Not of command'
+  | Pipe of command' * command'
 
-      (* Function Definition Command' *)
-      | Function of name * command'
+  (* Compound Command's *)
+  | Subshell of command'
+  | For of name * word list option * command'
+  | Case of word * case_item' list
+  | If of command' * command' * command' option
+  | While of command' * command'
+  | Until of command' * command'
 
-      (* Redirection *)
-      | Redirection of command' * descr * kind * word
-      | HereDocument of command' * descr * word'
+  (* Function Definition Command' *)
+  | Function of name * command'
 
-    and command' = command located
+  (* Redirection *)
+  | Redirection of command' * descr * kind * word
+  | HereDocument of command' * descr * word'
 
-    and case_item =
-      pattern' * command' option
+and command' = command located
 
-    and case_item' = case_item located
+and case_item =
+  pattern' * command' option
 
-    and kind =
-      | Output          (*  > *)
-      | OutputDuplicate (* >& *)
-      | OutputAppend    (* >> *)
-      | OutputClobber   (* >| *)
-      | Input           (*  < *)
-      | InputDuplicate  (* <& *)
-      | InputOutput     (* <> *)
+and case_item' = case_item located
 
-    [@@deriving eq, show{with_path=false}]
+and kind =
+  | Output          (*  > *)
+  | OutputDuplicate (* >& *)
+  | OutputAppend    (* >> *)
+  | OutputClobber   (* >| *)
+  | Input           (*  < *)
+  | InputDuplicate  (* <& *)
+  | InputOutput     (* <> *)
 
-    let default_redirection_descriptor = function
-      | Output | OutputDuplicate | OutputAppend | OutputClobber -> 1
-      | Input | InputDuplicate | InputOutput -> 0
-  end
+[@@deriving eq, show{with_path=false}]
 
-module LAST = Make(Location.MorbigLocation)
-module AST = Make(Location.NoLocation)
+let default_redirection_descriptor = function
+  | Output | OutputDuplicate | OutputAppend | OutputClobber -> 1
+  | Input | InputDuplicate | InputOutput -> 0

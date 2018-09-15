@@ -20,39 +20,21 @@
 (*                                                                            *)
 (******************************************************************************)
 
-type position = Location.MorbigLocation.position
-
-exception SyntaxError of position * string
+exception SyntaxError of Location.lexing_position
 
 let parse_file filename =
-  let csts =
-    try Libmorbig.API.parse_file filename
-    with _ ->
-      (* FIXME: when issue #22 in Morbig is fixed, match for Morbig's errors. *)
-      raise (SyntaxError (Libmorbig.CSTHelpers.dummy_position, "An error occured"))
-  in
-  let asts =
-    List.map
-      CST_to_AST.complete_command__to__command_option
-      csts
-  in
-  if asts = [None] then
-    []
-  else
-    List.map
-      (function
-       | None -> assert false
-       | Some ast -> ast)
-      asts
+  let open Morbig.API in
+  (
+    try
+      Morbig.API.parse_file filename
+    with
+    | Errors.DuringParsing position
+    | Errors.DuringLexing (position, _) ->
+       raise (SyntaxError position)
+  )
+  |> CST_to_AST.program__to__program
 
-module LAST = AST.LAST
-module AST = AST.AST
+module AST = AST
 
-let strip_locations = LocationMapper.command
-
-let pp_print_safe = SafePrinter.pp_command
-let pp_print_debug = AST.pp_command
-
-module Env = Env
-
-let interpret = Interpreter.command
+let pp_print_safe = SafePrinter.pp_program
+let pp_print_debug = AST.pp_program
