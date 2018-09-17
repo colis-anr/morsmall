@@ -95,7 +95,7 @@ and pp_pattern' ppf pattern' =
     
 (* AST.assignement *)
 
-and pp_assignment ppf { variable ; word } =
+and pp_assignment ppf (variable, word) =
   fpf ppf "%a=%a"
     pp_name variable
     pp_word word

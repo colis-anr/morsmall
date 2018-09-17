@@ -837,10 +837,8 @@ and name'__to__name (name' : name') : AST.name =
 (* CST.assignment_word -> AST.assignment *)
 
 and assignment_word__to__assignment ((name, word) : assignment_word) : AST.assignment =
-  AST.{
-      variable = name__to__name name ;
-      word = word__to__word word
-  }
+  (name__to__name name,
+   word__to__word word)
 
 and assignment_word'__to__assignment' (assignment_word' : assignment_word') : AST.assignment' =
   convert_location assignment_word__to__assignment assignment_word'

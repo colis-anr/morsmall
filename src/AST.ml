@@ -64,7 +64,7 @@ and pattern' = pattern located
 
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
-and assignment = { variable : name ; word : word }
+and assignment = name * word
 and assignment' = assignment located
 
 (** A file descriptor {!descr} is an integer. *)
@@ -220,8 +220,7 @@ and command =
 
 and command' = command located
 
-and case_item =
-  pattern' * command' option
+and case_item = pattern' * command' option
 
 and case_item' = case_item located
 
