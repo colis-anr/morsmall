@@ -34,7 +34,13 @@ let parse_file filename =
   )
   |> CST_to_AST.program__to__program
 
-module AST = AST
-
 let pp_print_safe = SafePrinter.pp_program
 let pp_print_debug = AST.pp_program
+
+module AST = AST
+
+(* other modules *)
+
+module Location = Location
+module SafePrinter = SafePrinter
+module CST_to_AST = CST_to_AST

@@ -57,15 +57,12 @@ type parameters =
 let default_parameters =
   { depth = 10 }
 
-let d p = { p with depth = p.depth - 1 }
+let d p = { depth = p.depth - 1 } (* { p with depth = p.depth - 1 } *)
 
 (* Generator helper functions *)
 
-let g_bool ~prob =
-  if Random.float 1. < prob then
-    true
-  else
-    false
+(* let g_bool ~prob =
+ *   Random.float 1. < prob *)
 
 let g_option ~prob inhabitant =
   if Random.float 1. < prob then
@@ -84,9 +81,9 @@ let rec g_list ~prob ~limit inhabitant =
 let rec g_word_component p : word_component =
   choose
     [| 1, (fun _ -> Literal "foo") ;
-       1, (fun _ -> Variable "x") ;
+       1, (fun _ -> Variable ("x", NoAttribute)) ;
        (if p.depth <= 0 then 0 else 1),
-       (fun p -> Subshell (g_command_list p)) ;
+       (fun p -> Subshell (g_program p)) ;
        1, (fun _ -> GlobAll) ;
        1, (fun _ -> GlobAny) |]
     (d p)
@@ -127,6 +124,10 @@ and g_redirection_kind _p =
        1, InputDuplicate ;
        1, InputOutput |]
 
+and g_program p =
+  g_list ~prob:0.5 ~limit:3
+    (fun () -> g_command' (d p))
+  
 and g_command p =
   if p.depth <= 0 then
     g_simple_command (d p)
@@ -153,9 +154,6 @@ and g_command p =
 and g_command' p =
   dummy_locate g_command p
 
-and g_command_list p =
-  g_list ~prob:0.8 ~limit:10 (fun () -> g_command (d p))
-
 and g_simple_command p =
   let assignments =
     g_list ~prob:0.5 ~limit:5
@@ -168,66 +166,66 @@ and g_simple_command p =
   if assignments = [] && words = [] then
     g_simple_command p
   else
-    Simple { assignments ; words }
+    Simple (assignments, words)
 
 and g_for_clause p =
-  For {
-      variable = "x" ; (*FIXME*)
-      words =
-        g_option ~prob:0.8
-          (fun () -> g_list ~prob:0.8 ~limit:10
-                       (fun () -> g_word (d p))) ;
-      body = g_command' (d p)
-    }
+  For (
+      "x",
+      g_option ~prob:0.8 (fun () -> g_list ~prob:0.8 ~limit:10 (fun () -> g_word (d p))),
+      g_command' (d p)
+    )
 
 and g_case_clause p =
-  Case {
-      word = g_word (d p) ;
-      items =
-        g_list ~prob:0.7 ~limit:5
-          (fun () -> g_case_item' (d p) )
-    }
+  Case (
+      g_word (d p),
+      g_list ~prob:0.7 ~limit:5 (fun () -> g_case_item' (d p) )
+    )
 
 and g_case_item p =
-  { pattern = g_pattern' (d p) ;
-    body = g_option ~prob:0.9 (fun () -> g_command' (d p)) }
+  (
+    g_pattern' (d p),
+    g_option ~prob:0.9 (fun () -> g_command' (d p))
+  )
 
 and g_case_item' p =
   dummy_locate g_case_item p
 
 and g_if_clause p =
-  If
-    { test = g_command' (d p) ;
-      body = g_command' (d p) ;
-      rest = g_option ~prob:0.6 (fun () -> g_command' (d p)) }
+  If (
+      g_command' (d p),
+      g_command' (d p),
+      g_option ~prob:0.6 (fun () -> g_command' (d p))
+    )
 
 and g_while_clause p =
-  While
-    { test = g_command' (d p) ;
-      body = g_command' (d p) }
+  While (
+      g_command' (d p),
+      g_command' (d p)
+    )
 
 and g_until_clause p =
-  Until
-    { test = g_command' (d p) ;
-      body = g_command' (d p) }
+  Until (
+      g_command' (d p),
+      g_command' (d p)
+    )
 
 and g_function_definition p =
-  Function
-    { name = g_name (d p) ;
-      body = g_command' (d p) }
+  Function (
+      g_name (d p),
+      g_command' (d p)
+    )
 
 and g_redirection p =
-  Redirection
-    { command = g_command' (d p) ;
-      descr = g_descr (d p) ;
-      kind = g_redirection_kind (d p) ;
-      file = g_word (d p) }
+  Redirection (
+      g_command' (d p),
+      g_descr (d p),
+      g_redirection_kind (d p),
+      g_word (d p)
+    )
 
 and g_here_document p =
-  HereDocument
-    { command = g_command' (d p) ;
-      descr = g_descr (d p) ;
-      strip = g_bool ~prob:0.5 ;
-      content = Morsmall.Location.map
-                  (fun w -> w @ [Literal "\n"])
-                  (g_word' (d p)) }
+  HereDocument (
+      g_command' (d p),
+      g_descr (d p),
+      dummily_located (g_word (d p) @ [Literal "\n"])
+    )

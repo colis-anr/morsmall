@@ -25,4 +25,4 @@ type parameters =
 
 val default_parameters : parameters
 
-val g_command : parameters -> Morsmall.AST.command
+val g_program : parameters -> Morsmall.AST.program

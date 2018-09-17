@@ -1,6 +1,6 @@
 
-exception CouldntParse of Morsmall.AST.command * string
-exception ASTsDontMatch of Morsmall.AST.command * Morsmall.AST.command
+exception CouldntParse of Morsmall.AST.program
+exception ASTsDontMatch of Morsmall.AST.program * Morsmall.AST.program
 
 let generator_parameters = Generator.default_parameters
 
@@ -8,13 +8,13 @@ let number_of_tests = 100
 
 (* *)
 
-let run_one_test test_number =
+let run_one_test () =
   (* Create a temporary file *)
   let (filename, out_channel) = Filename.open_temp_file "morsmall_test_" ".sh" in
   let formatter = Format.formatter_of_out_channel out_channel in
 
   (* Create a random script, put it in the file *)
-  let ast = Generator.(g_command generator_parameters) in
+  let ast = Generator.(g_program generator_parameters) in
   Morsmall.pp_print_safe formatter ast;
 
   (* Close the file *)
@@ -23,20 +23,18 @@ let run_one_test test_number =
 
   try
     (
-      (* Parse the file with Morbig *)
-      let asts' =
-        try Morsmall.parse_file filename
-        with Morsmall.SyntaxError (_pos, msg) ->
-          raise (CouldntParse(ast, msg))
+      (* Parse the file with Morbig and Morsmall *)
+      let ast' =
+        try
+          Morsmall.parse_file filename
+        with
+          Morsmall.SyntaxError _pos ->
+          raise (CouldntParse ast)
       in
 
       (* Compare *)
-      match asts' with
-      | [ast'] ->
-         if not (Morsmall.AST.equal_command ast ast') then
+      if not (Morsmall.AST.equal_program ast ast') then
            raise (ASTsDontMatch (ast, ast'))
-      | _ ->
-         failwith (Format.sprintf "Error in test #%d: could not understand Morbig's output.@." test_number)
     );
 
     (* Clean the temporary file *)
@@ -52,7 +50,7 @@ let () =
   for i = 1 to number_of_tests do
     Format.printf "Running test #%d...\r@?" i;
     try
-      run_one_test i
+      run_one_test ()
     with
     | _ as exn ->
        (
@@ -66,15 +64,14 @@ let () =
          let ast =
            (
              match exn with
-             | CouldntParse (ast, error) ->
+             | CouldntParse ast ->
                 Format.fprintf formatter "\nMorbig could not parse the file produced by Morsmall's printer.\n";
-                Format.fprintf formatter "It failed with the following error message:\n> %s\n" error;
                 ast
 
              | ASTsDontMatch (ast, _) ->
                 Format.fprintf formatter "\nThe parsed AST does not coincide with the generated one.\n";
                 ast
-
+                
              | _ as exn -> raise exn
            )
          in

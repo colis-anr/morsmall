@@ -38,3 +38,9 @@ val pp_print_safe : Format.formatter -> AST.program -> unit
 
 val pp_print_debug : Format.formatter -> AST.program -> unit
 (** Prints a representation of the AST in OCaml-style. *)
+
+(** {2 Other Modules} *)
+
+module Location = Location
+module SafePrinter = SafePrinter
+module CST_to_AST = CST_to_AST
