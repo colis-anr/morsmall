@@ -90,6 +90,9 @@ and pp_pattern ppf = function
        pp_word word
        pp_pattern pattern
 
+and pp_pattern' ppf pattern' =
+  Location.on_located (pp_pattern ppf) pattern'
+    
 (* AST.assignement *)
 
 and pp_assignment ppf { variable ; word } =
