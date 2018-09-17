@@ -22,4 +22,4 @@ tests:
 clean:
 	dune clean
 	rm -f bin lib doc
-	rm -f morsmall_test_report_*.md
+	rm -f morsmall_test_report_*.org

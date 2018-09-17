@@ -56,46 +56,58 @@ let () =
        (
          (* Generate a report *)
 
-         let filename = "morsmall_test_report_"^(string_of_int i)^".md" in
+         let filename = "morsmall_test_report_"^(string_of_int i)^".org" in
          let out_channel = open_out filename in
          let formatter = Format.formatter_of_out_channel out_channel in
-         Format.fprintf formatter "# Morsmall Test Engine -- Report on Test #%d\n" i;
-         Format.fprintf formatter "\n## The Error\n";
+         Format.fprintf formatter "#+TITLE: Morsmall Test Engine -- Report on Test #%d\n\n" i;
+         Format.fprintf formatter "* The Error\n";
          let ast =
            (
              match exn with
              | CouldntParse ast ->
-                Format.fprintf formatter "\nMorbig could not parse the file produced by Morsmall's printer.\n";
+                Format.fprintf formatter "Morbig could not parse the file produced by Morsmall's printer.\n";
                 ast
 
              | ASTsDontMatch (ast, _) ->
-                Format.fprintf formatter "\nThe parsed AST does not coincide with the generated one.\n";
+                Format.fprintf formatter "The parsed AST does not coincide with the generated one.\n";
                 ast
                 
              | _ as exn -> raise exn
            )
          in
-         Format.fprintf formatter "\n## Generated AST\n\n%a\n" Morsmall.pp_print_debug ast;
-         Format.fprintf formatter "\n## Generated Shell Script\n\n%a\n" Morsmall.pp_print_safe ast;
+         Format.fprintf formatter "* Generated AST\n%a\n" Morsmall.pp_print_debug ast;
+         Format.fprintf formatter "* Generated Shell Script\n%a\n" Morsmall.pp_print_safe ast;
          (
            match exn with
            | ASTsDontMatch (_, ast') ->
-              Format.fprintf formatter "\n## Parsed AST\n\n%a\n" Morsmall.pp_print_debug ast'
+              (
+                Format.fprintf formatter
+                  "* Parsed AST\n%a\n"
+                  Morsmall.pp_print_debug ast';
 
+                try
+                  Format.fprintf formatter
+                    "* Parsed Shell Script\n%a\n"
+                    Morsmall.pp_print_safe ast'
+                with
+                  Assert_failure _ ->
+                  Format.fprintf formatter "* Error while printing the parsed AST@.";
+                  Printexc.print_backtrace out_channel
+              )
            | _ -> ()
          );
          Format.fprintf formatter "@?";
          close_out out_channel;
 
          (* Complain *)
-         Format.eprintf "Error in test #%d: check report in '%s'@." i filename;
+         Format.eprintf "Error in test #%d: check report in '%s'\n" i filename;
          incr errors
        )
   done;
 
   if !errors = 0 then
     (
-      Format.printf "Successfully ran %d tests." number_of_tests;
+      Format.printf "Successfully ran %d tests.@." number_of_tests;
       exit 0
     )
   else

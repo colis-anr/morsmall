@@ -13,4 +13,4 @@ _build
 lib
 doc
 bin
-morsmall_test_report_*.md
+morsmall_test_report_*.org
