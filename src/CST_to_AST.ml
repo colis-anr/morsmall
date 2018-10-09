@@ -775,6 +775,8 @@ and word_component__to__word_component = function
      AST.DoubleQuoted (word_double_quoted__to__word word)
   | WordSingleQuoted (Word (_, [WordLiteral literal])) ->
      AST.Literal literal
+  | WordSingleQuoted (Word (_, [])) ->
+     AST.Literal ""
   | WordSingleQuoted _ ->
      assert false
   | WordLiteral literal ->
