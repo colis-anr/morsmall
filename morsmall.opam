@@ -9,7 +9,7 @@ authors: "Nicolas Jeannerod nicolas.jeannerod@irif.fr"
 
 homepage: "https://github.com/colis-anr/morsmall"
 bug-reports: "https://github.com/colis-anr/morsmall/issues"
-dev-repo: "https://github.com/colis-anr/morsmall"
+dev-repo: "git+ssh://git@github.com/colis-anr/morsmall.git"
 
 depends: [
   "dune"    {build}
