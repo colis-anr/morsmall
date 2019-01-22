@@ -10,7 +10,7 @@ endif
 
 build:
 	dune build @install
-	ln -sf _build/install/default/bin bin
+#	ln -sf _build/install/default/bin bin
 	ln -sf _build/install/default/lib lib
 
 install:
