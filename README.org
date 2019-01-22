@@ -15,9 +15,7 @@ License, version 3. Please refer to the file [[file:LICENSE][LICENSE]].
 * Downloading, building and installing
 ** Download
 *** Clone the repository
-#+BEGIN_SRC sh
-git clone https://github.com/colis-anr/morsmall
-#+END_SRC
+: git clone https://github.com/colis-anr/morsmall
 *** Download the latest release
 There is no release yet.
 ** Install dependencies
@@ -28,14 +26,14 @@ Morsmall depends on the following software:
 - [[https://github.com/ocaml/dune][Dune]] (ex jbuilder) with ocaml-migrate-parsetree
 - [[http://opam.ocaml.org/][OPAM]]
 ** Build
-#+BEGIN_SRC sh
-make
-#+END_SRC
+: make
 ** Run tests
-#+BEGIN_SRC sh
-make tests
-#+END_SRC
+: make tests
 ** Install
-#+BEGIN_SRC sh
-make install
-#+END_SRC
+: make install
+
+This target recognises the environment variables =PREFIX= and =LIBDIR=.
+** Uninstall
+: make uninstall
+
+This target recognises the environment variables =PREFIX= and =LIBDIR=.

@@ -1,15 +1,23 @@
 .PHONY: build install uninstall doc tests clean
 
+ifneq ($(PREFIX),)
+INSTALL_ARGS := $(INSTALL_ARGS) --prefix $(PREFIX)
+endif
+
+ifneq ($(LIBDIR),)
+INSTALL_ARGS := $(INSTALL_ARGS) --libdir $(LIBDIR)
+endif
+
 build:
 	dune build @install
 	ln -sf _build/install/default/bin bin
 	ln -sf _build/install/default/lib lib
 
 install:
-	dune install
+	dune install $(INSTALL_ARGS)
 
 uninstall:
-	dune uninstall
+	dune uninstall $(INSTALL_ARGS)
 
 doc:
 	dune build @doc
