@@ -8,10 +8,6 @@ A concise AST for POSIX shell
 
 version: "0.1"
 license: "GPL3"
-synopsis: "A concise AST for POSIX shell"
-description: """
-A concise AST for POSIX shell
-"""
 
 maintainer: "Nicolas Jeannerod <nicolas.jeannerod@irif.fr>"
 authors: [ "Nicolas Jeannerod <nicolas.jeannerod@irif.fr>" ]
