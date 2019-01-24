@@ -17,9 +17,10 @@ bug-reports: "https://github.com/colis-anr/morsmall/issues"
 dev-repo: "git+ssh://git@github.com/colis-anr/morsmall.git"
 
 depends: [
-  "dune"    {build}
+  "dune"          {build}
   "morbig"
-  "ocaml"   {>= "4.04"}
+  "ocaml"         {>= "4.04"}
+  "ppx_deriving"  {build}
 ]
 
 build: [
