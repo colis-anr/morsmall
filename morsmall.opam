@@ -19,7 +19,7 @@ dev-repo: "git+ssh://git@github.com/colis-anr/morsmall.git"
 depends: [
   "dune"    {build}
   "morbig"
-  "ocaml"   {build & >= "4.04"}
+  "ocaml"   {>= "4.04"}
 ]
 
 build: [
