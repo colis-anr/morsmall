@@ -21,8 +21,3 @@ RUN sudo chown -R opam .
 ## Build
 
 RUN eval $(opam env) && make
-
-## Set up the entry point of this Dockerfile to Morbig's binary that
-## has just been built.
-
-ENTRYPOINT [ "/home/opam/morbig/bin/morsmall" ]
