@@ -19,28 +19,20 @@
 (*  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-exception SyntaxError of Location.lexing_position
+(** abstract syntax of test expressions *)
 
-let parse_file filename =
-  let open Morbig.API in
-  (
-    try
-      Morbig.API.parse_file filename
-    with
-    | Errors.DuringParsing position
-    | Errors.DuringLexing (position, _) ->
-       raise (SyntaxError position)
-  )
-  |> CST_to_AST.program__to__program
+type expression =
+  | And of expression * expression
+  | Or  of expression * expression
+  | Not of expression
+  | Binary of string * string * string   (* (op,arg_left,arg_right) *)
+  | Unary  of string * string            (* (op,arg) *)
+  | Single of string                     (* arg *)
 
-let pp_print_safe = SafePrinter.pp_program
-let pp_print_debug = AST.pp_program
+exception Parse_error
 
-module AST = AST
-
-(* other modules *)
-
-module Location = Location
-module SafePrinter = SafePrinter
-module CST_to_AST = CST_to_AST
-module Testexp = Testexp
+(** [parse is_bracket wl] parses the list of words [wl] as a test expression.
+    If [is_bracket] is [true] then the last word of [wl] must be a right
+    bracket.
+ *)
+val parse: bool -> string list -> expression
