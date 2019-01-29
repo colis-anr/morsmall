@@ -31,8 +31,7 @@ type expression =
 
 exception Parse_error
 
-(** [parse is_bracket wl] parses the list of words [wl] as a test expression.
-    If [is_bracket] is [true] then the last word of [wl] must be a right
-    bracket.
- *)
-val parse: bool -> string list -> expression
+(** [parse ~bracket wl] parses the list of words [wl] as a test
+   expression.  If [bracket] is [true] then the last word of [wl] must
+   be a right bracket.  *)
+val parse: ?bracket:bool -> string list -> expression

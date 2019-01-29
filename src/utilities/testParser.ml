@@ -28,11 +28,11 @@ type expression =
   | Binary of string * string * string   (* (op,arg_left,arg_right) *)
   | Unary  of string * string            (* (op,arg) *)
   | Single of string                     (* arg *)
-                
+
 exception Parse_error
 
 type token =
-  | UnOp of string    (* unary operators -e, -f, etc. *) 
+  | UnOp of string    (* unary operators -e, -f, etc. *)
   | BinOp of string   (* binary operators -eq, =, etc. *)
   | AndOp             (* -a *)
   | OrOp              (* -o *)
@@ -68,7 +68,7 @@ let to_token s = match s with
   | "!"  -> NotOp
   | _    -> String s
 
-let parse is_bracket wl =
+let parse ?(bracket=false) wl =
   let tokenbuf = ref
                    (List.map to_token
                       (List.map Morbig.API.remove_quotes wl)) in
@@ -81,7 +81,7 @@ let parse is_bracket wl =
   in
   let rec parse_S () =
     let exp = parse_disj () in
-    if is_bracket then
+    if bracket then
       if lookup () = BracketR
       then pop ()
       else raise Parse_error;
@@ -146,9 +146,9 @@ let parse is_bracket wl =
                      | _ -> raise Parse_error
                      end
     | _ -> raise Parse_error
-  in parse_S ()       
+  in parse_S ()
 
-       
+
 (*
 
 grammar of test expressions:
@@ -157,7 +157,7 @@ grammar of test expressions:
 <disj>     -> <conj> | <conj> -o <disj>
 <conj>     -> <literal> | <literal> -a <conj>
 <literal>  -> <atom> | ! <atom>
-<atom>     -> string | unop string | string binop string | ( <disj> ) 
+<atom>     -> string | unop string | string binop string | ( <disj> )
 
 grammar in LL(1):
 
@@ -167,10 +167,10 @@ grammar in LL(1):
 <conj>     -> <literal> <conj'>
 <conj'>    -> EPSILON | -a <conj>
 <literal>  -> <atom> | ! <atom>
-<atom>     -> string <atom'> | unop string | ( <disj> ) 
+<atom>     -> string <atom'> | unop string | ( <disj> )
 <atom'>    -> EPSILON | binop string
 
-annulating non-terminals: { <disj'>, <conj'>, <atom'> } 
+annulating non-terminals: { <disj'>, <conj'>, <atom'> }
 
 nonterminal | Fi_1
 ------------+--------------------
@@ -214,7 +214,7 @@ nonterminal | must be mutually disjoint
 ------------+--------------------------
 <S>         | ---
 <disj>      | ---
-<disj'>     | EOF, ), -o 
+<disj'>     | EOF, ), -o
 <conj>      | ---
 <conj'>     | -o, EOF, ), -a
 <literal>   | string, unop, (, !
