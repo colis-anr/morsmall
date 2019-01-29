@@ -43,3 +43,4 @@ val pp_print_debug : Format.formatter -> AST.program -> unit
 module Location = Location
 module SafePrinter = SafePrinter
 module CST_to_AST = CST_to_AST
+module Utilities = Morsmall_utilities

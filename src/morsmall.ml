@@ -43,4 +43,4 @@ module AST = AST
 module Location = Location
 module SafePrinter = SafePrinter
 module CST_to_AST = CST_to_AST
-module Testexp = Testexp
+module Utilities = Morsmall_utilities
