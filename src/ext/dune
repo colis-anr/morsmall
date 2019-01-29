@@ -1,0 +1,3 @@
+(library
+ (name morsmall_ext)
+ (public_name morsmall.ext))
