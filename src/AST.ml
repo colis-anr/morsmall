@@ -47,8 +47,7 @@ and word_component =
   | DoubleQuoted of word
   | Variable of name * attribute
   | Subshell of program
-  | Name of string (* FIXME: do we really want that? *)
-  | Assignment of assignment (* and that? *)
+  | Assignment of assignment (* FIXME: do we really want that? *)
   | GlobAll
   | GlobAny
   | GlobRange of character_range

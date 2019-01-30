@@ -39,8 +39,6 @@ and pp_word_component ppf = function (*FIXME*)
      fpf ppf "${%s}" variable
   | Subshell command_list ->
      fpf ppf "$(%a)" pp_command'_list command_list
-  | Name name ->
-     fpf ppf "%s" name
   | Assignment assignment ->
      pp_assignment ppf assignment
   | GlobAll ->
@@ -91,7 +89,7 @@ and pp_pattern ppf = function
 
 and pp_pattern' ppf pattern' =
   Location.on_located (pp_pattern ppf) pattern'
-    
+
 (* AST.assignement *)
 
 and pp_assignment ppf (variable, word) =

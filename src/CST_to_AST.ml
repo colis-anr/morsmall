@@ -767,7 +767,7 @@ and word_component__to__word_component = function
   | WordSubshell (_, program') ->
      AST.Subshell (program'__to__program program')
   | WordName name ->
-     AST.Name name (* FIXME: literal? *)
+     AST.Literal name
   | WordAssignmentWord assignment_word ->
      AST.Assignment (assignment_word__to__assignment assignment_word)
   | WordDoubleQuoted word ->
@@ -788,14 +788,16 @@ and word_component__to__word_component = function
      AST.GlobAny
   | WordGlobRange (Range char_list) ->
      AST.GlobRange char_list
-  | WordOther | WordEmpty ->
+  | WordEmpty ->
+     AST.Literal ""
+  | WordOther ->
      assert false
 
 and word_component_double_quoted__to__word_component = function
   | WordSubshell (_, program') ->
      AST.Subshell (program'__to__program program')
   | WordName name ->
-     AST.Name name (* FIXME: literal? *)
+     AST.Literal name
   | WordAssignmentWord assignment_word ->
      AST.Assignment (assignment_word__to__assignment assignment_word)
   | WordLiteral literal ->
