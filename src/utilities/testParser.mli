@@ -32,6 +32,6 @@ type expression =
 exception Parse_error
 
 (** [parse ~bracket wl] parses the list of words [wl] as a test
-   expression.  If [bracket] is [true] then the last word of [wl] must
-   be a right bracket.  *)
-val parse: ?bracket:bool -> string list -> expression
+   expression (or [None] if [wl] is empty). If [bracket] is [true]
+   then the last word of [wl] must be a right bracket.  *)
+val parse: ?bracket:bool -> string list -> expression option

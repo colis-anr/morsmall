@@ -69,91 +69,110 @@ let to_token s = match s with
   | _    -> String s
 
 let parse ?(bracket=false) wl =
-  let tokenbuf = ref
-                   (List.map to_token
-                      (List.map Morbig.API.remove_quotes wl)) in
-  let lookup () = match !tokenbuf with
+  let tokenbuf =
+    wl
+    |> List.map Morbig.API.remove_quotes
+    |> List.map to_token
+    |> ref
+  in
+  let lookup () =
+    match !tokenbuf with
     | h::_ -> h
     | [] -> EOF
-  and pop () = match !tokenbuf with
+  in
+  let pop () =
+    match !tokenbuf with
     | _::r -> tokenbuf := r
     | [] -> assert false
   in
+
   let rec parse_S () =
-    let exp = parse_disj () in
+    let exp = parse_S' () in
     if bracket then
-      if lookup () = BracketR
-      then pop ()
-      else raise Parse_error;
-    if lookup () = EOF
-    then exp
-    else raise Parse_error
+      if lookup () = BracketR then
+        pop ()
+      else
+        raise Parse_error;
+    if lookup () = EOF then
+      exp
+    else
+      raise Parse_error
+
+  and parse_S' () =
+    match lookup () with
+    | EOF | BracketR -> None
+    | _ -> Some (parse_disj ())
+
   and parse_disj () =
     let head = parse_conj () in
     match parse_disj' () with
     | None -> head
     | Some rest -> Or (head,rest)
+
   and parse_disj' () =
     match lookup () with
     | EOF | BracketR | ParR -> None
     | OrOp -> pop (); Some (parse_disj ())
     | _ -> raise Parse_error
+
   and parse_conj () =
     let head = parse_literal () in
     match parse_conj' () with
     | None -> head
     | Some rest ->  And (head, rest)
+
   and parse_conj' () =
     match lookup () with
     | OrOp | EOF | BracketR | ParR -> None
     | AndOp -> pop (); Some (parse_conj ())
     | _ -> raise Parse_error
+
   and parse_literal () =
     match lookup () with
     | NotOp -> pop (); Not (parse_atom ())
     | UnOp _ | ParL | String _ -> parse_atom ()
     | _ -> raise Parse_error
+
   and parse_atom () =
     match lookup () with
-    | UnOp op -> pop ();
-                 begin
-                 match lookup () with
-                 | String s -> pop (); Unary (op,s)
-                 | _ -> raise Parse_error
-                 end
-    | ParL -> pop ();
-              begin
-              let exp = parse_disj () in
-              match lookup () with
-              | ParR -> pop (); exp
-              | _ -> raise Parse_error
-              end
-    | String s -> pop ();
-                  begin
-                  match parse_atom' () with
-                  | None -> Single s
-                  | Some (binop,rightarg) -> Binary (binop,s,rightarg)
-                  end
+    | UnOp op ->
+       pop ();
+       (match lookup () with
+        | String s -> pop (); Unary (op,s)
+        | _ -> raise Parse_error)
+    | ParL ->
+       pop ();
+       let exp = parse_disj () in
+       (match lookup () with
+        | ParR -> pop (); exp
+        | _ -> raise Parse_error)
+    | String s ->
+       pop ();
+       (match parse_atom' () with
+        | None -> Single s
+        | Some (binop,rightarg) -> Binary (binop,s,rightarg))
     | _ -> raise Parse_error
+
   and parse_atom' () =
     match lookup () with
     | AndOp | OrOp | EOF | BracketR -> None
-    | BinOp binop -> pop ();
-                     begin
-                     match lookup () with
-                     | String rightarg | UnOp rightarg | BinOp rightarg
-                       -> pop (); Some (binop,rightarg)
-                     | _ -> raise Parse_error
-                     end
+    | BinOp binop ->
+       pop ();
+       (match lookup () with
+        | String rightarg | UnOp rightarg | BinOp rightarg
+          -> pop (); Some (binop,rightarg)
+        | _ -> raise Parse_error)
     | _ -> raise Parse_error
-  in parse_S ()
+  in
+
+  parse_S ()
 
 
 (*
 
 grammar of test expressions:
 
-<S>        -> <disj> EOF
+<S>        -> EOF | <disj> EOF
 <disj>     -> <conj> | <conj> -o <disj>
 <conj>     -> <literal> | <literal> -a <conj>
 <literal>  -> <atom> | ! <atom>
@@ -161,7 +180,8 @@ grammar of test expressions:
 
 grammar in LL(1):
 
-<S>        -> <disj> EOF
+<S>        -> <S'> EOF
+<S'>       -> EPSILON | <disj>
 <disj>     -> <conj> <disj'>
 <disj'>    -> EPSILON | -o <disj>
 <conj>     -> <literal> <conj'>
