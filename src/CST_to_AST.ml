@@ -756,78 +756,85 @@ and word_double_quoted__to__word (Word (_, word_cst)) =
 (* CST.word_cst -> AST.word *)
 
 and word_cst__to__word (word_cst : word_cst) : AST.word =
-  List.map word_component__to__word_component word_cst
+  List.map word_component__to__word word_cst
+  |> List.flatten
 
 and word_cst_double_quoted__to__word (word_cst : word_cst) : AST.word =
-  List.map word_component_double_quoted__to__word_component word_cst
+  List.map word_component_double_quoted__to__word word_cst
+  |> List.flatten
 
 (* CST.word_component -> AST.word_component *)
 
-and word_component__to__word_component = function
-  | WordSubshell (_, program') ->
-     AST.Subshell (program'__to__program program')
-  | WordName name ->
-     AST.Literal name
-  | WordAssignmentWord assignment_word ->
-     AST.Assignment (assignment_word__to__assignment assignment_word)
-  | WordDoubleQuoted word ->
-     AST.DoubleQuoted (word_double_quoted__to__word word)
-  | WordSingleQuoted (Word (_, [WordLiteral literal])) ->
-     AST.Literal literal
-  | WordSingleQuoted (Word (_, [])) ->
-     AST.Literal ""
-  | WordSingleQuoted _ ->
-     assert false
-  | WordLiteral literal ->
-     AST.Literal literal
-  | WordVariable (VariableAtom (name, variable_attribute)) ->
-     AST.Variable (name, variable_attribute__to__attribute variable_attribute)
-  | WordGlobAll ->
-     AST.GlobAll
-  | WordGlobAny ->
-     AST.GlobAny
-  | WordGlobRange (Range char_list) ->
-     AST.GlobRange char_list
+and word_component__to__word = function
   | WordEmpty ->
-     AST.Literal ""
-  | WordOther ->
-     assert false
-
-and word_component_double_quoted__to__word_component = function
-  | WordSubshell (_, program') ->
-     AST.Subshell (program'__to__program program')
+    []
   | WordName name ->
-     AST.Literal name
-  | WordAssignmentWord assignment_word ->
-     AST.Assignment (assignment_word__to__assignment assignment_word)
+    [AST.Literal name]
   | WordLiteral literal ->
-     AST.Literal literal
+    [AST.Literal literal]
+  | WordAssignmentWord (Name name, Word (_, word_cst)) ->
+    [AST.Literal name;
+     AST.Literal "="]
+    @ word_cst__to__word word_cst
+  | WordSingleQuoted (Word (_, [WordLiteral literal])) ->
+    [AST.Literal literal]
+  | WordSingleQuoted (Word (_, [])) ->
+    [AST.Literal ""]
+  | WordSingleQuoted _ ->
+    assert false
+  | WordSubshell (_, program') ->
+    [AST.Subshell (program'__to__program program')]
+  | WordDoubleQuoted word ->
+    [AST.DoubleQuoted (word_double_quoted__to__word word)]
   | WordVariable (VariableAtom (name, variable_attribute)) ->
-     AST.Variable (name, variable_attribute__to__attribute variable_attribute)
+    [AST.Variable (name, variable_attribute__to__attribute variable_attribute)]
+  | WordGlobAll ->
+    [AST.GlobAll]
+  | WordGlobAny ->
+    [AST.GlobAny]
+  | WordReBracketExpression bracket_expression ->
+    [AST.BracketExpression bracket_expression]
+
+and word_component_double_quoted__to__word = function
+  | WordEmpty ->
+    []
+  | WordName literal | WordLiteral literal ->
+    [AST.Literal literal]
+  | WordSubshell (_, program') ->
+    [AST.Subshell (program'__to__program program')]
+  | WordAssignmentWord (Name name, Word (_, word_cst)) ->
+    [AST.Literal name;
+     AST.Literal "="]
+    @ word_cst_double_quoted__to__word word_cst
+  | WordVariable (VariableAtom (name, variable_attribute)) ->
+    [AST.Variable (name, variable_attribute__to__attribute variable_attribute)]
+  | WordReBracketExpression bracket_expression ->
+    [AST.BracketExpression bracket_expression]
   | WordDoubleQuoted _ | WordSingleQuoted _
-  | WordGlobAll | WordGlobAny | WordGlobRange _
-  | WordOther | WordEmpty ->
-     assert false
+  | WordGlobAll | WordGlobAny ->
+    assert false
 
 and variable_attribute__to__attribute = function
   | NoAttribute ->
-     AST.NoAttribute
-  | UseDefaultValues word ->
-     AST.UseDefaultValues (word__to__word word)
-  | AssignDefaultValues word ->
-     AST.AssignDefaultValues (word__to__word word)
-  | IndicateErrorifNullorUnset word ->
-     AST.IndicateErrorifNullorUnset (word__to__word word)
-  | UseAlternativeValue word ->
-     AST.UseAlternativeValue (word__to__word word)
+    AST.NoAttribute
+  | ParameterLength word ->
+    AST.ParameterLength (word__to__word word)
+  | UseDefaultValues (_, word) ->
+    AST.UseDefaultValues (word__to__word word)
+  | AssignDefaultValues (_, word) ->
+    AST.AssignDefaultValues (word__to__word word)
+  | IndicateErrorifNullorUnset (_, word) ->
+    AST.IndicateErrorifNullorUnset (word__to__word word)
+  | UseAlternativeValue (_, word) ->
+    AST.UseAlternativeValue (word__to__word word)
   | RemoveSmallestSuffixPattern word ->
-     AST.RemoveSmallestSuffixPattern (word__to__word word)
+    AST.RemoveSmallestSuffixPattern (word__to__word word)
   | RemoveLargestSuffixPattern word ->
-     AST.RemoveLargestSuffixPattern (word__to__word word)
+    AST.RemoveLargestSuffixPattern (word__to__word word)
   | RemoveSmallestPrefixPattern word ->
-     AST.RemoveSmallestPrefixPattern (word__to__word word)
+    AST.RemoveSmallestPrefixPattern (word__to__word word)
   | RemoveLargestPrefixPattern word ->
-     AST.RemoveLargestPrefixPattern (word__to__word word)
+    AST.RemoveLargestPrefixPattern (word__to__word word)
 
 (* CST.name -> AST.name *)
 

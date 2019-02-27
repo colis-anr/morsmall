@@ -33,6 +33,7 @@ and character_range = char list
 
 and attribute =
   | NoAttribute
+  | ParameterLength of word
   | UseDefaultValues of word
   | AssignDefaultValues of word
   | IndicateErrorifNullorUnset of word
@@ -47,10 +48,9 @@ and word_component =
   | DoubleQuoted of word
   | Variable of name * attribute
   | Subshell of program
-  | Assignment of assignment (* FIXME: do we really want that? *)
   | GlobAll
   | GlobAny
-  | GlobRange of character_range
+  | BracketExpression of (Morbig.CST.bracket_expression [@equal (=)] [@opaque])
 
 and word = word_component list
 and word' = word located

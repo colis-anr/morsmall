@@ -6,7 +6,7 @@ description: """
 A concise AST for POSIX shell
 """
 
-version: "0.1"
+version: "0.2.0"
 license: "GPL3"
 
 maintainer: "Nicolas Jeannerod <nicolas.jeannerod@irif.fr>"
@@ -18,7 +18,7 @@ dev-repo: "git+ssh://git@github.com/colis-anr/morsmall.git"
 
 depends: [
   "dune"          {build}
-  "morbig"
+  "morbig"        {>= "0.10.0"}
   "ocaml"         {>= "4.04"}
   "ppx_deriving"  {build}
 ]

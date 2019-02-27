@@ -22,10 +22,10 @@
 exception SyntaxError of Location.lexing_position
 
 let parse_file filename =
-  let open Morbig.API in
+  let open Morbig in
   (
     try
-      Morbig.API.parse_file filename
+      Morbig.parse_file filename
     with
     | Errors.DuringParsing position
     | Errors.DuringLexing (position, _) ->

@@ -39,13 +39,11 @@ and pp_word_component ppf = function (*FIXME*)
      fpf ppf "${%s}" variable
   | Subshell command_list ->
      fpf ppf "$(%a)" pp_command'_list command_list
-  | Assignment assignment ->
-     pp_assignment ppf assignment
   | GlobAll ->
      fpf ppf "*"
   | GlobAny ->
      fpf ppf "?"
-  | GlobRange _char_range ->
+  | BracketExpression _bracket_expression ->
      assert false
 
 (* AST.word *)

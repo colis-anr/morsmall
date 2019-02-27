@@ -105,8 +105,8 @@ and g_pattern' p =
   dummy_locate g_pattern p
 
 and g_assignment p =
-  { variable = choose [|1,"x";2,"y";3,"z";4,"choucroute"|] ;
-    word = g_word (d p) }
+  (choose [|1,"x";2,"y";3,"z";4,"choucroute"|],
+   g_word (d p))
 
 and g_assignment' p =
   dummy_locate g_assignment p
@@ -127,7 +127,7 @@ and g_redirection_kind _p =
 and g_program p =
   g_list ~prob:0.5 ~limit:3
     (fun () -> g_command' (d p))
-  
+
 and g_command p =
   if p.depth <= 0 then
     g_simple_command (d p)

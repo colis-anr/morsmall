@@ -71,7 +71,7 @@ let to_token s = match s with
 let parse ?(bracket=false) wl =
   let tokenbuf =
     wl
-    |> List.map Morbig.API.remove_quotes
+    |> List.map Morbig.remove_quotes
     |> List.map to_token
     |> ref
   in
