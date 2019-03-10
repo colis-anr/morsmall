@@ -10,6 +10,8 @@ MAINTAINER Nicolas Jeannerod
 ## dependencies that are required and then the OPAM packages.
 
 RUN opam depext -i morbig
+ADD *.opam .
+RUN opam install . --deps-only --with-test --with-doc
 
 ## Work in /home/opam/morsmall, copy all the file there with the right
 ## owner and group.
