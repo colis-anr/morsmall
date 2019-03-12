@@ -21,6 +21,8 @@
 
 exception SyntaxError of Location.lexing_position
 
+let from_CST = CST_to_AST.program__to__program
+
 let parse_file filename =
   let open Morbig in
   (
@@ -31,7 +33,7 @@ let parse_file filename =
     | Errors.DuringLexing (position, _) ->
        raise (SyntaxError position)
   )
-  |> CST_to_AST.program__to__program
+  |> from_CST
 
 let pp_print_safe = SafePrinter.pp_program
 let pp_print_debug = AST.pp_program

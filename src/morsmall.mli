@@ -22,9 +22,11 @@
 module AST = AST
 (** Shell AST. *)
 
-(** {2 Parsers} *)
+(** {2 Parsers and Converters} *)
 
 exception SyntaxError of Location.lexing_position
+
+val from_CST : Morbig.CST.program -> AST.program
 
 val parse_file : string -> AST.program
 (** Parses a whole Shell file into a list of {!AST.command}. The list
