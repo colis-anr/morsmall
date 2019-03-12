@@ -19,8 +19,6 @@
 (*  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-type 'a located = 'a Location.located                      [@@deriving eq, show]
-
 (** Names in Shell are just strings with a few additional
    conditions. *)
 
@@ -44,26 +42,26 @@ and attribute =
   | RemoveLargestPrefixPattern of word
 
 and word_component =
-  | Literal of string
-  | DoubleQuoted of word
-  | Variable of name * attribute
-  | Subshell of program
-  | GlobAll
-  | GlobAny
-  | BracketExpression of (Morbig.CST.bracket_expression [@equal (=)] [@opaque])
+  | WLiteral of string
+  | WDoubleQuoted of word
+  | WVariable of name * attribute
+  | WSubshell of program
+  | WGlobAll
+  | WGlobAny
+  | WBracketExpression of (Morbig.CST.bracket_expression [@equal (=)] [@opaque])
 
 and word = word_component list
-and word' = word located
+and word' = word Location.located
 
 (** For now, a {!pattern} is just a {!word}. *)
 
 and pattern = word list
-and pattern' = pattern located
+and pattern' = pattern Location.located
 
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
 and assignment = name * word
-and assignment' = assignment located
+and assignment' = assignment Location.located
 
 (** A file descriptor {!descr} is an integer. *)
 
@@ -216,11 +214,11 @@ and command =
   | Redirection of command' * descr * kind * word
   | HereDocument of command' * descr * word'
 
-and command' = command located
+and command' = command Location.located
 
 and case_item = pattern' * command' option
 
-and case_item' = case_item located
+and case_item' = case_item Location.located
 
 and kind =
   | Output          (*  > *)
@@ -231,7 +229,17 @@ and kind =
   | InputDuplicate  (* <& *)
   | InputOutput     (* <> *)
 
-[@@deriving eq, show{with_path=false}]
+[@@deriving
+  eq,
+  show{with_path=false},
+  visitors { variety = "iter";       ancestors=["Location.located_iter"];      nude=true },
+  visitors { variety = "map";        ancestors=["Location.located_map"];       nude=true },
+  visitors { variety = "reduce";     ancestors=["Location.located_reduce"];    nude=true },
+  visitors { variety = "mapreduce";  ancestors=["Location.located_mapreduce"]; nude=true },
+  visitors { variety = "iter2";      ancestors=["Location.located_iter2"];     nude=true },
+  visitors { variety = "map2";       ancestors=["Location.located_map2"];      nude=true },
+  visitors { variety = "reduce2";    ancestors=["Location.located_reduce2"];   nude=true }
+]
 
 let default_redirection_descriptor = function
   | Output | OutputDuplicate | OutputAppend | OutputClobber -> 1

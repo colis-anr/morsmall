@@ -30,20 +30,20 @@ let rec pp_name ppf =
 (* AST.word_component *)
 
 and pp_word_component ppf = function (*FIXME*)
-  | Literal literal ->
+  | WLiteral literal ->
      fpf ppf "%s" literal
-  | DoubleQuoted _word ->
+  | WDoubleQuoted _word ->
      assert false
-  | Variable (variable, attribute) ->
+  | WVariable (variable, attribute) ->
      assert (attribute = NoAttribute);
      fpf ppf "${%s}" variable
-  | Subshell command_list ->
+  | WSubshell command_list ->
      fpf ppf "$(%a)" pp_command'_list command_list
-  | GlobAll ->
+  | WGlobAll ->
      fpf ppf "*"
-  | GlobAny ->
+  | WGlobAny ->
      fpf ppf "?"
-  | BracketExpression _bracket_expression ->
+  | WBracketExpression _bracket_expression ->
      assert false
 
 (* AST.word *)

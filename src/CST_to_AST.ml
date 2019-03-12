@@ -23,10 +23,10 @@ open Morbig.CST
 
 (* Helpers about locations. *)
 
-let convert_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b AST.located =
+let convert_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b Location.located =
   fun f loc -> { value = f loc.value ; position = loc.position }
 
-let convert_location_2 : 'a 'b 'c. ('a -> 'b -> 'c) -> 'a located -> 'b -> 'c AST.located =
+let convert_location_2 : 'a 'b 'c. ('a -> 'b -> 'c) -> 'a located -> 'b -> 'c Location.located =
   fun f loc x ->
   { value = f loc.value x ; position = loc.position }
 
@@ -769,47 +769,45 @@ and word_component__to__word = function
   | WordEmpty ->
     []
   | WordName name ->
-    [AST.Literal name]
+    [AST.WLiteral name]
   | WordLiteral literal ->
-    [AST.Literal literal]
+    [AST.WLiteral literal]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
-    [AST.Literal name;
-     AST.Literal "="]
+    [AST.WLiteral name; AST.WLiteral "="]
     @ word_cst__to__word word_cst
   | WordSingleQuoted (Word (_, [WordLiteral literal])) ->
-    [AST.Literal literal]
+    [AST.WLiteral literal]
   | WordSingleQuoted (Word (_, [])) ->
-    [AST.Literal ""]
+    [AST.WLiteral ""]
   | WordSingleQuoted _ ->
     assert false
   | WordSubshell (_, program') ->
-    [AST.Subshell (program'__to__program program')]
+    [AST.WSubshell (program'__to__program program')]
   | WordDoubleQuoted word ->
-    [AST.DoubleQuoted (word_double_quoted__to__word word)]
+    [AST.WDoubleQuoted (word_double_quoted__to__word word)]
   | WordVariable (VariableAtom (name, variable_attribute)) ->
-    [AST.Variable (name, variable_attribute__to__attribute variable_attribute)]
+    [AST.WVariable (name, variable_attribute__to__attribute variable_attribute)]
   | WordGlobAll ->
-    [AST.GlobAll]
+    [AST.WGlobAll]
   | WordGlobAny ->
-    [AST.GlobAny]
+    [AST.WGlobAny]
   | WordReBracketExpression bracket_expression ->
-    [AST.BracketExpression bracket_expression]
+    [AST.WBracketExpression bracket_expression]
 
 and word_component_double_quoted__to__word = function
   | WordEmpty ->
     []
   | WordName literal | WordLiteral literal ->
-    [AST.Literal literal]
+    [AST.WLiteral literal]
   | WordSubshell (_, program') ->
-    [AST.Subshell (program'__to__program program')]
+    [AST.WSubshell (program'__to__program program')]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
-    [AST.Literal name;
-     AST.Literal "="]
+    [AST.WLiteral name; AST.WLiteral "="]
     @ word_cst_double_quoted__to__word word_cst
   | WordVariable (VariableAtom (name, variable_attribute)) ->
-    [AST.Variable (name, variable_attribute__to__attribute variable_attribute)]
+    [AST.WVariable (name, variable_attribute__to__attribute variable_attribute)]
   | WordReBracketExpression bracket_expression ->
-    [AST.BracketExpression bracket_expression]
+    [AST.WBracketExpression bracket_expression]
   | WordDoubleQuoted _ | WordSingleQuoted _
   | WordGlobAll | WordGlobAny ->
     assert false
