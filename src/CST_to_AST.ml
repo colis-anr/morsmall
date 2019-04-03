@@ -770,6 +770,8 @@ and word_component__to__word = function
     []
   | WordName name ->
     [AST.WLiteral name]
+  | WordTildePrefix prefix ->
+    [AST.WTildePrefix prefix]
   | WordLiteral literal ->
     [AST.WLiteral literal]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
@@ -797,7 +799,7 @@ and word_component__to__word = function
 and word_component_double_quoted__to__word = function
   | WordEmpty ->
     []
-  | WordName literal | WordLiteral literal ->
+  | WordName literal | WordLiteral literal | WordTildePrefix literal ->
     [AST.WLiteral literal]
   | WordSubshell (_, program') ->
     [AST.WSubshell (program'__to__program program')]

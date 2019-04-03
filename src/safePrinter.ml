@@ -32,6 +32,8 @@ let rec pp_name ppf =
 and pp_word_component ppf = function (*FIXME*)
   | WLiteral literal ->
      fpf ppf "%s" literal
+  | WTildePrefix _ ->
+     assert false
   | WDoubleQuoted _word ->
      assert false
   | WVariable (variable, attribute) ->
