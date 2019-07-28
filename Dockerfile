@@ -9,6 +9,7 @@ MAINTAINER Nicolas Jeannerod
 ## Install dependencies. `opam depext` installs first the non-opam
 ## dependencies that are required and then the OPAM packages.
 
+RUN opam pin -n morbig.dev https://github.com/colis-anr/morbig.git
 RUN opam depext -i morbig
 ADD *.opam .
 RUN opam install . --deps-only --with-test --with-doc
