@@ -24,17 +24,17 @@ type lexing_position = Morbig.CST.lexing_position =
     pos_lnum : int ;
     pos_bol : int ;
     pos_cnum : int }
-[@@deriving eq, show{with_path=false}]
+[@@deriving eq, show {with_path=false}, yojson]
 
 type position = Morbig.CST.position =
   { start_p : lexing_position ;
     end_p : lexing_position }
-[@@deriving eq, show{with_path=false}]
+[@@deriving eq, show {with_path=false}, yojson]
 
 type 'a located = 'a Morbig.CST.located =
   { value : 'a ;
     position : position }
-[@@deriving eq, show{with_path=false}]
+[@@deriving eq, show {with_path=false}, yojson]
 
 class virtual ['a] located_iter      = ['a] Morbig.CST.located_iter
 class virtual ['a] located_map       = ['a] Morbig.CST.located_map
