@@ -191,7 +191,7 @@ and command =
   | Simple of assignment' list * word' list
 
   (* Lists *)
-  | Async of command
+  | Async of command'
   | Seq of command' * command'
   | And of command' * command'
   | Or of command' * command'
@@ -202,8 +202,8 @@ and command =
 
   (* Compound Command's *)
   | Subshell of command'
-  | For of name * word list option * command'
-  | Case of word * case_item' list
+  | For of name * word' list option * command'
+  | Case of word' * case_item' list
   | If of command' * command' * command' option
   | While of command' * command'
   | Until of command' * command'
@@ -212,7 +212,7 @@ and command =
   | Function of name * command'
 
   (* Redirection *)
-  | Redirection of command' * descr * kind * word
+  | Redirection of command' * descr * kind * word'
   | HereDocument of command' * descr * word'
 
 and command' = command Location.located

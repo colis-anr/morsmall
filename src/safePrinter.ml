@@ -144,7 +144,7 @@ and pp_command ppf (command : command) =
     match command with
 
     | Async command ->
-       pp_command ppf command
+       pp_command' ppf command
 
     | Seq (command1, command2) ->
        fpf ppf "%a;%a"
@@ -193,11 +193,11 @@ and pp_command ppf (command : command) =
     | For (variable, Some words, body) ->
        fpf ppf "for %a in %a;do %a;done"
          pp_name variable
-         pp_words words
+         pp_words' words
          pp_command' body
 
     | Case (word, items) ->
-       fpf ppf "case %a in" pp_word word;
+       fpf ppf "case %a in" pp_word' word;
        List.iter
          (fun item ->
            match item.Location.value with
@@ -238,7 +238,7 @@ and pp_command ppf (command : command) =
          pp_command' command
          descr
          pp_redirection_kind kind
-         pp_word file
+         pp_word' file
 
     | HereDocument (command, descr, content) ->
        (* if content.value.[String.length content.value - 1] <> '\n' then

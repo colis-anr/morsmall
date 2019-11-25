@@ -47,5 +47,9 @@ class virtual ['a] located_reduce2   = ['a] Morbig.CST.located_reduce2
 let dummily_located value =
   { value ; position = Morbig.CSTHelpers.dummy_position }
 
+let copy_location : 'a 'b. 'a located -> 'b -> 'b located =
+  fun located value ->
+  { value ; position = located.position }
+
 let on_located f v =
   f v.value

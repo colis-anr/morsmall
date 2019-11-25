@@ -62,7 +62,7 @@ and complete_commands'__to__command'_list (complete_commands' : complete_command
 
 and complete_command__to__command = function
   | CompleteCommand_CList_SeparatorOp (clist', sepop') ->
-     clist'__to__command clist'
+     clist'__to__command' clist'
      |> separator_op'__to__command sepop'
   | CompleteCommand_CList clist' ->
      clist'__to__command clist'
@@ -199,7 +199,7 @@ and compound_list__to__command : compound_list -> AST.command = function
   | CompoundList_LineBreak_Term (_, term') ->
      term'__to__command term'
   | CompoundList_LineBreak_Term_Separator (_, term', sep') ->
-     term'__to__command term'
+     term'__to__command' term'
      |> separator'__to__command sep'
 
 and compound_list'__to__command (compound_list' : compound_list') : AST.command =
@@ -245,7 +245,7 @@ and for_clause__to__command : for_clause -> AST.command = function
   | ForClause_For_Name_LineBreak_In_WordList_SequentialSep_DoGroup (name', _, wordlist', _, do_group') ->
      AST.For (
          name'__to__name name' ,
-         Some (wordlist'__to__word_list wordlist') ,
+         Some (wordlist'__to__word'_list wordlist') ,
          do_group'__to__command' do_group'
        )
 
@@ -254,32 +254,32 @@ and for_clause'__to__command (for_clause' : for_clause') : AST.command =
 
 (* CST.wordlist -> AST.word list *)
 
-and wordlist__to__word_list : wordlist -> AST.word list = function (*FIXME*)
+and wordlist__to__word'_list : wordlist -> AST.word' list = function
   | WordList_WordList_Word (wordlist', word') ->
-     (wordlist'__to__word_list wordlist')
-     @ [word'__to__word word']
+     (wordlist'__to__word'_list wordlist')
+     @ [word'__to__word' word']
   | WordList_Word word' ->
-     [word'__to__word word']
+     [word'__to__word' word']
 
-and wordlist'__to__word_list (wordlist' : wordlist') : AST.word list =
-  erase_location wordlist__to__word_list wordlist'
+and wordlist'__to__word'_list (wordlist' : wordlist') : AST.word' list =
+  erase_location wordlist__to__word'_list wordlist'
 
 (* CST.case_clause -> AST.command *)
 
 and case_clause__to__command : case_clause -> AST.command = function
   | CaseClause_Case_Word_LineBreak_In_LineBreak_CaseList_Esac (word', _, _, case_list') ->
      AST.Case (
-         word'__to__word word' ,
+         word'__to__word' word' ,
          case_list'__to__case_item'_list case_list'
        )
   | CaseClause_Case_Word_LineBreak_In_LineBreak_CaseListNS_Esac (word', _, _, case_list_ns') ->
      AST.Case (
-         word'__to__word word' ,
+         word'__to__word' word' ,
          case_list_ns'__to__case_item'_list case_list_ns'
        )
   | CaseClause_Case_Word_LineBreak_In_LineBreak_Esac (word', _, _) ->
      AST.Case (
-         word'__to__word word' ,
+         word'__to__word' word' ,
          []
        )
 
@@ -625,20 +625,20 @@ and redirect_list'__to__command (redirect_list' : redirect_list') (command' : AS
 and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command') : AST.command =
   match io_redirect with
   | IoRedirect_IoFile io_file' ->
-     let kind, word = io_file'__to__kind_word io_file' in
+     let kind, word' = io_file'__to__kind_word' io_file' in
      AST.Redirection (
          command' ,
          (AST.default_redirection_descriptor kind) ,
          kind ,
-         word
+         word'
        )
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
-     let kind, word = io_file'__to__kind_word io_file' in
+     let kind, word' = io_file'__to__kind_word' io_file' in
      AST.Redirection (
          command' ,
          (io_number__to__int io_number) ,
          kind ,
-         word
+         word'
        )
   | IoRedirect_IoHere io_here' ->
      let _strip, word' = io_here'__to__strip_word' io_here' in
@@ -663,7 +663,7 @@ and io_redirect'__to__command' (io_redirect' : io_redirect') (command' : AST.com
 
 (* CST.io_file -> AST.redirection_kind * AST.word *)
 
-and io_file__to__kind_word io_file =
+and io_file__to__kind_word' io_file =
   let kind, filename' =
     match io_file with
     | IoFile_Less_FileName filename' -> AST.Input, filename'
@@ -674,19 +674,19 @@ and io_file__to__kind_word io_file =
     | IoFile_LessGreat_FileName filename' -> AST.InputOutput, filename'
     | IoFile_Clobber_FileName filename' -> AST.OutputClobber, filename'
   in
-  ( kind , filename'__to__word filename' )
+  ( kind , filename'__to__word' filename' )
 
-and io_file'__to__kind_word (io_file' : io_file') : AST.kind * AST.word =
-  erase_location io_file__to__kind_word io_file'
+and io_file'__to__kind_word' (io_file' : io_file') : AST.kind * AST.word' =
+  erase_location io_file__to__kind_word' io_file'
 
 (* CST.filename -> AST.word *)
 
-and filename__to__word : filename -> AST.word = function
+and filename__to__word' : filename -> AST.word' = function
   | Filename_Word word' ->
-     word'__to__word word'
+     word'__to__word' word'
 
-and filename'__to__word (filename' : filename') : AST.word =
-  erase_location filename__to__word filename'
+and filename'__to__word' (filename' : filename') : AST.word' =
+  erase_location filename__to__word' filename'
 
 (* CST.io_here -> bool * AST.word *)
 
@@ -701,37 +701,35 @@ and io_here'__to__strip_word' (io_here' : io_here') : bool * AST.word' =
 
 (* CST.separator_op -> AST.command -> AST.command *)
 
-and separator_op__to__command (sep_op : separator_op) (command : AST.command) : AST.command =
+and separator_op__to__command (sep_op : separator_op) (command' : AST.command') : AST.command =
   match sep_op with
-  | SeparatorOp_Uppersand -> AST.Async command
-  | SeparatorOp_Semicolon -> command
+  | SeparatorOp_Uppersand -> AST.Async command'
+  | SeparatorOp_Semicolon -> command'.value
 
-and separator_op'__to__command (sep_op' : separator_op') (command : AST.command) : AST.command =
-  erase_location separator_op__to__command sep_op' command
+and separator_op'__to__command (sep_op' : separator_op') (command' : AST.command') : AST.command =
+  erase_location separator_op__to__command sep_op' command'
 
 and separator_op'__to__command' (sep_op' : separator_op') (command' : AST.command') : AST.command' =
   (* We do not want to convert the separator's location here but
      rather use the command's location! *)
-  { value = separator_op__to__command sep_op'.value command'.value ;
-    position = command'.position }
+  Location.copy_location command' (separator_op'__to__command sep_op' command')
 
 (* CST.separator -> AST.command -> AST.command *)
 
-and separator__to__command (sep : separator) (command : AST.command) : AST.command =
+and separator__to__command (sep : separator) (command' : AST.command') : AST.command =
   match sep with
   | Separator_SeparatorOp_LineBreak (sep_op', _) ->
-     separator_op'__to__command sep_op' command
+     separator_op'__to__command sep_op' command'
   | Separator_NewLineList _ ->
-     command
+     command'.value
 
-and separator'__to__command (sep' : separator') (command : AST.command) : AST.command =
-  erase_location separator__to__command sep' command
+and separator'__to__command (sep' : separator') (command' : AST.command') : AST.command =
+  erase_location separator__to__command sep' command'
 
 and separator'__to__command' (sep' : separator') (command' : AST.command') : AST.command' =
   (* We do not want to convert the separator's location here but
      rather use the command's location! *)
-  { value = separator__to__command sep'.value command'.value ;
-    position = command'.position }
+  Location.copy_location command' (separator'__to__command sep' command')
 
 (* *)
 
