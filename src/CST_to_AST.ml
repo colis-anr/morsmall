@@ -817,14 +817,14 @@ and variable_attribute__to__attribute = function
     AST.NoAttribute
   | ParameterLength word ->
     AST.ParameterLength (word__to__word word)
-  | UseDefaultValues (_, word) ->
-    AST.UseDefaultValues (word__to__word word)
-  | AssignDefaultValues (_, word) ->
-    AST.AssignDefaultValues (word__to__word word)
-  | IndicateErrorifNullorUnset (_, word) ->
-    AST.IndicateErrorifNullorUnset (word__to__word word)
-  | UseAlternativeValue (_, word) ->
-    AST.UseAlternativeValue (word__to__word word)
+  | UseDefaultValues (p, word) ->
+    AST.UseDefaultValues (word__to__word word, p.[0] = ':')
+  | AssignDefaultValues (p, word) ->
+    AST.AssignDefaultValues (word__to__word word, p.[0] = ':')
+  | IndicateErrorifNullorUnset (p, word) ->
+    AST.IndicateErrorifNullorUnset (word__to__word word, p.[0] = ':')
+  | UseAlternativeValue (p, word) ->
+    AST.UseAlternativeValue (word__to__word word, p.[0] = ':')
   | RemoveSmallestSuffixPattern word ->
     AST.RemoveSmallestSuffixPattern (word__to__word word)
   | RemoveLargestSuffixPattern word ->
