@@ -815,8 +815,8 @@ and word_component_double_quoted__to__word = function
 and variable_attribute__to__attribute = function
   | NoAttribute ->
     AST.NoAttribute
-  | ParameterLength word ->
-    AST.ParameterLength (word__to__word word)
+  | ParameterLength ->
+    AST.ParameterLength
   | UseDefaultValues (_, word) ->
     AST.UseDefaultValues (word__to__word word)
   | AssignDefaultValues (_, word) ->

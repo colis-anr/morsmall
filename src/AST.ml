@@ -31,7 +31,7 @@ and character_range = char list
 
 and attribute =
   | NoAttribute
-  | ParameterLength of word
+  | ParameterLength
   | UseDefaultValues of word
   | AssignDefaultValues of word
   | IndicateErrorifNullorUnset of word
