@@ -32,10 +32,10 @@ and character_range = char list
 and attribute =
   | NoAttribute
   | ParameterLength
-  | UseDefaultValues of word
-  | AssignDefaultValues of word
-  | IndicateErrorifNullorUnset of word
-  | UseAlternativeValue of word
+  | UseDefaultValues of word * bool
+  | AssignDefaultValues of word * bool
+  | IndicateErrorifNullorUnset of word * bool
+  | UseAlternativeValue of word * bool
   | RemoveSmallestSuffixPattern of word
   | RemoveLargestSuffixPattern of word
   | RemoveSmallestPrefixPattern of word
