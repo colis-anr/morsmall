@@ -14,3 +14,5 @@ lib
 doc
 bin
 morsmall_test_report_*.org
+/.pre-commit-config.yaml
+result

@@ -14,7 +14,7 @@
 
  (depends
   (dune                 :build)
-  (morbig              (>= 0.10.0))
+  (morbig              (>= 0.10.4))
   (ocaml               (>= 4.04.0))
   (ppx_deriving         :build)
   (ppx_deriving_yojson  :build)
