@@ -31,6 +31,10 @@ jobs:
         run: |
           nix develop --command make
 
+      - name: Build Morsmall's documentation
+        run: |
+          nix develop --command make doc
+
   run-flake-checks:
     name: Run flake checks
     runs-on: ubuntu-latest

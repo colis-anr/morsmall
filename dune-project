@@ -16,6 +16,7 @@
   (dune                 :build)
   (morbig              (>= 0.10.4))
   (ocaml               (>= 4.04.0))
+  (odoc                 :with-doc)
   (ppx_deriving         :build)
   (ppx_deriving_yojson  :build)
    yojson))
