@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: Build & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code.
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Nix dependencies
+        run: |
+          nix develop --command true
+
+      - name: Build Morsmall
+        run: |
+          nix develop --command make
+
+  run-flake-checks:
+    name: Run flake checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code.
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run flake checks
+        run: |
+          nix flake check --print-build-logs
