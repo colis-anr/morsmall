@@ -10,6 +10,11 @@
           ocaml-lsp-server = "*";
           ocp-indent = "*";
           utop = "*";
+
+          ## FIXME: Somehow, as of 2023-04-10, 1.9.6 cannot compile. So in the
+          ## meantime we specify a specific version here. We should relax this
+          ## as soon as things get working again.
+          ocamlfind = "1.9.5";
         };
     in { packages.morsmall = scope.morsmall // { inherit scope; }; };
 }
