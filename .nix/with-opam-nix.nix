@@ -19,5 +19,5 @@
         ## as soon as things get working again.
         ocamlfind = "1.9.5";
       };
-    in { packages.morsmall = scope.morsmall // { inherit scope; }; };
+    in { packages.with-opam-nix = scope.morsmall // { inherit scope; }; };
 }

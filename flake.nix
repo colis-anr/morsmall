@@ -22,12 +22,12 @@
       systems = [ "x86_64-linux" ];
 
       imports =
-        [ inputs.pre-commit-hooks.flakeModule ./.nix/package-morsmall.nix ];
+        [ inputs.pre-commit-hooks.flakeModule ./.nix/with-opam-nix.nix ];
 
       perSystem = { self', pkgs, config, ... }: {
         formatter = pkgs.nixfmt;
 
-        packages.default = self'.packages.morsmall;
+        packages.default = self'.packages.with-opam-nix;
 
         devShells.default =
           pkgs.mkShell { shellHook = config.pre-commit.installationScript; };
