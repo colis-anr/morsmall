@@ -21,16 +21,16 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" ];
 
-      imports = [
-        inputs.pre-commit-hooks.flakeModule
-        ./.nix/devshell-default.nix
-        ./.nix/package-morsmall.nix
-      ];
+      imports =
+        [ inputs.pre-commit-hooks.flakeModule ./.nix/package-morsmall.nix ];
 
-      perSystem = { self', pkgs, ... }: {
+      perSystem = { self', pkgs, config, ... }: {
         formatter = pkgs.nixfmt;
 
         packages.default = self'.packages.morsmall;
+
+        devShells.default =
+          pkgs.mkShell { shellHook = config.pre-commit.installationScript; };
 
         pre-commit.settings.hooks = {
           nixfmt.enable = true;
