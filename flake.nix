@@ -24,11 +24,15 @@
         ./.nix/devshell-default.nix
         ./.nix/package-morsmall.nix
         ./.nix/package-default.nix
-        ./.nix/perinput-lib.nix
         ./.nix/pre-commit-settings.nix
         ./.nix/systems.nix
       ];
 
       perSystem = { pkgs, ... }: { formatter = pkgs.nixfmt; };
+
+      ## NOTE: Improve the way `inputs'` are computed by also handling the case
+      ## of flakes having a `lib.${system}` attribute.
+      perInput = system: flake:
+        if flake ? lib.${system} then { lib = flake.lib.${system}; } else { };
     };
 }
