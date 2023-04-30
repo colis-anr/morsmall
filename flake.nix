@@ -26,10 +26,19 @@
         ./.nix/devshell-default.nix
         ./.nix/package-morsmall.nix
         ./.nix/package-default.nix
-        ./.nix/pre-commit-settings.nix
       ];
 
-      perSystem = { pkgs, ... }: { formatter = pkgs.nixfmt; };
+      perSystem = { pkgs, ... }: {
+        formatter = pkgs.nixfmt;
+
+        pre-commit.settings.hooks = {
+          nixfmt.enable = true;
+          deadnix.enable = true;
+          prettier.enable = true;
+          dune-opam-sync.enable = true;
+          opam-lint.enable = true;
+        };
+      };
 
       ## NOTE: Improve the way `inputs'` are computed by also handling the case
       ## of flakes having a `lib.${system}` attribute.
