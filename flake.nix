@@ -19,13 +19,14 @@
 
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "x86_64-linux" ];
+
       imports = [
         inputs.pre-commit-hooks.flakeModule
         ./.nix/devshell-default.nix
         ./.nix/package-morsmall.nix
         ./.nix/package-default.nix
         ./.nix/pre-commit-settings.nix
-        ./.nix/systems.nix
       ];
 
       perSystem = { pkgs, ... }: { formatter = pkgs.nixfmt; };
