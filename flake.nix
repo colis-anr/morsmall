@@ -22,12 +22,13 @@
       imports = [
         inputs.pre-commit-hooks.flakeModule
         ./.nix/devshell-default.nix
-        ./.nix/formatter.nix
         ./.nix/package-morsmall.nix
         ./.nix/package-default.nix
         ./.nix/perinput-lib.nix
         ./.nix/pre-commit-settings.nix
         ./.nix/systems.nix
       ];
+
+      perSystem = { pkgs, ... }: { formatter = pkgs.nixfmt; };
     };
 }
