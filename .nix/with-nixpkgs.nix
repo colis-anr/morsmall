@@ -28,6 +28,7 @@
             else
               inputs'.morbig.packages.with-nixpkgs)
 
+            menhirLib
             ppx_deriving
             ppx_deriving_yojson
             visitors
