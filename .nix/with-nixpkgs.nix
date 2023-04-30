@@ -9,18 +9,15 @@
       ## false`) in which case it comes from its own flake.
       ##
       mk-with-nixpkgs = { inclMorbig }:
-        pkgs.stdenv.mkDerivation {
-          name = "morsmall";
+        opkgs.buildDunePackage {
+          pname = "morsmall";
+          version = "dev";
+
           ## NOTE: The use of `./..` matters because the path is taken as relative to
           ## the current file, and therefore to `.nix/`.
           src = ./..;
 
-          nativeBuildInputs = with opkgs; [
-            ## Basic ones, always necessary
-            ocaml
-            dune_3
-            findlib
-          ];
+          duneVersion = "3";
 
           propagatedBuildInputs = with opkgs; [
             (if inclMorbig then
@@ -34,14 +31,6 @@
             visitors
             yojson
           ];
-
-          buildPhase = ''
-            make build
-          '';
-
-          installPhase = ''
-            make install PREFIX=$out
-          '';
         };
     in {
       packages.with-nixpkgs = mk-with-nixpkgs { inclMorbig = false; };
