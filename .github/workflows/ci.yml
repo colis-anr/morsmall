@@ -10,8 +10,14 @@ on:
 
 jobs:
   build-and-test:
-    name: Build & test
+    name: Build and test
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - with-opam-nix
 
     steps:
       - name: Check out repository code.
@@ -21,19 +27,24 @@ jobs:
         uses: cachix/install-nix-action@v20
         with:
           extra_nix_config: |
+            ## Access token to avoid triggering GitHub's rate limiting.
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Nix dependencies
         run: |
-          nix develop --command true
+          nix develop .#${{ matrix.package }} --command true
 
-      - name: Build Morsmall
+      - name: Build in development Shell
         run: |
-          nix develop --command make
+          nix develop .#${{ matrix.package }} --command make
 
-      - name: Build Morsmall's documentation
+      - name: Build documentation in development Shell
         run: |
-          nix develop --command make doc
+          nix develop .#${{ matrix.package }} --command make doc
+
+      - name: Build with Nix
+        run: |
+          nix build .#${{ matrix.package }} --print-build-logs
 
   run-flake-checks:
     name: Run flake checks
@@ -47,6 +58,7 @@ jobs:
         uses: cachix/install-nix-action@v20
         with:
           extra_nix_config: |
+            ## Access token to avoid triggering GitHub's rate limiting.
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Run flake checks
