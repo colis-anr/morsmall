@@ -25,11 +25,12 @@
         inputs.pre-commit-hooks.flakeModule
         ./.nix/devshell-default.nix
         ./.nix/package-morsmall.nix
-        ./.nix/package-default.nix
       ];
 
-      perSystem = { pkgs, ... }: {
+      perSystem = { self', pkgs, ... }: {
         formatter = pkgs.nixfmt;
+
+        packages.default = self'.packages.morsmall;
 
         pre-commit.settings.hooks = {
           nixfmt.enable = true;
