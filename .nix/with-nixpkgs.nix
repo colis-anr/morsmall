@@ -19,6 +19,7 @@
           inputs'.morbig.packages.with-nixpkgs
           ppx_deriving
           ppx_deriving_yojson
+          visitors
           yojson
         ];
 

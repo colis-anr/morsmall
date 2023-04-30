@@ -19,6 +19,7 @@
   (odoc                 :with-doc)
   (ppx_deriving         :build)
   (ppx_deriving_yojson  :build)
+   visitors
    yojson))
 
 (generate_opam_files)
