@@ -1,15 +1,12 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     opam-nix.url = "github:tweag/opam-nix";
     opam-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    ## We add an input for the OPAM repository. We don't actually need it, but
-    ## this allows us to control when opam-nix's repository gets updated.
-    opam-repository.url = "github:ocaml/opam-repository";
-    opam-repository.flake = false;
-    opam-nix.inputs.opam-repository.follows = "opam-repository";
+    morbig.url = "github:colis-anr/morbig";
+    morbig.inputs.nixpkgs.follows = "nixpkgs";
 
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
@@ -21,13 +18,16 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" ];
 
-      imports =
-        [ inputs.pre-commit-hooks.flakeModule ./.nix/with-opam-nix.nix ];
+      imports = [
+        ./.nix/with-nixpkgs.nix
+        ./.nix/with-opam-nix.nix
+        inputs.pre-commit-hooks.flakeModule
+      ];
 
       perSystem = { self', pkgs, config, ... }: {
         formatter = pkgs.nixfmt;
 
-        packages.default = self'.packages.with-opam-nix;
+        packages.default = self'.packages.with-nixpkgs;
 
         devShells.default =
           pkgs.mkShell { shellHook = config.pre-commit.installationScript; };
