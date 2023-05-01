@@ -15,7 +15,7 @@
  (depends
   (dune                 :build)
    menhir
-  (morbig              (>= 0.10.4))
+   morbig
   (ocaml               (>= 4.04.0))
   (odoc                 :with-doc)
   (ppx_deriving         :build)

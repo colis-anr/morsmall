@@ -10,7 +10,7 @@ bug-reports: "https://github.com/colis-anr/morsmall/issues"
 depends: [
   "dune" {build}
   "menhir"
-  "morbig" {>= "0.10.4"}
+  "morbig"
   "ocaml" {>= "4.04.0"}
   "odoc" {with-doc}
   "ppx_deriving" {build}
@@ -33,3 +33,6 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/colis-anr/morsmall.git"
+pin-depends: [
+  [ "morbig.dev" "git+https://github.com/colis-anr/morbig#4d03370d3d0e20fbbced6985d2c71371adc3cb24" ]
+]

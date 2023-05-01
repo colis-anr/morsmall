@@ -5,6 +5,7 @@
     let
       scope = inputs'.opam-nix.lib.buildOpamProject {
         inherit pkgs;
+        pinDepends = true;
         resolveArgs.with-doc = true;
         resolveArgs.with-test = true;
       } "morsmall" ../. { ocaml-base-compiler = "*"; };

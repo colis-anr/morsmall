@@ -1,0 +1,3 @@
+pin-depends: [
+  [ "morbig.dev" "git+https://github.com/colis-anr/morbig#4d03370d3d0e20fbbced6985d2c71371adc3cb24" ]
+]
