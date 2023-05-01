@@ -5,7 +5,8 @@
     opam-nix.url = "github:tweag/opam-nix";
     opam-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    morbig.url = "github:colis-anr/morbig";
+    morbig.url =
+      "github:colis-anr/morbig/650c675a3272e23c598a3d233a39370c0698cbf5";
     morbig.inputs.nixpkgs.follows = "nixpkgs";
 
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
