@@ -1,8 +1,7 @@
 { ... }: {
-  perSystem = { pkgs, ... }: {
-    apps.sync-pin-depends = {
-      type = "app";
-      program = pkgs.writeShellApplication {
+  perSystem = { pkgs, ... }:
+    let
+      sync-pin-depends = pkgs.writeShellApplication {
         name = "sync-pin-depends";
         text = ''
           printf "Finding revision or Morbig in \`flake.lock\`... "
@@ -14,6 +13,17 @@
         '';
         runtimeInputs = with pkgs; [ jq ];
       };
+    in {
+      apps.sync-pin-depends = {
+        type = "app";
+        program = sync-pin-depends;
+      };
+
+      pre-commit.settings.hooks.sync-pin-depends = {
+        enable = true;
+        entry = "${sync-pin-depends}/bin/sync-pin-depends";
+        files = "(flake\\.lock$)|(\\.opam\\.template$)";
+        pass_filenames = false;
+      };
     };
-  };
 }
