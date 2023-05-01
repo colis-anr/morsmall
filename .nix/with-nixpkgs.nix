@@ -19,6 +19,8 @@
 
           duneVersion = "3";
 
+          nativeBuildInputs = with opkgs; [ odoc ];
+
           propagatedBuildInputs = with opkgs; [
             (if inclMorbig then
               morbig
