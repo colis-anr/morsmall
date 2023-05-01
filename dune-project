@@ -14,11 +14,13 @@
 
  (depends
   (dune                 :build)
-  (morbig              (>= 0.10.4))
+   menhir
+   morbig
   (ocaml               (>= 4.04.0))
   (odoc                 :with-doc)
   (ppx_deriving         :build)
   (ppx_deriving_yojson  :build)
+   visitors
    yojson))
 
 (generate_opam_files)

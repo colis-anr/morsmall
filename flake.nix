@@ -1,15 +1,12 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     opam-nix.url = "github:tweag/opam-nix";
     opam-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    ## We add an input for the OPAM repository. We don't actually need it, but
-    ## this allows us to control when opam-nix's repository gets updated.
-    opam-repository.url = "github:ocaml/opam-repository";
-    opam-repository.flake = false;
-    opam-nix.inputs.opam-repository.follows = "opam-repository";
+    morbig.url = "github:colis-anr/morbig";
+    morbig.inputs.nixpkgs.follows = "nixpkgs";
 
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
@@ -19,15 +16,37 @@
 
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "x86_64-linux" ];
+
       imports = [
+        ./.nix/with-nixpkgs.nix
+        ./.nix/with-opam-nix.nix
         inputs.pre-commit-hooks.flakeModule
-        ./.nix/devshell-default.nix
-        ./.nix/formatter.nix
-        ./.nix/package-morsmall.nix
-        ./.nix/package-default.nix
-        ./.nix/perinput-lib.nix
-        ./.nix/pre-commit-settings.nix
-        ./.nix/systems.nix
       ];
+
+      perSystem = { self', pkgs, config, ... }: {
+        formatter = pkgs.nixfmt;
+
+        packages.default = self'.packages.with-nixpkgs;
+
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs.ocamlPackages; [ ocaml-lsp ocp-indent ];
+          inputsFrom = [ self'.packages.default ];
+          shellHook = config.pre-commit.installationScript;
+        };
+
+        pre-commit.settings.hooks = {
+          nixfmt.enable = true;
+          deadnix.enable = true;
+          prettier.enable = true;
+          dune-opam-sync.enable = true;
+          opam-lint.enable = true;
+        };
+      };
+
+      ## NOTE: Improve the way `inputs'` are computed by also handling the case
+      ## of flakes having a `lib.${system}` attribute.
+      perInput = system: flake:
+        if flake ? lib.${system} then { lib = flake.lib.${system}; } else { };
     };
 }
