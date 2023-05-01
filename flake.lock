@@ -245,17 +245,16 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1682702834,
-        "narHash": "sha256-8B5cban39EuOIFHhVlcOMmxSVe6pUNjUKMOe4FowXag=",
+        "lastModified": 1682877951,
+        "narHash": "sha256-xcrODtFyir5sHp243OEo1f+oBMpF9l5OtmB4qSiHONo=",
         "owner": "colis-anr",
         "repo": "morbig",
-        "rev": "650c675a3272e23c598a3d233a39370c0698cbf5",
+        "rev": "4d03370d3d0e20fbbced6985d2c71371adc3cb24",
         "type": "github"
       },
       "original": {
         "owner": "colis-anr",
         "repo": "morbig",
-        "rev": "650c675a3272e23c598a3d233a39370c0698cbf5",
         "type": "github"
       }
     },
