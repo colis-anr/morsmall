@@ -815,7 +815,7 @@ and word_component_double_quoted__to__word = function
 and variable_attribute__to__attribute = function
   | NoAttribute ->
     AST.NoAttribute
-  | ParameterLength _word -> (* FIXME: what is that word supposed to be? *)
+  | ParameterLength ->
     AST.ParameterLength
   | UseDefaultValues (p, word) ->
     AST.UseDefaultValues (word__to__word word, p.[0] = ':')
