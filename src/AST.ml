@@ -52,8 +52,8 @@ and word_component =
   | WBracketExpression of (
       Morbig.CST.bracket_expression
       [@equal (=)] [@opaque]
-      [@to_yojson Morbig.CST.bracket_expression_to_yojson]
-      [@of_yojson Morbig.CST.bracket_expression_of_yojson]
+      [@to_yojson Morbig.CSTSerializers.bracket_expression_to_yojson]
+      [@of_yojson Morbig.CSTSerializers.bracket_expression_of_yojson]
     )
     (* REVIEW: Maybe we can remove those keys? It looks like they are the
        default ones. *)
