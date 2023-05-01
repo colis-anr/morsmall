@@ -8,11 +8,7 @@
         resolveArgs.with-doc = true;
         resolveArgs.with-test = true;
       } "morsmall" ../. {
-        merlin = "*";
         ocaml-base-compiler = "*";
-        ocaml-lsp-server = "*";
-        ocp-indent = "*";
-        utop = "*";
 
         ## FIXME: Somehow, as of 2023-04-10, 1.9.6 cannot compile. So in the
         ## meantime we specify a specific version here. We should relax this
