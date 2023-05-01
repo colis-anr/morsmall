@@ -21,6 +21,7 @@
       imports = [
         ./.nix/with-nixpkgs.nix
         ./.nix/with-opam-nix.nix
+        ./.nix/sync-pin-depends.nix
         inputs.pre-commit-hooks.flakeModule
       ];
 
