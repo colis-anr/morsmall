@@ -33,6 +33,8 @@
             visitors
             yojson
           ];
+
+          doCheck = true;
         };
     in {
       packages.with-nixpkgs = mk-with-nixpkgs { inclMorbig = false; };
