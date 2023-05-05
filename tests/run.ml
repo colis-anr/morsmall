@@ -94,6 +94,10 @@ let run_one_test ~test_number =
   Log.debug (fun m -> m "Printing it to `%s`..." fname);
   with_file fname (fun fmt -> Morsmall.pp_print_debug fmt input);
 
+  let fname = artifacts_file ~test_number "input.json" in
+  Log.debug (fun m -> m "Printing it to `%s`..." fname);
+  with_file fname (fun fmt -> Yojson.Safe.pretty_print fmt @@ Morsmall.AST.program_to_yojson input);
+
   let fname = artifacts_file ~test_number "input.sh" in
   Log.debug (fun m -> m "Printing it to `%s`..." fname);
   with_file fname (fun fmt -> Morsmall.pp_print_safe fmt input);
@@ -107,6 +111,10 @@ let run_one_test ~test_number =
   let fname = artifacts_file ~test_number "output.show" in
   Log.debug (fun m -> m "Printing it to `%s`..." fname);
   with_file fname (fun fmt -> Morsmall.pp_print_debug fmt output);
+
+  let fname = artifacts_file ~test_number "output.json" in
+  Log.debug (fun m -> m "Printing it to `%s`..." fname);
+  with_file fname (fun fmt -> Yojson.Safe.pretty_print fmt @@ Morsmall.AST.program_to_yojson output);
 
   if not (Morsmall.AST.equal_program input output) then
     (
