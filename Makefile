@@ -24,8 +24,7 @@ doc:
 	ln -sf _build/default/_doc doc
 
 tests:
-	dune build tests/run.exe
-	_build/default/tests/run.exe
+	dune test
 
 clean:
 	dune clean

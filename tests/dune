@@ -1,3 +1,7 @@
+(rule
+ (alias runtest)
+ (action (run ./run.exe)))
+
 (executable
  (name run)
  (libraries ppx_deriving_yojson.runtime morbig morsmall)
