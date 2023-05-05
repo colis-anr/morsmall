@@ -4,5 +4,5 @@
 
 (executable
  (name run)
- (libraries ppx_deriving_yojson.runtime morbig morsmall unix)
+ (libraries ppx_deriving_yojson.runtime morbig morsmall unix logs)
  (flags :standard -w +A-42))

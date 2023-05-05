@@ -9,6 +9,7 @@ homepage: "https://github.com/colis-anr/morsmall"
 bug-reports: "https://github.com/colis-anr/morsmall/issues"
 depends: [
   "dune" {build}
+  "logs"
   "menhir"
   "morbig"
   "ocaml" {>= "4.04.0"}

@@ -27,6 +27,7 @@
             else
               inputs'.morbig.packages.with-nixpkgs)
 
+            logs
             menhirLib
             ppx_deriving
             ppx_deriving_yojson

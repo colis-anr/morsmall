@@ -2,12 +2,52 @@ let pf = Format.printf
 let fpf = Format.fprintf
 let spf = Format.sprintf
 
+(******************************************************************************)
+(* Logging                                                                    *)
+
+let level_to_string = function
+  | Logs.Debug -> "DBG"
+  | Logs.Info -> "INF"
+  | Logs.Warning -> "WRN"
+  | Logs.Error -> "ERR"
+  | Logs.App -> "APP"
+
+let level_to_color = function
+  | Logs.Debug -> "\027[37m" (* gray *)
+  | Logs.Info -> ""               (* white *)
+  | Logs.Warning -> "\027[33m"    (* yellow *)
+  | Logs.Error -> "\027[31m"      (* red *)
+  | Logs.App -> "\027[1m"         (* white bold *)
+
+let () =
+  Logs.set_reporter
+    (let report _src level ~over k msgf =
+       msgf @@ fun ?header:_ ?tags:_ fmt ->
+       Format.kfprintf
+         (fun _ -> over (); k ())
+         Format.err_formatter
+         ("@[<h 2>%s%.3f | %s | " ^^ fmt ^^ "\027[0m@]@.")
+         (level_to_color level)
+         (Sys.time ())
+         (level_to_string level)
+     in
+     { Logs.report })
+
+let () = Logs.set_level ~all:true (Some Logs.Info)
+
+module Log = (val Logs.(src_log (Src.create "")) : Logs.LOG)
+
+(******************************************************************************)
+
 exception CouldntParse of Morsmall.AST.program
 exception ASTsDontMatch of Morsmall.AST.program * Morsmall.AST.program
 
 let generator_parameters = Generator.default_parameters
 
 let number_of_tests = 100
+
+(******************************************************************************)
+(* Artifacts                                                                  *)
 
 let artifacts_directory_prefix =
   "artifacts"
@@ -41,6 +81,9 @@ let with_file fname cont =
     Stdlib.close_out ochan;
     raise exn
 
+(******************************************************************************)
+(* Test runner                                                                *)
+
 let run_one_test ~test_number =
   create_artifacts_directory ~test_number;
 
@@ -63,37 +106,36 @@ let run_one_test ~test_number =
   if not (Morsmall.AST.equal_program input output) then
     raise (ASTsDontMatch (input, output))
 
+
+
 let () =
-  pf "@.";
   let errors = ref 0 in
   for test_number = 1 to number_of_tests do
-    pf "Running test #%d...\r@?" test_number;
+    Log.info (fun m -> m "Running test #%d." test_number);
     try
       run_one_test ~test_number
     with
       exn ->
       (
         incr errors;
-        pf "Error while running test #%d.@." test_number;
-        (
-          match exn with
-          | CouldntParse _input ->
-            pf "Morbig could not parse the file produced by Morsall's printer.@."
-          | ASTsDontMatch (_input, _output) ->
-            pf "The input and output ASTs do not match.@."
-          | exn -> raise exn
-        );
-        pf "@."
+        match exn with
+        | CouldntParse _input ->
+          Log.warn (fun m -> m "Test #%d failed: Morbig could not parse the file produced by Morsall's printer." test_number)
+        | ASTsDontMatch (_input, _output) ->
+          Log.warn (fun m -> m "Test #%d failed: Input and output ASTs do not match." test_number)
+        | exn ->
+          Log.err (fun m -> m "Test #%d failed with unexpected exception." test_number);
+          raise exn
       )
   done;
 
   if !errors = 0 then
     (
-      pf "Successfully ran %d tests.@." number_of_tests;
+      Log.info (fun m -> m "Successfully ran %d tests." number_of_tests);
       exit 0
     )
   else
     (
-      pf "While running %d tests, got %d errors. See the reports for more details.@." number_of_tests !errors;
+      Log.err (fun m -> m "While running %d tests, got %d errors. See the reports for more details." number_of_tests !errors);
       exit 1
     )
