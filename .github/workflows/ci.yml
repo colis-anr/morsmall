@@ -36,14 +36,19 @@ jobs:
           nix develop .#${{ matrix.package }} --command true
 
       - name: Build
+        id: build
         run: |
           nix develop .#${{ matrix.package }} --command make
 
       - name: Run tests
+        if: ${{ steps.build.outcome == 'success' }}
         run: |
           nix develop .#${{ matrix.package }} --command make tests
 
       - name: Build documentation
+        ## Try building the documentation regardless of whether running the
+        ## tests failed. This gives more information out of a CI run.
+        if: ${{ steps.build.outcome == 'success' }}
         run: |
           nix develop .#${{ matrix.package }} --command make doc
 
