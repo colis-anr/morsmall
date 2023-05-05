@@ -80,12 +80,12 @@ let rec g_list ~prob ~limit inhabitant =
 
 let rec g_word_component p : word_component =
   choose
-    [| 1, (fun _ -> Literal "foo") ;
-       1, (fun _ -> Variable ("x", NoAttribute)) ;
+    [| 1, (fun _ -> WLiteral "foo") ;
+       1, (fun _ -> WVariable ("x", NoAttribute)) ;
        (if p.depth <= 0 then 0 else 1),
-       (fun p -> Subshell (g_program p)) ;
-       1, (fun _ -> GlobAll) ;
-       1, (fun _ -> GlobAny) |]
+       (fun p -> WSubshell (g_program p)) ;
+       1, (fun _ -> WGlobAll) ;
+       1, (fun _ -> WGlobAny) |]
     (d p)
 
 and g_word p =
@@ -134,7 +134,7 @@ and g_command p =
   else
     choose
       [| 1, g_simple_command ;
-         1, (fun p -> Async (g_command (d p))) ;
+         1, (fun p -> Async (g_command' (d p))) ;
          1, (fun p -> Seq (g_command' (d p), g_command' (d p))) ;
          1, (fun p -> And (g_command' (d p), g_command' (d p))) ;
          1, (fun p -> Or (g_command' (d p), g_command' (d p))) ;
@@ -171,13 +171,13 @@ and g_simple_command p =
 and g_for_clause p =
   For (
       "x",
-      g_option ~prob:0.8 (fun () -> g_list ~prob:0.8 ~limit:10 (fun () -> g_word (d p))),
+      g_option ~prob:0.8 (fun () -> g_list ~prob:0.8 ~limit:10 (fun () -> g_word' (d p))),
       g_command' (d p)
     )
 
 and g_case_clause p =
   Case (
-      g_word (d p),
+      g_word' (d p),
       g_list ~prob:0.7 ~limit:5 (fun () -> g_case_item' (d p) )
     )
 
@@ -220,12 +220,12 @@ and g_redirection p =
       g_command' (d p),
       g_descr (d p),
       g_redirection_kind (d p),
-      g_word (d p)
+      g_word' (d p)
     )
 
 and g_here_document p =
   HereDocument (
       g_command' (d p),
       g_descr (d p),
-      dummily_located (g_word (d p) @ [Literal "\n"])
+      dummily_located (g_word (d p) @ [WLiteral "\n"])
     )
