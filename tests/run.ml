@@ -88,7 +88,7 @@ let run_one_test ~test_number =
   create_artifacts_directory ~test_number;
 
   Log.debug (fun m -> m "Generating AST...");
-  let input = Generator.(g_program generator_parameters) in
+  let input = Generator.(g_nonempty_program generator_parameters) in
 
   let fname = artifacts_file ~test_number "input.show" in
   Log.debug (fun m -> m "Printing it to `%s`..." fname);

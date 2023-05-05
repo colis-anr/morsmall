@@ -229,3 +229,6 @@ and g_here_document p =
       g_descr (d p),
       dummily_located (g_word (d p) @ [WLiteral "\n"])
     )
+
+let g_nonempty_program p =
+  g_command' (d p) :: g_program (d p)
