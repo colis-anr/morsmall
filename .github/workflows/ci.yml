@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  build-in-devshell:
+  build-in-nix-devshell:
     name: Build in Nix devShell
     runs-on: ubuntu-latest
 
@@ -31,15 +31,15 @@ jobs:
             ## Access token to avoid triggering GitHub's rate limiting.
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Nix dependencies
+      - name: Install dependencies
         run: |
           nix develop .#${{ matrix.package }} --command true
 
-      - name: Build in development Shell
+      - name: Build
         run: |
           nix develop .#${{ matrix.package }} --command make
 
-      - name: Build documentation in development Shell
+      - name: Build documentation
         run: |
           nix develop .#${{ matrix.package }} --command make doc
 
@@ -65,7 +65,7 @@ jobs:
             ## Access token to avoid triggering GitHub's rate limiting.
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build with Nix
+      - name: Build
         run: |
           nix build .#${{ matrix.package }} --print-build-logs
 
