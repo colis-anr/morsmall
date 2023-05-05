@@ -5,7 +5,7 @@ let spf = Format.sprintf
 (******************************************************************************)
 (* Logging                                                                    *)
 
-let () = Logs.set_level ~all:true (Some Logs.Debug)
+let () = Logs.set_level ~all:true (Some Logs.Info)
 
 let level_to_string = function
   | Logs.Debug -> "DBG"
