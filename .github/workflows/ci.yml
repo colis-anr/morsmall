@@ -9,8 +9,8 @@ on:
   pull_request:
 
 jobs:
-  build-and-test:
-    name: Build and test
+  build-in-devshell:
+    name: Build in Nix devShell
     runs-on: ubuntu-latest
 
     strategy:
@@ -42,6 +42,28 @@ jobs:
       - name: Build documentation in development Shell
         run: |
           nix develop .#${{ matrix.package }} --command make doc
+
+  build-with-nix:
+    name: Build with Nix
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - with-nixpkgs
+          - with-opam-nix
+
+    steps:
+      - name: Check out repository code.
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          extra_nix_config: |
+            ## Access token to avoid triggering GitHub's rate limiting.
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build with Nix
         run: |
