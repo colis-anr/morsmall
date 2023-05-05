@@ -5,6 +5,8 @@ let spf = Format.sprintf
 (******************************************************************************)
 (* Logging                                                                    *)
 
+let () = Logs.set_level ~all:true (Some Logs.Debug)
+
 let level_to_string = function
   | Logs.Debug -> "DBG"
   | Logs.Info -> "INF"
@@ -33,9 +35,7 @@ let () =
      in
      { Logs.report })
 
-let () = Logs.set_level ~all:true (Some Logs.Info)
-
-module Log = (val Logs.(src_log (Src.create "")) : Logs.LOG)
+module Log = (val Logs.(src_log default) : Logs.LOG)
 
 (******************************************************************************)
 
@@ -87,31 +87,37 @@ let with_file fname cont =
 let run_one_test ~test_number =
   create_artifacts_directory ~test_number;
 
+  Log.debug (fun m -> m "Generating AST...");
   let input = Generator.(g_program generator_parameters) in
 
   let fname = artifacts_file ~test_number "input.show" in
+  Log.debug (fun m -> m "Printing it to `%s`..." fname);
   with_file fname (fun fmt -> Morsmall.pp_print_debug fmt input);
 
   let fname = artifacts_file ~test_number "input.sh" in
+  Log.debug (fun m -> m "Printing it to `%s`..." fname);
   with_file fname (fun fmt -> Morsmall.pp_print_safe fmt input);
 
+  Log.debug (fun m -> m "Calling Morbig and Morsmall on it...");
   let output =
     try Morsmall.parse_file fname
     with Morsmall.SyntaxError _pos -> raise (CouldntParse input)
   in
 
   let fname = artifacts_file ~test_number "output.show" in
+  Log.debug (fun m -> m "Printing it to `%s`..." fname);
   with_file fname (fun fmt -> Morsmall.pp_print_debug fmt output);
 
   if not (Morsmall.AST.equal_program input output) then
-    raise (ASTsDontMatch (input, output))
-
-
+    (
+      Log.debug (fun m -> m "AST do not match. Incoming error.");
+      raise (ASTsDontMatch (input, output))
+    )
 
 let () =
   let errors = ref 0 in
   for test_number = 1 to number_of_tests do
-    Log.info (fun m -> m "Running test #%d." test_number);
+    Log.info (fun m -> m "Running test #%d..." test_number);
     try
       run_one_test ~test_number
     with
