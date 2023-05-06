@@ -21,6 +21,7 @@
   (odoc                 :with-doc)
   (ppx_deriving         :build)
   (ppx_deriving_yojson  :build)
+   ppx_import
    visitors
    yojson))
 

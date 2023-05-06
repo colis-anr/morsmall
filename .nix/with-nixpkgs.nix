@@ -31,6 +31,7 @@
             menhirLib
             ppx_deriving
             ppx_deriving_yojson
+            ppx_import
             visitors
             yojson
           ];
