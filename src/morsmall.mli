@@ -32,6 +32,12 @@ val parse_file : string -> AST.program
 (** Parses a whole Shell file into a list of {!AST.command}. The list
    can be empty. Can raise {!SyntaxError}. *)
 
+(** {2 Equalities} *)
+
+val equal_program : AST.program -> AST.program -> bool
+(** Check that two programs are equal. This takes into account the locations of
+    the various elements of the AST. *)
+
 (** {2 Printers} *)
 
 val pp_print_safe : Format.formatter -> AST.program -> unit
@@ -55,3 +61,7 @@ module Location = Location
 module CST_to_AST = CST_to_AST
 module Utilities = Morsmall_utilities
 module Visitors = Visitors
+
+module Equality : sig
+  module Located = LocatedEquality
+end

@@ -116,7 +116,7 @@ let run_one_test ~test_number =
   Log.debug (fun m -> m "Printing it to `%s`..." fname);
   with_file fname (fun fmt -> Morsmall.pp_print_json fmt output);
 
-  if not (Morsmall.AST.equal_program input output) then
+  if not (Morsmall.equal_program input output) then
     (
       Log.debug (fun m -> m "AST do not match. Incoming error.");
       raise (ASTsDontMatch (input, output))
