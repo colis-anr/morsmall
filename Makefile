@@ -24,10 +24,9 @@ doc:
 	ln -sf _build/default/_doc doc
 
 tests:
-	dune build tests/run.exe
-	_build/default/tests/run.exe
+	dune test
 
 clean:
 	dune clean
 	rm -f bin lib doc
-	rm -f morsmall_test_report_*.org
+	rm -Rf artifacts

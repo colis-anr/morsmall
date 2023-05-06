@@ -14,6 +14,7 @@
 
  (depends
   (dune                 :build)
+   logs
    menhir
    morbig
   (ocaml               (>= 4.04.0))

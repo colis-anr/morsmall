@@ -27,12 +27,15 @@
             else
               inputs'.morbig.packages.with-nixpkgs)
 
+            logs
             menhirLib
             ppx_deriving
             ppx_deriving_yojson
             visitors
             yojson
           ];
+
+          doCheck = true;
         };
     in {
       packages.with-nixpkgs = mk-with-nixpkgs { inclMorbig = false; };

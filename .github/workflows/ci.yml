@@ -43,6 +43,10 @@ jobs:
         run: |
           nix develop .#${{ matrix.package }} --command make doc
 
+      - name: Run tests
+        run: |
+          nix develop .#${{ matrix.package }} --command make tests
+
   build-with-nix:
     name: Build with Nix
     runs-on: ubuntu-latest
