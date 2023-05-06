@@ -44,6 +44,10 @@ include ASTUtils
 (* other modules *)
 
 module Location = Location
-module SafePrinter = SafePrinter
 module CST_to_AST = CST_to_AST
 module Utilities = Morsmall_utilities
+
+module Printer = struct
+  module Safe = SafePrinter
+  module Debug = DebugPrinter
+end
