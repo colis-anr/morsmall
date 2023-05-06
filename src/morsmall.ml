@@ -47,6 +47,7 @@ include ASTUtils
 module Location = Location
 module CST_to_AST = CST_to_AST
 module Utilities = Morsmall_utilities
+module Visitors = Visitors
 
 module Printer = struct
   module Safe = SafePrinter
