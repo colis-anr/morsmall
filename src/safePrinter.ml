@@ -45,7 +45,7 @@ and pp_word_component ppf = function (*FIXME*)
      fpf ppf "*"
   | WGlobAny ->
      fpf ppf "?"
-  | WBracketExpression _bracket_expression ->
+  | WBracketExpression ->
      assert false
 
 (* AST.word *)

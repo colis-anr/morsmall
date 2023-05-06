@@ -37,8 +37,8 @@ val parse_file : string -> AST.program
 val pp_print_safe : Format.formatter -> AST.program -> unit
 (** Prints a Shell from its AST. *)
 
-val pp_print_debug : Format.formatter -> AST.program -> unit
-(** Prints a representation of the AST in OCaml-style. *)
+(* val pp_print_debug : Format.formatter -> AST.program -> unit *)
+(* (\** Prints a representation of the AST in OCaml-style. *\) *)
 
 (** {2 Other Modules} *)
 

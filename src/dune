@@ -1,6 +1,6 @@
 (library
  (name morsmall)
  (public_name morsmall)
- (preprocess (pps ppx_deriving.std visitors.ppx ppx_deriving_yojson))
  (libraries morbig morsmall.utilities visitors.runtime yojson)
- (flags :standard -w +A-4-30-42))
+ (modules_without_implementation AST)
+ (preprocess (pps ppx_deriving.std visitors.ppx ppx_deriving_yojson)))
