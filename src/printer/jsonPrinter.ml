@@ -19,37 +19,24 @@
 (*  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-exception SyntaxError of Location.lexing_position
+type name = [%import: AST.name]
+and character_range = [%import: AST.character_range]
+and attribute = [%import: AST.attribute]
+and word_component = [%import: AST.word_component]
+and word = [%import: AST.word]
+and word' = [%import: AST.word']
+and pattern = [%import: AST.pattern]
+and pattern' = [%import: AST.pattern']
+and assignment = [%import: AST.assignment]
+and assignment' = [%import: AST.assignment']
+and descr = [%import: AST.descr]
+and program = [%import: AST.program]
+and command = [%import: AST.command]
+and command' = [%import: AST.command']
+and case_item = [%import: AST.case_item]
+and case_item' = [%import: AST.case_item']
+and kind = [%import: AST.kind]
+[@@deriving yojson]
 
-let from_CST = CST_to_AST.program__to__program
-
-let parse_file filename =
-  let open Morbig in
-  (
-    try
-      Morbig.parse_file filename
-    with
-    | Errors.DuringParsing position
-    | Errors.DuringLexing (position, _) ->
-       raise (SyntaxError position)
-  )
-  |> from_CST
-
-let pp_print_safe = SafePrinter.pp_program
-let pp_print_json = JsonPrinter.pp_program
-let pp_print_debug = DebugPrinter.pp_program
-
-module AST = AST
-include ASTUtils
-
-(* other modules *)
-
-module Location = Location
-module CST_to_AST = CST_to_AST
-module Utilities = Morsmall_utilities
-
-module Printer = struct
-  module Safe = SafePrinter
-  module Json = JsonPrinter
-  module Debug = DebugPrinter
-end
+let pp_program fmt program =
+  Yojson.Safe.pretty_print fmt (program_to_yojson program)
