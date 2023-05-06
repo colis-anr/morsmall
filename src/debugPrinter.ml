@@ -19,30 +19,21 @@
 (*  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-module AST = AST
-(** Shell AST. *)
-
-(** {2 Parsers and Converters} *)
-
-exception SyntaxError of Location.lexing_position
-
-val from_CST : Morbig.CST.program -> AST.program
-
-val parse_file : string -> AST.program
-(** Parses a whole Shell file into a list of {!AST.command}. The list
-   can be empty. Can raise {!SyntaxError}. *)
-
-(** {2 Printers} *)
-
-val pp_print_safe : Format.formatter -> AST.program -> unit
-(** Prints a Shell from its AST. *)
-
-val pp_print_debug : Format.formatter -> AST.program -> unit
-(** Prints a representation of the AST in OCaml-style. *)
-
-(** {2 Other Modules} *)
-
-module Location = Location
-module SafePrinter = SafePrinter
-module CST_to_AST = CST_to_AST
-module Utilities = Morsmall_utilities
+type name = [%import: AST.name]
+and character_range = [%import: AST.character_range]
+and attribute = [%import: AST.attribute]
+and word_component = [%import: AST.word_component]
+and word = [%import: AST.word]
+and word' = [%import: AST.word']
+and pattern = [%import: AST.pattern]
+and pattern' = [%import: AST.pattern']
+and assignment = [%import: AST.assignment]
+and assignment' = [%import: AST.assignment']
+and descr = [%import: AST.descr]
+and program = [%import: AST.program]
+and command = [%import: AST.command]
+and command' = [%import: AST.command']
+and case_item = [%import: AST.case_item]
+and case_item' = [%import: AST.case_item']
+and kind = [%import: AST.kind]
+[@@deriving show]
