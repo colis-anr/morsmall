@@ -24,18 +24,20 @@ and character_range = [%import: AST.character_range]
 and attribute = [%import: AST.attribute]
 and word_component = [%import: AST.word_component]
 and word = [%import: AST.word]
-and word' = [%import: AST.word']
 and pattern = [%import: AST.pattern]
-and pattern' = [%import: AST.pattern']
 and assignment = [%import: AST.assignment]
-and assignment' = [%import: AST.assignment']
 and descr = [%import: AST.descr]
 and program = [%import: AST.program]
 and command = [%import: AST.command]
-and command' = [%import: AST.command']
 and case_item = [%import: AST.case_item]
-and case_item' = [%import: AST.case_item']
 and kind = [%import: AST.kind]
+
+and word' = [%import: AST.word']
+and pattern' = [%import: AST.pattern']
+and assignment' = [%import: AST.assignment']
+and command' = [%import: AST.command']
+and case_item' = [%import: AST.case_item']
+
 [@@deriving
   visitors {variety = "iter";       ancestors=["Location.located_iter"];      nude=true},
   visitors {variety = "map";        ancestors=["Location.located_map"];       nude=true},
