@@ -20,29 +20,52 @@
 (***************************************************************************)
 
 module AST = AST
-(** Shell AST. *)
+(** The AST of Shell scripts, as provided by Morsmall. This is a stripped down
+    version of the CST provided by Morbig. *)
+
+type t = AST.program
+(** A type alias for a Shell program. *)
 
 (** {2 Parsers and Converters} *)
 
 exception SyntaxError of Location.lexing_position
 
-val from_CST : Morbig.CST.program -> AST.program
+val from_CST : Morbig.CST.program -> t
 
-val parse_file : string -> AST.program
-(** Parses a whole Shell file into a list of {!AST.command}. The list
-   can be empty. Can raise {!SyntaxError}. *)
+val parse_file : string -> t
+(** Parses a whole Shell file into an {!AST.program}. Can raise
+    {!SyntaxError}. *)
+
+(** {2 Equalities} *)
+
+val equal_program : t -> t -> bool
+(** Check that two programs are equal. This takes into account the locations of
+    the various elements of the AST. *)
 
 (** {2 Printers} *)
 
-val pp_print_safe : Format.formatter -> AST.program -> unit
+val pp_print_safe : Format.formatter -> t -> unit
 (** Prints a Shell from its AST. *)
 
-val pp_print_debug : Format.formatter -> AST.program -> unit
+val pp_print_json : Format.formatter -> t -> unit
+(** Prints a representation of the AST in JSON. *)
+
+val pp_print_debug : Format.formatter -> t -> unit
 (** Prints a representation of the AST in OCaml-style. *)
+
+module Printer : sig
+  module Safe = SafePrinter
+  module Json = JsonPrinter
+  module Debug = DebugPrinter
+end
 
 (** {2 Other Modules} *)
 
 module Location = Location
-module SafePrinter = SafePrinter
 module CST_to_AST = CST_to_AST
 module Utilities = Morsmall_utilities
+module Visitors = Visitors
+
+module Equality : sig
+  module Located = LocatedEquality
+end

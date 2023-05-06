@@ -628,7 +628,7 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
      let kind, word' = io_file'__to__kind_word' io_file' in
      AST.Redirection (
          command' ,
-         (AST.default_redirection_descriptor kind) ,
+         (ASTUtils.default_redirection_descriptor kind) ,
          kind ,
          word'
        )
@@ -791,8 +791,8 @@ and word_component__to__word = function
     [AST.WGlobAll]
   | WordGlobAny ->
     [AST.WGlobAny]
-  | WordReBracketExpression bracket_expression ->
-    [AST.WBracketExpression bracket_expression]
+  | WordReBracketExpression _bracket_expression ->
+    assert false (* FIXME: [AST.WBracketExpression] *)
 
 and word_component_double_quoted__to__word = function
   | WordEmpty ->
@@ -806,8 +806,8 @@ and word_component_double_quoted__to__word = function
     @ word_cst_double_quoted__to__word word_cst
   | WordVariable (VariableAtom (name, variable_attribute)) ->
     [AST.WVariable (name, variable_attribute__to__attribute variable_attribute)]
-  | WordReBracketExpression bracket_expression ->
-    [AST.WBracketExpression bracket_expression]
+  | WordReBracketExpression _bracket_expression ->
+    assert false (* FIXME: [AST.WBracketExpression] *)
   | WordDoubleQuoted _ | WordSingleQuoted _
   | WordGlobAll | WordGlobAny ->
     assert false

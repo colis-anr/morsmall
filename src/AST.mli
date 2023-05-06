@@ -49,14 +49,7 @@ and word_component =
   | WSubshell of program
   | WGlobAll
   | WGlobAny
-  | WBracketExpression of (
-      Morbig.CST.bracket_expression
-      [@equal (=)] [@opaque]
-      [@to_yojson Morbig.CSTSerializers.bracket_expression_to_yojson]
-      [@of_yojson Morbig.CSTSerializers.bracket_expression_of_yojson]
-    )
-    (* REVIEW: Maybe we can remove those keys? It looks like they are the
-       default ones. *)
+  | WBracketExpression (* FIXME *)
 
 and word = word_component list
 and word' = word Location.located
@@ -236,20 +229,3 @@ and kind =
   | Input           (*  < *)
   | InputDuplicate  (* <& *)
   | InputOutput     (* <> *)
-
-[@@deriving
-  eq,
-  show {with_path=false},
-  yojson {exn=true},
-  visitors {variety = "iter";       ancestors=["Location.located_iter"];      nude=true},
-  visitors {variety = "map";        ancestors=["Location.located_map"];       nude=true},
-  visitors {variety = "reduce";     ancestors=["Location.located_reduce"];    nude=true},
-  visitors {variety = "mapreduce";  ancestors=["Location.located_mapreduce"]; nude=true},
-  visitors {variety = "iter2";      ancestors=["Location.located_iter2"];     nude=true},
-  visitors {variety = "map2";       ancestors=["Location.located_map2"];      nude=true},
-  visitors {variety = "reduce2";    ancestors=["Location.located_reduce2"];   nude=true}
-]
-
-let default_redirection_descriptor = function
-  | Output | OutputDuplicate | OutputAppend | OutputClobber -> 1
-  | Input | InputDuplicate | InputOutput -> 0
