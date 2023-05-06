@@ -19,6 +19,9 @@
 (*  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+module AST = AST
+type t = AST.program
+
 exception SyntaxError of Location.lexing_position
 
 let from_CST = CST_to_AST.program__to__program
@@ -41,7 +44,6 @@ let pp_print_debug = DebugPrinter.pp_program
 
 let equal_program = LocatedEquality.equal_program
 
-module AST = AST
 include ASTUtils
 
 (* other modules *)
