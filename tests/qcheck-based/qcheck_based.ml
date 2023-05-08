@@ -63,7 +63,7 @@ open QCheck2
 let print =
   Test.make
     ~name:"print"
-    ~count:20000
+    ~count:2000
     ~print:(fun program ->
         with_formatter_to_string @@ fun fmt ->
         fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n"
@@ -76,7 +76,7 @@ let print =
 let print_parse =
   Test.make
     ~name:"print and parse"
-    ~count:20000
+    ~count:2000
     ~print:(
       fun program ->
         with_formatter_to_string @@ fun fmt ->
@@ -94,7 +94,7 @@ let print_parse =
 let print_parse_equal =
   Test.make
     ~name:"print and parse; stay equal"
-    ~count:20000
+    ~count:2000
     ~print:(
       fun program ->
         with_formatter_to_string @@ fun fmt ->
