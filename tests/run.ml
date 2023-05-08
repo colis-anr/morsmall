@@ -20,12 +20,7 @@
 (*                                                                            *)
 (******************************************************************************)
 
-let program_to_string_debug program =
-  let buf = Buffer.create 8 in
-  let fmt = Format.formatter_of_buffer buf in
-  Morsmall.pp_print_debug_noloc fmt program;
-  Format.pp_print_flush fmt ();
-  Buffer.contents buf
+let fpf = Format.fprintf
 
 let parse_file fname =
   try Ok (Morsmall.parse_file fname)
@@ -45,13 +40,34 @@ let print_to_temp_file program =
     Stdlib.close_out ochan;
     Error exn
 
+let with_formatter_to_string f =
+  let buf = Buffer.create 8 in
+  let fmt = Format.formatter_of_buffer buf in
+  f fmt;
+  Format.pp_print_flush fmt ();
+  Buffer.contents buf
+
+let pp_print_input_ast fmt input =
+  Morsmall.pp_print_debug_noloc fmt input
+
+let pp_print_concrete fmt input =
+  Morsmall.pp_print_safe fmt input
+
+let pp_print_parsed_ast fmt input =
+  let fname = Result.get_ok (print_to_temp_file input) in
+  let output = Result.get_ok (parse_file fname) in
+  Morsmall.pp_print_debug_noloc fmt output
+
 open QCheck2
 
 let print =
   Test.make
     ~name:"print"
-    ~count:200
-    ~print:program_to_string_debug
+    ~count:20000
+    ~print:(fun program ->
+        with_formatter_to_string @@ fun fmt ->
+        fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n"
+          pp_print_input_ast program)
     (Generator.gen_program 1)
   @@
   fun input ->
@@ -60,8 +76,14 @@ let print =
 let print_parse =
   Test.make
     ~name:"print and parse"
-    ~count:200
-    ~print:program_to_string_debug
+    ~count:20000
+    ~print:(
+      fun program ->
+        with_formatter_to_string @@ fun fmt ->
+        fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n@\nAs a Shell script:@\n@\n@[<2>  %a@]@\n"
+          pp_print_input_ast program
+          pp_print_concrete program
+    )
     (Generator.gen_program 1)
   @@
   fun input ->
@@ -72,8 +94,15 @@ let print_parse =
 let print_parse_equal =
   Test.make
     ~name:"print and parse; stay equal"
-    ~count:200
-    ~print:program_to_string_debug
+    ~count:20000
+    ~print:(
+      fun program ->
+        with_formatter_to_string @@ fun fmt ->
+        fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n@\nAs a Shell script:@\n@\n@[<2>  %a@]@\n@\nParsed AST:@\n@\n@[<2>  %a@]@\n"
+          pp_print_input_ast program
+          pp_print_concrete program
+          pp_print_parsed_ast program
+    )
     (Generator.gen_program 1)
   @@
   fun input ->
