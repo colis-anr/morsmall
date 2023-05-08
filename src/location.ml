@@ -19,21 +19,10 @@
 (*  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
-type lexing_position = Morbig.CST.lexing_position =
-  { pos_fname : string ;
-    pos_lnum : int ;
-    pos_bol : int ;
-    pos_cnum : int }
-[@@deriving eq, show {with_path=false}, yojson]
+type lexing_position = [%import: Morbig.CST.lexing_position]
+and position = [%import: Morbig.CST.position]
+and 'a located = [%import: 'a Morbig.CST.located]
 
-type position = Morbig.CST.position =
-  { start_p : lexing_position ;
-    end_p : lexing_position }
-[@@deriving eq, show {with_path=false}, yojson]
-
-type 'a located = 'a Morbig.CST.located =
-  { value : 'a ;
-    position : position }
 [@@deriving eq, show {with_path=false}, yojson]
 
 class virtual ['a] located_iter      = ['a] Morbig.CSTVisitors.located_iter
