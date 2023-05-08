@@ -1,7 +1,7 @@
 let program_to_string_debug program =
   let buf = Buffer.create 8 in
   let fmt = Format.formatter_of_buffer buf in
-  Morsmall.pp_print_debug fmt program;
+  Morsmall.pp_print_debug_noloc fmt program;
   Format.pp_print_flush fmt ();
   Buffer.contents buf
 
