@@ -58,9 +58,11 @@ module Visitors = Visitors
 module Printer = struct
   module Safe = SafePrinter
   module Json = JsonPrinter
+  module JsonNonLocated = JsonNonLocatedPrinter
   module Debug = DebugPrinter
 end
 
 module Equality = struct
   module Located = LocatedEquality
+  module NonLocated = NonLocatedEquality
 end

@@ -64,6 +64,7 @@ val pp_print_debug : Format.formatter -> t -> unit
 module Printer : sig
   module Safe = SafePrinter
   module Json = JsonPrinter
+  module JsonNonLocated = JsonNonLocatedPrinter
   module Debug = DebugPrinter
 end
 
@@ -76,4 +77,5 @@ module Visitors = Visitors
 
 module Equality : sig
   module Located = LocatedEquality
+  module NonLocated = NonLocatedEquality
 end
