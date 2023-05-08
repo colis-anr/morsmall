@@ -31,7 +31,10 @@ let gen_sized (s : int) (gen_0 : 'a Gen.t) (gen_n : int -> 'a Gen.t) : 'a Gen.t 
   if s <= 0 then gen_0 else gen_n (s - 1)
 
 let rec gen_name : name Gen.t =
-  Gen.(string_small_of (char_range 'a' 'z'))
+    Gen.(string_size
+         ~gen:(char_range 'a' 'z')
+         (int_range 1 20)
+        )
 
 and gen_attribute : attribute Gen.sized = fun s ->
   gen_sized
