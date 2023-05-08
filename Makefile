@@ -12,8 +12,6 @@ all: build
 
 build:
 	dune build @install
-#	ln -sf _build/install/default/bin bin
-	ln -sf _build/install/default/lib lib
 
 install:
 	dune install $(INSTALL_ARGS)
@@ -30,8 +28,7 @@ test:
 
 clean:
 	dune clean
-	rm -f bin lib doc
-	rm -Rf artifacts
+	rm -f doc
 
 headers:
 	headache -h .header $(shell find src/ tests/ -regex '.*\.ml[ily]?')

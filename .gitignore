@@ -10,9 +10,6 @@ _build
 .merlin
 
 ## Project specific
-lib
 doc
-bin
 /.pre-commit-config.yaml
 result
-artifacts
