@@ -111,7 +111,7 @@ let print_parse_equal =
   ==> (
     let parsing_result = parse_file (Result.get_ok printing_result) in
     Result.is_ok parsing_result
-    ==> (input = Result.get_ok parsing_result)
+    ==> (Morsmall.equal_program_noloc input (Result.get_ok parsing_result))
   )
 
 let () = QCheck_runner.run_tests_main [
