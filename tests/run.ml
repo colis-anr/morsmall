@@ -16,38 +16,55 @@ let print_to_temp_file program =
     Morsmall.pp_print_safe fmt program;
     Format.pp_print_flush fmt ();
     Stdlib.close_out ochan;
-    fname
+    Ok fname
   with
     exn ->
     Format.pp_print_flush fmt ();
     Stdlib.close_out ochan;
-    raise exn
+    Error exn
 
-let print_and_parse =
-  QCheck2.Test.make
-    ~name:"printed programs are parseable"
+open QCheck2
+
+let print =
+  Test.make
+    ~name:"print"
     ~count:200
     ~print:program_to_string_debug
     (Generator.gen_program 1)
   @@
   fun input ->
-  let fname = print_to_temp_file input in
-  Result.is_ok (parse_file fname)
+  Result.is_ok (print_to_temp_file input)
+
+let print_parse =
+  Test.make
+    ~name:"print and parse"
+    ~count:200
+    ~print:program_to_string_debug
+    (Generator.gen_program 1)
+  @@
+  fun input ->
+  let printing_result = print_to_temp_file input in
+  Result.is_ok printing_result
+  ==> Result.is_ok (parse_file (Result.get_ok printing_result))
 
 let print_parse_equal =
-  QCheck2.Test.make
-    ~name:"printed programs are parseable to the same AST"
+  Test.make
+    ~name:"print and parse; stay equal"
     ~count:200
     ~print:program_to_string_debug
     (Generator.gen_program 1)
   @@
   fun input ->
-  let fname = print_to_temp_file input in
-  match parse_file fname with
-  | Error _exn -> false
-  | Ok output -> Morsmall.equal_program input output
+  let printing_result = print_to_temp_file input in
+  Result.is_ok printing_result
+  ==> (
+    let parsing_result = parse_file (Result.get_ok printing_result) in
+    Result.is_ok parsing_result
+    ==> (input = Result.get_ok parsing_result)
+  )
 
 let () = QCheck_runner.run_tests_main [
-    print_and_parse ;
+    print ;
+    print_parse ;
     print_parse_equal ;
   ]
