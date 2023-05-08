@@ -34,7 +34,8 @@ let gen_reject (p : 'a -> bool) (gen : 'a Gen.t) : 'a Gen.t =
   let open Gen in
   gen >>= fun x -> if p x then pure x else gen
 
-let keywords = [ "for"; "in"; "do"; "done" ]
+let keywords = [ "for"; "in"; "do"; "done"; "if"; "then"; "else"; "fi"; "while";
+                 "case"; "esac" ]
 
 let rec gen_name : name Gen.t =
   gen_reject
