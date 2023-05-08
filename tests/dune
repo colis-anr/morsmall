@@ -4,5 +4,5 @@
 
 (executable
  (name run)
- (libraries morsmall unix logs qcheck)
+ (libraries morsmall qcheck)
  (preprocess (staged_pps ppx_import)))
