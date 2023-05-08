@@ -42,6 +42,10 @@ val equal_program : t -> t -> bool
 (** Check that two programs are equal. This takes into account the locations of
     the various elements of the AST. *)
 
+val equal_program_noloc : t -> t -> bool
+(** Check that two programs are equal, ignoring the locations of the various
+    elements of the AST. *)
+
 (** {2 Printers} *)
 
 val pp_print_safe : Format.formatter -> t -> unit
