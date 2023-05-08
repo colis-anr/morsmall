@@ -42,6 +42,7 @@
           prettier.enable = true;
           dune-opam-sync.enable = true;
           opam-lint.enable = true;
+          checkmake.enable = true;
         };
       };
 
