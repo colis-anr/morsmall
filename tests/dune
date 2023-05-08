@@ -1,8 +1,4 @@
-(rule
- (alias runtest)
- (action (run ./run.exe)))
-
-(executable
+(test
  (name run)
  (libraries morsmall qcheck)
  (preprocess (staged_pps ppx_import)))
