@@ -81,7 +81,7 @@ and gen_word : word Gen.sized = fun s ->
   gen_sized
     s
     (
-      Gen.pure []
+      Gen.map (fun word_component -> [word_component]) (gen_word_component 0)
     )
     (
       fun s ->
