@@ -32,7 +32,6 @@ class virtual ['a] located_map2      = ['a] Morbig.CSTVisitors.located_map2
 class virtual ['a] located_reduce2   = ['a] Morbig.CSTVisitors.located_reduce2
 
 type name = [%import: AST.name]
-and character_range = [%import: AST.character_range]
 and attribute = [%import: AST.attribute]
 and word_component = [%import: AST.word_component]
 and word = [%import: AST.word]

@@ -32,8 +32,6 @@ type name = string
 (** The type {!word} is a description of words in Shell. {e See POSIX,
    2 Shell & Utilities, 2.3 Token Recognition} *)
 
-and character_range = char list
-
 and attribute =
   | NoAttribute
   | ParameterLength

@@ -26,7 +26,6 @@ and 'a located = [%import: 'a Location.located]
 let equal_located eq_a x y = eq_a x.value y.value
 
 type name = [%import: AST.name]
-and character_range = [%import: AST.character_range]
 and attribute = [%import: AST.attribute]
 and word_component = [%import: AST.word_component]
 and word = [%import: AST.word]
