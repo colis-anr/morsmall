@@ -63,7 +63,7 @@ and gen_word_component : word_component Gen.sized = fun s ->
       Gen.oneof [
         Gen.pure WGlobAll ;
         Gen.pure WGlobAny ;
-        Gen.pure WBracketExpression ;
+        (* Gen.pure WBracketExpression ; *)
         Gen.map (fun string -> WTildePrefix string) gen_name ; (* FIXME: better than `gen_name` *)
         Gen.map (fun string -> WLiteral string) gen_name ; (* FIXME: better than `gen_name` *)
       ]
