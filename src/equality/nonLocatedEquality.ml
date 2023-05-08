@@ -23,7 +23,7 @@ type lexing_position = [%import: Location.lexing_position]
 and position = [%import: Location.position]
 and 'a located = [%import: 'a Location.located]
 
-[@@deriving show]
+let equal_located eq_a x y = eq_a x.value y.value
 
 type name = [%import: AST.name]
 and character_range = [%import: AST.character_range]
@@ -44,4 +44,4 @@ and assignment' = [%import: AST.assignment']
 and command' = [%import: AST.command']
 and case_item' = [%import: AST.case_item']
 
-[@@deriving show]
+[@@deriving eq]

@@ -40,9 +40,11 @@ let parse_file filename =
 
 let pp_print_safe = SafePrinter.pp_program
 let pp_print_json = JsonPrinter.pp_program
+let pp_print_json_noloc = JsonNonLocatedPrinter.pp_program
 let pp_print_debug = DebugPrinter.pp_program
 
 let equal_program = LocatedEquality.equal_program
+let equal_program_noloc = NonLocatedEquality.equal_program
 
 include ASTUtils
 

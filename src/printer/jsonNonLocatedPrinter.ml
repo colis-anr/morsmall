@@ -23,7 +23,7 @@ type lexing_position = [%import: Location.lexing_position]
 and position = [%import: Location.position]
 and 'a located = [%import: 'a Location.located]
 
-[@@deriving show]
+let located_to_yojson a_to_yojson x = a_to_yojson x.value
 
 type name = [%import: AST.name]
 and character_range = [%import: AST.character_range]
@@ -44,4 +44,7 @@ and assignment' = [%import: AST.assignment']
 and command' = [%import: AST.command']
 and case_item' = [%import: AST.case_item']
 
-[@@deriving show]
+[@@deriving to_yojson]
+
+let pp_program fmt program =
+  Yojson.Safe.pretty_print fmt (program_to_yojson program)

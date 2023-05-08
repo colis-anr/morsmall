@@ -42,6 +42,10 @@ val equal_program : t -> t -> bool
 (** Check that two programs are equal. This takes into account the locations of
     the various elements of the AST. *)
 
+val equal_program_noloc : t -> t -> bool
+(** Check that two programs are equal, ignoring the locations of the various
+    elements of the AST. *)
+
 (** {2 Printers} *)
 
 val pp_print_safe : Format.formatter -> t -> unit
@@ -49,6 +53,10 @@ val pp_print_safe : Format.formatter -> t -> unit
 
 val pp_print_json : Format.formatter -> t -> unit
 (** Prints a representation of the AST in JSON. *)
+
+val pp_print_json_noloc : Format.formatter -> t -> unit
+(** Prints a representation of the AST in JSON, ignoring the locations of the
+    various elements of the AST. *)
 
 val pp_print_debug : Format.formatter -> t -> unit
 (** Prints a representation of the AST in OCaml-style. *)
