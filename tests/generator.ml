@@ -131,7 +131,7 @@ and gen_command : command Gen.sized = fun s ->
   gen_sized
     s
     (
-      Gen.map (fun word -> Simple ([], [word])) (gen_word' s)
+      Gen.map (fun word -> Simple ([], [word])) (gen_word' 0)
     )
     (
       fun s ->
