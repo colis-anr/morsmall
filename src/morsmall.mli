@@ -54,6 +54,10 @@ val pp_print_safe : Format.formatter -> t -> unit
 val pp_print_json : Format.formatter -> t -> unit
 (** Prints a representation of the AST in JSON. *)
 
+val pp_print_json_noloc : Format.formatter -> t -> unit
+(** Prints a representation of the AST in JSON, ignoring the locations of the
+    various elements of the AST. *)
+
 val pp_print_debug : Format.formatter -> t -> unit
 (** Prints a representation of the AST in OCaml-style. *)
 
