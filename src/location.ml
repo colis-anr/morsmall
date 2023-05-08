@@ -23,16 +23,6 @@ type lexing_position = [%import: Morbig.CST.lexing_position]
 and position = [%import: Morbig.CST.position]
 and 'a located = [%import: 'a Morbig.CST.located]
 
-[@@deriving eq, show {with_path=false}, yojson]
-
-class virtual ['a] located_iter      = ['a] Morbig.CSTVisitors.located_iter
-class virtual ['a] located_map       = ['a] Morbig.CSTVisitors.located_map
-class virtual ['a] located_reduce    = ['a] Morbig.CSTVisitors.located_reduce
-class virtual ['a] located_mapreduce = ['a] Morbig.CSTVisitors.located_mapreduce
-class virtual ['a] located_iter2     = ['a] Morbig.CSTVisitors.located_iter2
-class virtual ['a] located_map2      = ['a] Morbig.CSTVisitors.located_map2
-class virtual ['a] located_reduce2   = ['a] Morbig.CSTVisitors.located_reduce2
-
 let dummily_located value =
   { value ; position = Morbig.CSTHelpers.dummy_position }
 

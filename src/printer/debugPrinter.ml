@@ -19,6 +19,12 @@
 (*  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+type lexing_position = [%import: Location.lexing_position]
+and position = [%import: Location.position]
+and 'a located = [%import: 'a Location.located]
+
+[@@deriving show]
+
 type name = [%import: AST.name]
 and character_range = [%import: AST.character_range]
 and attribute = [%import: AST.attribute]

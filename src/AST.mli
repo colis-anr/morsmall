@@ -19,6 +19,11 @@
 (*  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *)
 (***************************************************************************)
 
+(** A type alias for located pieces of AST. *)
+(* NOTE: This type alias allows `ppx_import`-based modules to override the
+   behaviour of the derivers when it comes to locations. *)
+type 'a located = 'a Location.located
+
 (** Names in Shell are just strings with a few additional
    conditions. *)
 
@@ -52,17 +57,17 @@ and word_component =
   | WBracketExpression (* FIXME *)
 
 and word = word_component list
-and word' = word Location.located
+and word' = word located
 
 (** For now, a {!pattern} is just a {!word}. *)
 
 and pattern = word list
-and pattern' = pattern Location.located
+and pattern' = pattern located
 
 (** An assignment is just a pair of a {!name} and a {!word}. *)
 
 and assignment = name * word
-and assignment' = assignment Location.located
+and assignment' = assignment located
 
 (** A file descriptor {!descr} is an integer. *)
 
@@ -215,11 +220,11 @@ and command =
   | Redirection of command' * descr * kind * word'
   | HereDocument of command' * descr * word'
 
-and command' = command Location.located
+and command' = command located
 
 and case_item = pattern' * command' option
 
-and case_item' = case_item Location.located
+and case_item' = case_item located
 
 and kind =
   | Output          (*  > *)
