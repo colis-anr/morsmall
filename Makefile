@@ -1,4 +1,4 @@
-.PHONY: build install uninstall doc tests clean
+.PHONY: all build install uninstall doc test clean
 
 ifneq ($(PREFIX),)
 INSTALL_ARGS := $(INSTALL_ARGS) --prefix $(PREFIX)
@@ -7,6 +7,8 @@ endif
 ifneq ($(LIBDIR),)
 INSTALL_ARGS := $(INSTALL_ARGS) --libdir $(LIBDIR)
 endif
+
+all: build
 
 build:
 	dune build @install
@@ -23,7 +25,7 @@ doc:
 	dune build @doc
 	ln -sf _build/default/_doc doc
 
-tests:
+test:
 	dune test
 
 clean:
