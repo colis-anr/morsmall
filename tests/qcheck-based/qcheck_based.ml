@@ -60,10 +60,14 @@ let pp_print_parsed_ast fmt input =
 
 open QCheck2
 
-let print =
+let make_test =
   Test.make
-    ~name:"print"
     ~count:2000
+    ~long_factor:100
+
+let print =
+  make_test
+    ~name:"print"
     ~print:(fun program ->
         with_formatter_to_string @@ fun fmt ->
         fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n"
@@ -74,9 +78,8 @@ let print =
   Result.is_ok (print_to_temp_file input)
 
 let print_parse =
-  Test.make
+  make_test
     ~name:"print and parse"
-    ~count:2000
     ~print:(
       fun program ->
         with_formatter_to_string @@ fun fmt ->
@@ -92,9 +95,8 @@ let print_parse =
   ==> Result.is_ok (parse_file (Result.get_ok printing_result))
 
 let print_parse_equal =
-  Test.make
+  make_test
     ~name:"print and parse; stay equal"
-    ~count:2000
     ~print:(
       fun program ->
         with_formatter_to_string @@ fun fmt ->
