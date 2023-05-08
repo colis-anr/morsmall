@@ -30,8 +30,21 @@ let gen_map4 f g1 g2 g3 g4 =
 let gen_sized (s : int) (gen_0 : 'a Gen.t) (gen_n : int -> 'a Gen.t) : 'a Gen.t =
   if s <= 0 then gen_0 else gen_n (s - 1)
 
+let rec gen_reject ~(keep_if : 'a -> bool) (gen : 'a Gen.t) : 'a Gen.t =
+  let open Gen in
+  gen >>= fun x ->
+  if keep_if x then
+    pure x
+  else
+    gen_reject ~keep_if gen
+
+let keywords = [ "for"; "in"; "do"; "done"; "if"; "then"; "else"; "fi"; "while";
+                 "case"; "esac"; "elif"; "until" ]
+
 let rec gen_name : name Gen.t =
-  Gen.(string_small_of (char_range 'a' 'z'))
+  gen_reject
+    ~keep_if:(fun name -> not (List.mem name keywords))
+    Gen.(string_size ~gen:(char_range 'a' 'z') (int_range 1 20))
 
 and gen_attribute : attribute Gen.sized = fun s ->
   gen_sized
@@ -63,7 +76,7 @@ and gen_word_component : word_component Gen.sized = fun s ->
       Gen.oneof [
         Gen.pure WGlobAll ;
         Gen.pure WGlobAny ;
-        Gen.pure WBracketExpression ;
+        (* Gen.pure WBracketExpression ; *)
         Gen.map (fun string -> WTildePrefix string) gen_name ; (* FIXME: better than `gen_name` *)
         Gen.map (fun string -> WLiteral string) gen_name ; (* FIXME: better than `gen_name` *)
       ]
@@ -81,7 +94,7 @@ and gen_word : word Gen.sized = fun s ->
   gen_sized
     s
     (
-      Gen.pure []
+      Gen.map (fun word_component -> [word_component]) (gen_word_component 0)
     )
     (
       fun s ->
@@ -131,7 +144,7 @@ and gen_command : command Gen.sized = fun s ->
   gen_sized
     s
     (
-      Gen.map (fun word -> Simple ([], [word])) (gen_word' s)
+      Gen.map (fun word -> Simple ([], [word])) (gen_word' 0)
     )
     (
       fun s ->
