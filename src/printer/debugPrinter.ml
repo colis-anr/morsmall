@@ -23,10 +23,9 @@ type lexing_position = [%import: Location.lexing_position]
 and position = [%import: Location.position]
 and 'a located = [%import: 'a Location.located]
 
-[@@deriving show]
+[@@deriving show {with_path = false}]
 
 type name = [%import: AST.name]
-and character_range = [%import: AST.character_range]
 and attribute = [%import: AST.attribute]
 and word_component = [%import: AST.word_component]
 and word = [%import: AST.word]
@@ -44,4 +43,4 @@ and assignment' = [%import: AST.assignment']
 and command' = [%import: AST.command']
 and case_item' = [%import: AST.case_item']
 
-[@@deriving show]
+[@@deriving show {with_path = false}]

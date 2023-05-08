@@ -20,215 +20,158 @@
 (*                                                                            *)
 (******************************************************************************)
 
-open Morsmall.AST
-open Morsmall.Location
+open Morsmall
+open AST
+open QCheck2
 
-let dummy_lexing_position =
-  { pos_fname = "dummy" ;
-    pos_lnum = 0 ;
-    pos_bol = 0 ;
-    pos_cnum = 0 }
+let gen_map4 f g1 g2 g3 g4 =
+  Gen.map (fun (x1, x2, x3, x4) -> f x1 x2 x3 x4) (Gen.quad g1 g2 g3 g4)
 
-let dummy_locate f x =
-  { value = f x ;
-    position = { start_p = dummy_lexing_position ;
-                 end_p = dummy_lexing_position } }
+let gen_sized (s : int) (gen_0 : 'a Gen.t) (gen_n : int -> 'a Gen.t) : 'a Gen.t =
+  if s <= 0 then gen_0 else gen_n (s - 1)
 
-type 'a p_array = (int * 'a) array
+let rec gen_name : name Gen.t =
+  Gen.(string_small_of (char_range 'a' 'z'))
 
-let choose (a : 'a p_array) : 'a =
-  let p_max = Array.fold_left (fun p_tot (p,_) -> p_tot+p) 0 a in
-  let n = Random.int p_max in
-  let p_tot = ref 0 in
-  let v_found = ref (snd (a.(0))) in
-  for i = 0 to Array.length a - 1 do
-    let (p, v) = a.(i) in
-    if !p_tot <= n && n < !p_tot + p then
-      v_found := v;
-    p_tot := !p_tot + p
-  done;
-  !v_found
-
-(* Parameters *)
-
-type parameters =
-  { depth : int }
-
-let default_parameters =
-  { depth = 10 }
-
-let d p = { depth = p.depth - 1 } (* { p with depth = p.depth - 1 } *)
-
-(* Generator helper functions *)
-
-(* let g_bool ~prob =
- *   Random.float 1. < prob *)
-
-let g_option ~prob inhabitant =
-  if Random.float 1. < prob then
-    Some (inhabitant ())
-  else
-    None
-
-let rec g_list ~prob ~limit inhabitant =
-  if limit > 0 && Random.float 1. < prob then
-    (inhabitant ()) :: g_list ~prob ~limit:(limit - 1) inhabitant
-  else
-    []
-
-(* Our generators *)
-
-let rec g_word_component p : word_component =
-  choose
-    [| 1, (fun _ -> WLiteral "foo") ;
-       1, (fun _ -> WVariable ("x", NoAttribute)) ;
-       (if p.depth <= 0 then 0 else 1),
-       (fun p -> WSubshell (g_program p)) ;
-       1, (fun _ -> WGlobAll) ;
-       1, (fun _ -> WGlobAny) |]
-    (d p)
-
-and g_word p =
-  g_word_component (d p)
-  :: g_list ~prob:0.9 ~limit:4 (fun () -> g_word_component (d p))
-
-and g_word' p =
-  dummy_locate g_word p
-
-and g_name _p =
-  "blah" (*FIXME*)
-
-and g_pattern p =
-  g_word (d p) :: g_list ~prob:0.8 ~limit:4 (fun () -> g_word (d p))
-
-and g_pattern' p =
-  dummy_locate g_pattern p
-
-and g_assignment p =
-  (choose [|1,"x";2,"y";3,"z";4,"choucroute"|],
-   g_word (d p))
-
-and g_assignment' p =
-  dummy_locate g_assignment p
-
-and g_descr _p =
-  Random.int 10
-
-and g_redirection_kind _p =
-  choose
-    [| 1, Output ;
-       1, OutputDuplicate ;
-       1, OutputAppend ;
-       1, OutputClobber ;
-       1, Input ;
-       1, InputDuplicate ;
-       1, InputOutput |]
-
-and g_program p =
-  g_list ~prob:0.5 ~limit:3
-    (fun () -> g_command' (d p))
-
-and g_command p =
-  if p.depth <= 0 then
-    g_simple_command (d p)
-  else
-    choose
-      [| 1, g_simple_command ;
-         1, (fun p -> Async (g_command' (d p))) ;
-         1, (fun p -> Seq (g_command' (d p), g_command' (d p))) ;
-         1, (fun p -> And (g_command' (d p), g_command' (d p))) ;
-         1, (fun p -> Or (g_command' (d p), g_command' (d p))) ;
-         1, (fun p -> Not (g_command' (d p))) ;
-         1, (fun p -> Pipe (g_command' (d p), g_command' (d p))) ;
-         1, (fun p -> Subshell (g_command' (d p))) ;
-         1, g_for_clause ;
-         1, g_case_clause ;
-         1, g_if_clause ;
-         1, g_while_clause ;
-         1, g_until_clause ;
-         1, g_function_definition ;
-         1, g_redirection ;
-         1, g_here_document |]
-      (d p)
-
-and g_command' p =
-  dummy_locate g_command p
-
-and g_simple_command p =
-  let assignments =
-    g_list ~prob:0.5 ~limit:5
-      (fun () -> g_assignment' (d p))
-  in
-  let words =
-    g_list ~prob:0.7 ~limit:10
-      (fun () -> g_word' (d p))
-  in
-  if assignments = [] && words = [] then
-    g_simple_command p
-  else
-    Simple (assignments, words)
-
-and g_for_clause p =
-  For (
-      "x",
-      g_option ~prob:0.8 (fun () -> g_list ~prob:0.8 ~limit:10 (fun () -> g_word' (d p))),
-      g_command' (d p)
+and gen_attribute : attribute Gen.sized = fun s ->
+  gen_sized
+    s
+    (
+      Gen.oneof [
+        Gen.pure NoAttribute ;
+        Gen.pure ParameterLength ;
+      ]
+    )
+    (
+      fun s ->
+        Gen.oneof [
+          Gen.map2 (fun word bool -> UseDefaultValues (word, bool)) (gen_word s) Gen.bool ;
+          Gen.map2 (fun word bool -> AssignDefaultValues (word, bool)) (gen_word s) Gen.bool ;
+          Gen.map2 (fun word bool -> IndicateErrorifNullorUnset (word, bool)) (gen_word s) Gen.bool ;
+          Gen.map2 (fun word bool -> UseAlternativeValue (word, bool)) (gen_word s) Gen.bool ;
+          Gen.map (fun word -> RemoveSmallestSuffixPattern word) (gen_word s) ;
+          Gen.map (fun word -> RemoveLargestSuffixPattern word) (gen_word s) ;
+          Gen.map (fun word -> RemoveSmallestPrefixPattern word) (gen_word s) ;
+          Gen.map (fun word -> RemoveLargestPrefixPattern word) (gen_word s) ;
+        ]
     )
 
-and g_case_clause p =
-  Case (
-      g_word' (d p),
-      g_list ~prob:0.7 ~limit:5 (fun () -> g_case_item' (d p) )
+and gen_word_component : word_component Gen.sized = fun s ->
+  gen_sized
+    s
+    (
+      Gen.oneof [
+        Gen.pure WGlobAll ;
+        Gen.pure WGlobAny ;
+        Gen.pure WBracketExpression ;
+        Gen.map (fun string -> WTildePrefix string) gen_name ; (* FIXME: better than `gen_name` *)
+        Gen.map (fun string -> WLiteral string) gen_name ; (* FIXME: better than `gen_name` *)
+      ]
+    )
+    (
+      fun s ->
+        Gen.oneof [
+          Gen.map (fun word -> WDoubleQuoted word) (gen_word s) ;
+          Gen.map2 (fun name attribute -> WVariable (name, attribute)) gen_name (gen_attribute s) ;
+          Gen.map (fun program -> WSubshell program) (gen_program s) ;
+        ]
     )
 
-and g_case_item p =
-  (
-    g_pattern' (d p),
-    g_option ~prob:0.9 (fun () -> g_command' (d p))
-  )
-
-and g_case_item' p =
-  dummy_locate g_case_item p
-
-and g_if_clause p =
-  If (
-      g_command' (d p),
-      g_command' (d p),
-      g_option ~prob:0.6 (fun () -> g_command' (d p))
+and gen_word : word Gen.sized = fun s ->
+  gen_sized
+    s
+    (
+      Gen.pure []
+    )
+    (
+      fun s ->
+        (* FIXME: improper use of size *)
+        Gen.small_list (gen_word_component s)
     )
 
-and g_while_clause p =
-  While (
-      g_command' (d p),
-      g_command' (d p)
+and gen_pattern : pattern Gen.sized = fun s ->
+  gen_sized
+    s
+    (
+      Gen.pure []
+    )
+    (
+      fun s ->
+        (* FIXME: improper use of size *)
+        Gen.small_list (gen_word s)
     )
 
-and g_until_clause p =
-  Until (
-      g_command' (d p),
-      g_command' (d p)
+and gen_assignment : assignment Gen.sized = fun s ->
+  gen_sized
+    s
+    (
+      Gen.map (fun name -> (name, [])) gen_name
+    )
+    (
+      fun s ->
+        Gen.pair gen_name (gen_word s)
     )
 
-and g_function_definition p =
-  Function (
-      g_name (d p),
-      g_command' (d p)
+and gen_descr : descr Gen.t =
+  Gen.small_nat
+
+and gen_program : program Gen.sized = fun s ->
+  gen_sized
+    s
+    (
+      Gen.pure []
+    )
+    (
+      fun s ->
+        (* FIXME: improper use of size *)
+        Gen.small_list (gen_command' s)
     )
 
-and g_redirection p =
-  Redirection (
-      g_command' (d p),
-      g_descr (d p),
-      g_redirection_kind (d p),
-      g_word' (d p)
+and gen_command : command Gen.sized = fun s ->
+  gen_sized
+    s
+    (
+      Gen.map (fun word -> Simple ([], [word])) (gen_word' s)
+    )
+    (
+      fun s ->
+        Gen.oneof [
+          Gen.map2 (fun assignments words -> Simple (assignments, words)) (Gen.small_list (gen_assignment' s)) (Gen.small_list (gen_word' s)) ;
+          Gen.map2 (fun word case_items -> Case (word, case_items)) (gen_word' s) (Gen.small_list (gen_case_item' s)) ;
+          Gen.map (fun command -> Async command) (gen_command' s) ;
+          Gen.map2 (fun command1 command2 -> Seq (command1, command2)) (gen_command' s) (gen_command' s) ;
+          Gen.map2 (fun command1 command2 -> And (command1, command2)) (gen_command' s) (gen_command' s) ;
+          Gen.map2 (fun command1 command2 -> Or (command1, command2)) (gen_command' s) (gen_command' s) ;
+          Gen.map (fun command -> Not command) (gen_command' s) ;
+          Gen.map2 (fun command1 command2 -> Pipe (command1, command2)) (gen_command' s) (gen_command' s) ;
+          Gen.map (fun command -> Subshell command) (gen_command' s) ;
+          Gen.map3 (fun name words command -> For (name, words, command)) gen_name (Gen.option (Gen.small_list (gen_word' s))) (gen_command' s) ;
+          Gen.map3 (fun command1 command2 command3 -> If (command1, command2, command3)) (gen_command' s) (gen_command' s) (Gen.option (gen_command' s)) ;
+          Gen.map2 (fun command1 command2 -> While (command1, command2)) (gen_command' s) (gen_command' s) ;
+          Gen.map2 (fun command1 command2 -> Until (command1, command2)) (gen_command' s) (gen_command' s) ;
+          Gen.map2 (fun name command -> Function (name, command)) gen_name (gen_command' s) ;
+          gen_map4 (fun command descr kind word -> Redirection (command, descr, kind, word)) (gen_command' s) gen_descr gen_kind (gen_word' s) ;
+          Gen.map3 (fun command descr word -> HereDocument (command, descr, word)) (gen_command' s) gen_descr (gen_word' s) ;
+        ]
     )
 
-and g_here_document p =
-  HereDocument (
-      g_command' (d p),
-      g_descr (d p),
-      dummily_located (g_word (d p) @ [WLiteral "\n"])
-    )
+and gen_case_item : case_item Gen.sized = fun s ->
+  (* FIXME: improper use of size *)
+  Gen.pair (gen_pattern' s) (Gen.option (gen_command' s))
 
-let g_nonempty_program p =
-  g_command' (d p) :: g_program (d p)
+and gen_kind : kind Gen.t =
+  Gen.oneof [
+    Gen.pure Output ;
+    Gen.pure OutputDuplicate ;
+    Gen.pure OutputAppend ;
+    Gen.pure OutputClobber ;
+    Gen.pure Input ;
+    Gen.pure InputDuplicate ;
+    Gen.pure InputOutput ;
+  ]
+
+and gen_word' = fun s -> Gen.map Location.dummily_located (gen_word s)
+and gen_pattern' = fun s -> Gen.map Location.dummily_located (gen_pattern s)
+and gen_assignment' = fun s -> Gen.map Location.dummily_located (gen_assignment s)
+and gen_command' = fun s -> Gen.map Location.dummily_located (gen_command s)
+and gen_case_item' = fun s -> Gen.map Location.dummily_located (gen_case_item s)

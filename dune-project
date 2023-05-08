@@ -22,6 +22,7 @@
   (ppx_deriving         :build)
   (ppx_deriving_yojson  :build)
    ppx_import
+  (qcheck               :with-test)
    visitors
    yojson))
 
