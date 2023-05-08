@@ -30,11 +30,16 @@ let gen_map4 f g1 g2 g3 g4 =
 let gen_sized (s : int) (gen_0 : 'a Gen.t) (gen_n : int -> 'a Gen.t) : 'a Gen.t =
   if s <= 0 then gen_0 else gen_n (s - 1)
 
+let gen_reject (p : 'a -> bool) (gen : 'a Gen.t) : 'a Gen.t =
+  let open Gen in
+  gen >>= fun x -> if p x then pure x else gen
+
+let keywords = [ "for"; "in"; "do"; "done" ]
+
 let rec gen_name : name Gen.t =
-    Gen.(string_size
-         ~gen:(char_range 'a' 'z')
-         (int_range 1 20)
-        )
+  gen_reject
+    (fun name -> not (List.mem name keywords))
+    Gen.(string_size ~gen:(char_range 'a' 'z') (int_range 1 20))
 
 and gen_attribute : attribute Gen.sized = fun s ->
   gen_sized
