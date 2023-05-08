@@ -39,7 +39,7 @@ let rec gen_reject ~(keep_if : 'a -> bool) (gen : 'a Gen.t) : 'a Gen.t =
     gen_reject ~keep_if gen
 
 let keywords = [ "for"; "in"; "do"; "done"; "if"; "then"; "else"; "fi"; "while";
-                 "case"; "esac" ]
+                 "case"; "esac"; "elif" ]
 
 let rec gen_name : name Gen.t =
   gen_reject
