@@ -30,3 +30,6 @@ clean:
 	dune clean
 	rm -f bin lib doc
 	rm -Rf artifacts
+
+headers:
+	headache -h .header $(shell find src/ tests/ -regex '.*\.ml[ily]?')
