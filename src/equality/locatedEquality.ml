@@ -2,7 +2,7 @@
 (*                                 Morsmall                                *)
 (*                      A concise AST for POSIX shell                      *)
 (*                                                                         *)
-(*  Copyright (C) 2017,2018,2019 Yann Régis-Gianas, Ralf Treinen,          *)
+(*  Copyright (C) 2017-2023 Yann Régis-Gianas, Ralf Treinen,               *)
 (*  Nicolas Jeannerod                                                      *)
 (*                                                                         *)
 (*  This program is free software: you can redistribute it and/or modify   *)
