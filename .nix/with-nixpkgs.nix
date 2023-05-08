@@ -37,6 +37,8 @@
           ];
 
           doCheck = true;
+
+          checkInputs = with opkgs; [ qcheck ];
         };
     in {
       packages.with-nixpkgs = mk-with-nixpkgs { inclMorbig = false; };
