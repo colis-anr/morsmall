@@ -1,9 +1,9 @@
 (******************************************************************************)
-(*                                                                            *)
 (*                                  Morsmall                                  *)
 (*                       A concise AST for POSIX shell                        *)
 (*                                                                            *)
-(*   Copyright (C) 2017  Yann Régis-Gianas, Ralf Treinen, Nicolas Jeannerod   *)
+(*   Copyright (C) 2017-2023 Yann Régis-Gianas, Ralf Treinen,                 *)
+(*   Nicolas Jeannerod                                                        *)
 (*                                                                            *)
 (*   This program is free software: you can redistribute it and/or modify     *)
 (*   it under the terms of the GNU General Public License as published by     *)
@@ -17,7 +17,6 @@
 (*                                                                            *)
 (*   You should have received a copy of the GNU General Public License        *)
 (*   along with this program.  If not, see <http://www.gnu.org/licenses/>.    *)
-(*                                                                            *)
 (******************************************************************************)
 
 open Morsmall
