@@ -64,6 +64,10 @@ let make_test =
     ~count:2000
     ~long_factor:100
 
+let result_is_ok = function
+  | Ok _ -> true
+  | Error err -> Test.fail_report (Printexc.to_string err)
+
 let print =
   make_test
     ~name:"print"
@@ -74,7 +78,7 @@ let print =
     (Generator.gen_program 1)
   @@
   fun input ->
-  Result.is_ok (print_to_temp_file input)
+  result_is_ok (print_to_temp_file input)
 
 let print_parse =
   make_test
@@ -91,7 +95,7 @@ let print_parse =
   fun input ->
   let printing_result = print_to_temp_file input in
   Result.is_ok printing_result
-  ==> Result.is_ok (parse_file (Result.get_ok printing_result))
+  ==> result_is_ok (parse_file (Result.get_ok printing_result))
 
 let print_parse_equal =
   make_test
