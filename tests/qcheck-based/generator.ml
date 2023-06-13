@@ -148,7 +148,15 @@ and gen_command : command Gen.sized = fun s ->
     (
       fun s ->
         Gen.oneof [
-          Gen.map2 (fun assignments words -> Simple (assignments, words)) (Gen.small_list (gen_assignment' s)) (Gen.small_list (gen_word' s)) ;
+          Gen.(
+            (* NOTE: [Simple] constructor must not carry two empty lists, so we
+               make sure to generate at most one empty list between the two. *)
+            (0 -- 1) >>= fun d ->
+            map2
+              (fun assignments words -> Simple (assignments, words))
+              (list_size (   d  -- 10) (gen_assignment' s))
+              (list_size ((1-d) -- 10) (gen_word' s))
+          ) ;
           Gen.map2 (fun word case_items -> Case (word, case_items)) (gen_word' s) (Gen.small_list (gen_case_item' s)) ;
           Gen.map (fun command -> Async command) (gen_command' s) ;
           Gen.map2 (fun command1 command2 -> Seq (command1, command2)) (gen_command' s) (gen_command' s) ;
