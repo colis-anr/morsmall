@@ -190,8 +190,8 @@ and gen_kind : kind Gen.t =
     Gen.pure InputOutput ;
   ]
 
-and gen_word' = fun s -> Gen.map Location.dummily_located (gen_word s)
-and gen_pattern' = fun s -> Gen.map Location.dummily_located (gen_pattern s)
-and gen_assignment' = fun s -> Gen.map Location.dummily_located (gen_assignment s)
-and gen_command' = fun s -> Gen.map Location.dummily_located (gen_command s)
-and gen_case_item' = fun s -> Gen.map Location.dummily_located (gen_case_item s)
+and gen_word' = fun s -> Gen.map Location.locate (gen_word s)
+and gen_pattern' = fun s -> Gen.map Location.locate (gen_pattern s)
+and gen_assignment' = fun s -> Gen.map Location.locate (gen_assignment s)
+and gen_command' = fun s -> Gen.map Location.locate (gen_command s)
+and gen_case_item' = fun s -> Gen.map Location.locate (gen_case_item s)
