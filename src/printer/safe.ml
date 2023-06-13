@@ -34,11 +34,11 @@ and pp_word_component ppf = function (*FIXME*)
      fpf ppf "%s" literal
   | WTildePrefix tilde_prefix ->
     fpf ppf "~%s" tilde_prefix
-  | WDoubleQuoted _word ->
-     assert false
   | WVariable (variable, attribute) ->
      assert (attribute = NoAttribute);
      fpf ppf "${%s}" variable
+  | WDoubleQuoted word ->
+    fpf ppf "\"%a\"" pp_word word
   | WSubshell command_list ->
      fpf ppf "$(%a)" pp_command'_list command_list
   | WGlobAll ->
