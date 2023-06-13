@@ -37,5 +37,5 @@ build: [
 ]
 dev-repo: "git+https://github.com/colis-anr/morsmall.git"
 pin-depends: [
-  [ "morbig.dev" "git+https://github.com/colis-anr/morbig#4d03370d3d0e20fbbced6985d2c71371adc3cb24" ]
+  [ "morbig.dev" "git+https://github.com/colis-anr/morbig#a50e6bf994aafb601ab6bc0777e9be2bc7457b2d" ]
 ]
