@@ -7,6 +7,9 @@
 
     morbig.url = "github:colis-anr/morbig";
     morbig.inputs.nixpkgs.follows = "nixpkgs";
+    morbig.inputs.opam-nix.follows = "";
+    ## NOTE: We do not use Morbig's `opam-nix`-based part of the flake here, so
+    ## we can remove that input to save space and time.
 
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
