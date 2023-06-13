@@ -51,7 +51,7 @@ and pp_word_component ppf = function (*FIXME*)
 (* AST.word *)
 
 and pp_word ppf = function
-  | [] -> assert false
+  | [] -> ()
   | [e] -> pp_word_component ppf e
   | h :: q -> fpf ppf "%a%a" pp_word_component h pp_word q
 
