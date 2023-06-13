@@ -22,6 +22,9 @@
 let fpf = Format.fprintf
 open AST
 
+(* Function used when printing parameters. *)
+let colon_if = function true -> ":" | false -> ""
+
 (* AST.name *)
 
 let rec pp_name ppf =
@@ -34,9 +37,6 @@ and pp_word_component ppf = function (*FIXME*)
      fpf ppf "%s" literal
   | WTildePrefix tilde_prefix ->
     fpf ppf "~%s" tilde_prefix
-  | WVariable (variable, attribute) ->
-     assert (attribute = NoAttribute);
-     fpf ppf "${%s}" variable
   | WDoubleQuoted word ->
     fpf ppf "\"%a\"" pp_word word
   | WSubshell command_list ->
@@ -47,6 +47,26 @@ and pp_word_component ppf = function (*FIXME*)
      fpf ppf "?"
   | WBracketExpression ->
      assert false
+  | WVariable (variable, NoAttribute) ->
+    fpf ppf "${%s}" variable
+  | WVariable (variable, ParameterLength) ->
+    fpf ppf "${#%s}" variable
+  | WVariable (variable, UseDefaultValues (word, also_for_null)) ->
+    fpf ppf "${%s%s-%a}" variable (colon_if also_for_null) pp_word word
+  | WVariable (variable, AssignDefaultValues (word, also_for_null)) ->
+    fpf ppf "${%s%s=%a}" variable (colon_if also_for_null) pp_word word
+  | WVariable (variable, IndicateErrorifNullorUnset (word, also_for_null)) ->
+    fpf ppf "${%s%s?%a}" variable (colon_if also_for_null) pp_word word
+  | WVariable (variable, UseAlternativeValue (word, also_for_null)) ->
+    fpf ppf "${%s%s+%a}" variable (colon_if also_for_null) pp_word word
+  | WVariable (variable, RemoveSmallestSuffixPattern suffix_pattern) ->
+    fpf ppf "${%s%%%a}" variable pp_word suffix_pattern
+  | WVariable (variable, RemoveLargestSuffixPattern suffix_pattern) ->
+    fpf ppf "${%s%%%%%a}" variable pp_word suffix_pattern
+  | WVariable (variable, RemoveSmallestPrefixPattern prefix_pattern) ->
+    fpf ppf "${%s#%a}" variable pp_word prefix_pattern
+  | WVariable (variable, RemoveLargestPrefixPattern prefix_pattern) ->
+    fpf ppf "${%s##%a}" variable pp_word prefix_pattern
 
 (* AST.word *)
 
