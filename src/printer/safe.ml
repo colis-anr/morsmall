@@ -261,10 +261,8 @@ and pp_command ppf (command : command) =
          pp_word' file
 
     | HereDocument (command, descr, content) ->
-       (* if content.value.[String.length content.value - 1] <> '\n' then
-        *   failwith "SafePrinter.pp_command': ill-formed here-document: the content must end with a newline"; *) (*FIXME*)
-       let eof = "EOF" in (*FIXME*)
-       fpf ppf "%a %d<<%s\n%a%s\n"
+       let eof = "EOF" in (* FIXME: check that no line contains `EOF`, or get it from the grammar? *)
+       fpf ppf "%a %d<<%s\n%a\n%s\n"
          pp_command' command
          descr
          eof
