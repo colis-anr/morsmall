@@ -1,9 +1,9 @@
-(include_subdirs unqualified)
+(include_subdirs qualified)
 
 (library
  (name morsmall)
  (public_name morsmall)
- (libraries morbig morsmall.utilities visitors.runtime yojson)
+ (libraries morbig visitors.runtime yojson)
  (modules_without_implementation AST)
  (preprocess
   (staged_pps ppx_import ppx_deriving.std visitors.ppx ppx_deriving_yojson)))

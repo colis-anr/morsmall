@@ -1,6 +1,0 @@
-(include_subdirs no)
-
-(library
- (name morsmall_utilities)
- (public_name morsmall.utilities)
- (libraries morbig))
