@@ -22,6 +22,8 @@
 module AST = AST
 type t = AST.program
 
+include Constructors
+
 exception SyntaxError of Location.lexing_position
 
 let from_CST = CST_to_AST.program__to__program
