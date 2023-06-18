@@ -1,0 +1,6 @@
+(test
+ (name golden)
+ (libraries morsmall alcotest)
+ (deps (source_tree .)))
+
+(data_only_dirs morbig)
