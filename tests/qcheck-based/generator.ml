@@ -23,8 +23,22 @@ open Morsmall
 open AST
 open QCheck2
 
-let gen_map4 f g1 g2 g3 g4 =
-  Gen.map (fun (x1, x2, x3, x4) -> f x1 x2 x3 x4) (Gen.quad g1 g2 g3 g4)
+module Gen = struct
+  include Gen
+
+  let map4 f g1 g2 g3 g4 =
+    f <$> g1 <*> g2 <*> g3 <*> g4
+
+  let sized (s : int) (gen_0 : 'a t) (gen_n : int -> 'a t) : 'a t =
+    if s <= 0 then gen_0 else gen_n (s - 1)
+
+  let rec reject ~(keep_if : 'a -> bool) (gen : 'a t) : 'a t =
+    gen >>= fun x ->
+    if keep_if x then
+      pure x
+    else
+      reject ~keep_if gen
+end
 
 (* Infix synonyms for `map` and `ap`. *)
 
@@ -32,27 +46,16 @@ let (>|=) = Gen.(>|=)
 let (<$>) = Gen.(<$>)
 let (<*>) = Gen.(<*>)
 
-let gen_sized (s : int) (gen_0 : 'a Gen.t) (gen_n : int -> 'a Gen.t) : 'a Gen.t =
-  if s <= 0 then gen_0 else gen_n (s - 1)
-
-let rec gen_reject ~(keep_if : 'a -> bool) (gen : 'a Gen.t) : 'a Gen.t =
-  let open Gen in
-  gen >>= fun x ->
-  if keep_if x then
-    pure x
-  else
-    gen_reject ~keep_if gen
-
 let keywords = [ "for"; "in"; "do"; "done"; "if"; "then"; "else"; "fi"; "while";
                  "case"; "esac"; "elif"; "until" ]
 
 let rec gen_name : name Gen.t =
-  gen_reject
+  Gen.reject
     ~keep_if:(fun name -> not (List.mem name keywords))
     Gen.(string_size ~gen:(char_range 'a' 'z') (int_range 1 20))
 
 and gen_attribute : attribute Gen.sized = fun s ->
-  gen_sized
+  Gen.sized
     s
     (
       Gen.oneof [
@@ -75,7 +78,7 @@ and gen_attribute : attribute Gen.sized = fun s ->
     )
 
 and gen_word_component : word_component Gen.sized = fun s ->
-  gen_sized
+  Gen.sized
     s
     (
       Gen.oneof [
@@ -96,7 +99,7 @@ and gen_word_component : word_component Gen.sized = fun s ->
     )
 
 and gen_word : word Gen.sized = fun s ->
-  gen_sized
+  Gen.sized
     s
     (gen_word_component 0 >|= fun word_component -> [word_component])
     (
@@ -106,7 +109,7 @@ and gen_word : word Gen.sized = fun s ->
     )
 
 and gen_pattern : pattern Gen.sized = fun s ->
-  gen_sized
+  Gen.sized
     s
     (Gen.pure [])
     (
@@ -116,7 +119,7 @@ and gen_pattern : pattern Gen.sized = fun s ->
     )
 
 and gen_assignment : assignment Gen.sized = fun s ->
-  gen_sized
+  Gen.sized
     s
     (gen_name >|= fun name -> (name, []))
     (
@@ -128,7 +131,7 @@ and gen_descr : descr Gen.t =
   Gen.small_nat
 
 and gen_program : program Gen.sized = fun s ->
-  gen_sized
+  Gen.sized
     s
     (Gen.pure [])
     (
@@ -138,7 +141,7 @@ and gen_program : program Gen.sized = fun s ->
     )
 
 and gen_command : command Gen.sized = fun s ->
-  gen_sized
+  Gen.sized
     s
     (gen_word' 0 >|= fun word -> simple [word])
     (
