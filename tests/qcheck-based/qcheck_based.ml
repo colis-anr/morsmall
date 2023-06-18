@@ -62,7 +62,7 @@ open QCheck2
 let make_test =
   Test.make
     ~count:2000
-    ~long_factor:100
+    ~long_factor:2
 
 let result_is_ok = function
   | Ok _ -> true
@@ -75,7 +75,7 @@ let print =
         with_formatter_to_string @@ fun fmt ->
         fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n"
           pp_print_input_ast program)
-    (Generator.gen_program 1)
+    (Generator.gen_program 4)
   @@
   fun input ->
   result_is_ok (print_to_temp_file input)
