@@ -19,9 +19,11 @@
 (*   along with this program.  If not, see <http://www.gnu.org/licenses/>.    *)
 (******************************************************************************)
 
+(** {1 Abstract Syntax Tree for Shell}*)
+
+(** {2 Types} *)
+
 (** A type alias for located pieces of AST. *)
-(* NOTE: This type alias allows `ppx_import`-based modules to override the
-   behaviour of the derivers when it comes to locations. *)
 type 'a located = 'a Location.located
 
 (** Names in Shell are just strings with a few additional
@@ -32,7 +34,7 @@ type name = string
 (** The type {!word} is a description of words in Shell. {e See POSIX,
    2 Shell & Utilities, 2.3 Token Recognition} *)
 
-and attribute =
+and attribute = private
   | NoAttribute
   | ParameterLength
   | UseDefaultValues of word * bool
@@ -44,7 +46,7 @@ and attribute =
   | RemoveSmallestPrefixPattern of word
   | RemoveLargestPrefixPattern of word
 
-and word_component =
+and word_component = private
   | WTildePrefix of string
   | WLiteral of string
   | WDoubleQuoted of word
@@ -189,7 +191,7 @@ and descr = int
 
 and program = command' list
 
-and command =
+and command = private
   (* Simple Commands *)
   | Simple of assignment' list * word' list
 
@@ -224,7 +226,7 @@ and case_item = pattern' * command' option
 
 and case_item' = case_item located
 
-and kind =
+and kind = private
   | Output          (*  > *)
   | OutputDuplicate (* >& *)
   | OutputAppend    (* >> *)
@@ -232,3 +234,63 @@ and kind =
   | Input           (*  < *)
   | InputDuplicate  (* <& *)
   | InputOutput     (* <> *)
+
+(** {2 Smart Constructors} *)
+
+(** {3 Words} *)
+
+val noAttribute : attribute
+val parameterLength : attribute
+val useDefaultValues : also_for_null:bool -> word -> attribute
+val assignDefaultValues : also_for_null:bool -> word -> attribute
+val indicateErrorifNullorUnset : also_for_null:bool -> word -> attribute
+val useAlternativeValue : also_for_null:bool -> word -> attribute
+val removeSmallestSuffixPattern : word -> attribute
+val removeLargestSuffixPattern : word -> attribute
+val removeSmallestPrefixPattern : word -> attribute
+val removeLargestPrefixPattern : word -> attribute
+
+val wTildePrefix : string -> word_component
+val wLiteral : string -> word_component
+val wVariable : ?attribute:attribute -> name -> word_component
+val wSubshell : program -> word_component
+val wGlobAll : word_component
+val wGlobAny : word_component
+val wBracketExpression : word_component
+val wDoubleQuoted : word -> word_component
+
+val word : word_component list -> word
+
+(** {3 Commands} *)
+
+val simple : ?assignments:assignment' list -> word' list -> command
+val async : command' -> command
+val seq : command' -> command' -> command
+val and_ : command' -> command' -> command
+val or_ : command' -> command' -> command
+val not_ : command' -> command
+val pipe : command' -> command' -> command
+val subshell : command' -> command
+val for_ : name -> ?words:word' list -> command' -> command
+val case : word' -> case_item' list -> command
+val if_ : then_:command' -> ?else_:command' -> command' -> command
+val while_ : command' -> command' -> command
+val until : command' -> command' -> command
+val function_ : name -> command' -> command
+val redirection : command' -> descr -> kind -> word' -> command
+val hereDocument : command' -> descr -> word' -> command
+
+(** {3 Others} *)
+
+val pattern : word list -> pattern
+val assignment : name -> word -> assignment
+val descr : int -> descr
+val program : command' list -> program
+
+val output : kind
+val outputDuplicate : kind
+val outputAppend : kind
+val outputClobber : kind
+val input : kind
+val inputDuplicate : kind
+val inputOutput : kind

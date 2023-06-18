@@ -23,8 +23,8 @@ type lexing_position = [%import: Morbig.CST.lexing_position]
 and position = [%import: Morbig.CST.position]
 and 'a located = [%import: 'a Morbig.CST.located]
 
-let dummily_located value =
-  { value ; position = Morbig.CSTHelpers.dummy_position }
+let locate ?(position=Morbig.CSTHelpers.dummy_position) value =
+  { value; position }
 
 let copy_location : 'a 'b. 'a located -> 'b -> 'b located =
   fun located value ->

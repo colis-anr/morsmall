@@ -72,5 +72,4 @@ module Printer = Printer
 module Location = Location
 module CST_to_AST = CST_to_AST
 module Utilities = Utilities
-module Visitors = Visitors
 module Equality = Equality
