@@ -184,9 +184,9 @@ and gen_command : command Gen.sized = fun s ->
           while_ <$> gen_command' s <*> gen_command' s ;
           until <$> gen_command' s <*> gen_command' s ;
           function_ <$> gen_name <*> gen_command' s ;
-          redirection <$> gen_command' s <*> gen_descr <*> gen_kind <*> gen_word' s ;
-          Gen.map3_retry hereDocument (gen_command' s) gen_descr (gen_word' s)
-            ~fallback:(hereDocument <$> gen_command' s <*> gen_descr <*> Gen.pure (Location.locate [])) ;
+          (fun around -> redirection ~around) <$> gen_command' s <*> gen_descr <*> gen_kind <*> gen_word' s ;
+          Gen.map3_retry (fun around -> hereDocument ~around) (gen_command' s) gen_descr (gen_word' s)
+            ~fallback:((fun around -> hereDocument ~around) <$> gen_command' s <*> gen_descr <*> Gen.pure (Location.locate [])) ;
         ]
     )
 

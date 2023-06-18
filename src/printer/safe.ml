@@ -252,7 +252,7 @@ and pp_command ppf (command : command) =
          pp_assignments' assignments
          pp_words' words
 
-    | Redirection (command, descr, kind, file) ->
+    | Redirection (Some command, descr, kind, file) ->
        (* The space is required because "the [descriptor] must be delimited from any preceding text". *)
        fpf ppf "%a %d%a%a"
          pp_command' command
@@ -260,10 +260,24 @@ and pp_command ppf (command : command) =
          pp_redirection_kind kind
          pp_word' file
 
-    | HereDocument (command, descr, content) ->
+    | Redirection (None, descr, kind, file) ->
+       fpf ppf "%d%a%a"
+         descr
+         pp_redirection_kind kind
+         pp_word' file
+
+    | HereDocument (Some command, descr, content) ->
        let eof = "EOF" in (* FIXME: check that no line contains `EOF`, or get it from the grammar? *)
        fpf ppf "%a %d<<%s\n%a\n%s\n"
          pp_command' command
+         descr
+         eof
+         pp_word' content
+         eof
+
+    | HereDocument (None, descr, content) ->
+       let eof = "EOF" in (* FIXME: check that no line contains `EOF`, or get it from the grammar? *)
+       fpf ppf "%d<<%s\n%a\n%s\n"
          descr
          eof
          pp_word' content

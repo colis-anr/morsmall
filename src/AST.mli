@@ -217,8 +217,8 @@ and command = private
   | Function of name * command'
 
   (* Redirection *)
-  | Redirection of command' * descr * kind * word'
-  | HereDocument of command' * descr * word'
+  | Redirection of command' option * descr * kind * word'
+  | HereDocument of command' option * descr * word'
 
 and command' = command located
 
@@ -277,12 +277,12 @@ val if_ : then_:command' -> ?else_:command' -> command' -> command
 val while_ : command' -> command' -> command
 val until : command' -> command' -> command
 val function_ : name -> command' -> command
-val redirection : command' -> descr -> kind -> word' -> command
+val redirection : ?around:command' -> descr -> kind -> word' -> command
 
 (** [hereDocument c d w] creates a here-document redirection around [c], about
     descriptor [d] and containing the word [w]. The last newline must not be
     included. *)
-val hereDocument : command' -> descr -> word' -> command
+val hereDocument : ?around:command' -> descr -> word' -> command
 
 (** {3 Others} *)
 

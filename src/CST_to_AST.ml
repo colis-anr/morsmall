@@ -627,14 +627,14 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
   | IoRedirect_IoFile io_file' ->
      let kind, word' = io_file'__to__kind_word' io_file' in
      AST.redirection
-         command'
+         ~around:command'
          (ASTUtils.default_redirection_descriptor kind)
          kind
          word'
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
      let kind, word' = io_file'__to__kind_word' io_file' in
      AST.redirection
-         command'
+         ~around:command'
          (io_number__to__int io_number)
          kind
          word'
@@ -642,14 +642,14 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
      let _strip, word' = io_here'__to__strip_word' io_here' in
      (* FIXME: strip that word if needed *)
      AST.hereDocument
-         command'
+         ~around:command'
          0
          (Location.map_located assert_remove_last_newline_from_word word')
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
      let _strip, word' = io_here'__to__strip_word' io_here' in
      (* FIXME: strip that word if needed *)
      AST.hereDocument
-         command'
+         ~around:command'
          (io_number__to__int io_number)
          (Location.map_located assert_remove_last_newline_from_word word')
 
