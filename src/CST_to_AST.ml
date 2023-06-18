@@ -52,6 +52,7 @@ let assert_remove_last_newline_from_word word =
   | Some (WUnquoted "\n") -> list_bd word
   | Some (WUnquoted l) when l.[String.length l - 1] = '\n' ->
     list_bd word @ [AST.wUnquoted (String.sub l 0 (String.length l - 1))]
+  | None -> []
   | _ -> assert false
 
 (* Convertion functions *)
