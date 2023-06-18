@@ -57,6 +57,8 @@ module Gen = struct
 
   let very_small_nat = 0 -- 10
   let very_small_list gen = list_size very_small_nat gen
+
+  let singleton g = g >|= fun x -> [x]
 end
 
 (* Infix synonyms for `map` and `ap`. *)
@@ -166,15 +168,8 @@ and gen_command : command Gen.sized = fun s ->
     (
       fun s ->
         Gen.oneof [
-          Gen.(
-            (* NOTE: [Simple] constructor must not carry two empty lists, so we
-               make sure to generate at most one empty list between the two. *)
-            (0 -- 1) >>= fun d ->
-            map2
-              (fun assignments words -> simple ~assignments words)
-              (list_size (   d  -- 10) (gen_assignment' s))
-              (list_size ((1-d) -- 10) (gen_word' s))
-          ) ;
+          Gen.map2_retry (fun assignments -> simple ~assignments) (Gen.very_small_list (gen_assignment' s)) (Gen.very_small_list (gen_word' s))
+            ~fallback:(simple ~assignments:[] <$> (Gen.singleton (gen_word' s))) ;
           case <$> gen_word' s <*> Gen.very_small_list (gen_case_item' s) ;
           async <$> gen_command' s ;
           seq <$> gen_command' s <*> gen_command' s ;
