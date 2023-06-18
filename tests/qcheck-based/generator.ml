@@ -50,21 +50,21 @@ and gen_attribute : attribute Gen.sized = fun s ->
     s
     (
       Gen.oneof [
-        Gen.pure NoAttribute ;
-        Gen.pure ParameterLength ;
+        Gen.pure noAttribute ;
+        Gen.pure parameterLength ;
       ]
     )
     (
       fun s ->
         Gen.oneof [
-          Gen.map2 (fun word bool -> UseDefaultValues (word, bool)) (gen_word s) Gen.bool ;
-          Gen.map2 (fun word bool -> AssignDefaultValues (word, bool)) (gen_word s) Gen.bool ;
-          Gen.map2 (fun word bool -> IndicateErrorifNullorUnset (word, bool)) (gen_word s) Gen.bool ;
-          Gen.map2 (fun word bool -> UseAlternativeValue (word, bool)) (gen_word s) Gen.bool ;
-          Gen.map (fun word -> RemoveSmallestSuffixPattern word) (gen_word s) ;
-          Gen.map (fun word -> RemoveLargestSuffixPattern word) (gen_word s) ;
-          Gen.map (fun word -> RemoveSmallestPrefixPattern word) (gen_word s) ;
-          Gen.map (fun word -> RemoveLargestPrefixPattern word) (gen_word s) ;
+          Gen.map2 (fun also_for_null -> useDefaultValues ~also_for_null) Gen.bool (gen_word s) ;
+          Gen.map2 (fun also_for_null -> assignDefaultValues ~also_for_null) Gen.bool (gen_word s) ;
+          Gen.map2 (fun also_for_null -> indicateErrorifNullorUnset ~also_for_null) Gen.bool (gen_word s) ;
+          Gen.map2 (fun also_for_null -> useAlternativeValue ~also_for_null) Gen.bool (gen_word s) ;
+          Gen.map removeSmallestSuffixPattern (gen_word s) ;
+          Gen.map removeLargestSuffixPattern (gen_word s) ;
+          Gen.map removeSmallestPrefixPattern (gen_word s) ;
+          Gen.map removeLargestPrefixPattern (gen_word s) ;
         ]
     )
 
@@ -73,19 +73,19 @@ and gen_word_component : word_component Gen.sized = fun s ->
     s
     (
       Gen.oneof [
-        Gen.pure WGlobAll ;
-        Gen.pure WGlobAny ;
+        Gen.pure wGlobAll ;
+        Gen.pure wGlobAny ;
         (* Gen.pure WBracketExpression ; *)
-        Gen.map (fun string -> WTildePrefix string) gen_name ; (* FIXME: better than `gen_name` *)
-        Gen.map (fun string -> WLiteral string) gen_name ; (* FIXME: better than `gen_name` *)
+        Gen.map wTildePrefix gen_name ; (* FIXME: better than `gen_name` *)
+        Gen.map wLiteral gen_name ; (* FIXME: better than `gen_name` *)
       ]
     )
     (
       fun s ->
         Gen.oneof [
-          Gen.map (fun word -> WDoubleQuoted word) (gen_word s) ;
-          Gen.map2 (fun name attribute -> WVariable (name, attribute)) gen_name (gen_attribute s) ;
-          Gen.map (fun program -> WSubshell program) (gen_program s) ;
+          Gen.map wDoubleQuoted (gen_word s) ;
+          Gen.map2 (fun attribute -> wVariable ~attribute) (gen_attribute s) gen_name ;
+          Gen.map wSubshell (gen_program s) ;
         ]
     )
 
@@ -143,7 +143,7 @@ and gen_command : command Gen.sized = fun s ->
   gen_sized
     s
     (
-      Gen.map (fun word -> Simple ([], [word])) (gen_word' 0)
+      Gen.map (fun word -> simple [word]) (gen_word' 0)
     )
     (
       fun s ->
@@ -153,25 +153,25 @@ and gen_command : command Gen.sized = fun s ->
                make sure to generate at most one empty list between the two. *)
             (0 -- 1) >>= fun d ->
             map2
-              (fun assignments words -> Simple (assignments, words))
+              (fun assignments words -> simple ~assignments words)
               (list_size (   d  -- 10) (gen_assignment' s))
               (list_size ((1-d) -- 10) (gen_word' s))
           ) ;
-          Gen.map2 (fun word case_items -> Case (word, case_items)) (gen_word' s) (Gen.small_list (gen_case_item' s)) ;
-          Gen.map (fun command -> Async command) (gen_command' s) ;
-          Gen.map2 (fun command1 command2 -> Seq (command1, command2)) (gen_command' s) (gen_command' s) ;
-          Gen.map2 (fun command1 command2 -> And (command1, command2)) (gen_command' s) (gen_command' s) ;
-          Gen.map2 (fun command1 command2 -> Or (command1, command2)) (gen_command' s) (gen_command' s) ;
-          Gen.map (fun command -> Not command) (gen_command' s) ;
-          Gen.map2 (fun command1 command2 -> Pipe (command1, command2)) (gen_command' s) (gen_command' s) ;
-          Gen.map (fun command -> Subshell command) (gen_command' s) ;
-          Gen.map3 (fun name words command -> For (name, words, command)) gen_name (Gen.option (Gen.small_list (gen_word' s))) (gen_command' s) ;
-          Gen.map3 (fun command1 command2 command3 -> If (command1, command2, command3)) (gen_command' s) (gen_command' s) (Gen.option (gen_command' s)) ;
-          Gen.map2 (fun command1 command2 -> While (command1, command2)) (gen_command' s) (gen_command' s) ;
-          Gen.map2 (fun command1 command2 -> Until (command1, command2)) (gen_command' s) (gen_command' s) ;
-          Gen.map2 (fun name command -> Function (name, command)) gen_name (gen_command' s) ;
-          gen_map4 (fun command descr kind word -> Redirection (command, descr, kind, word)) (gen_command' s) gen_descr gen_kind (gen_word' s) ;
-          Gen.map3 (fun command descr word -> HereDocument (command, descr, word)) (gen_command' s) gen_descr (gen_word' s) ;
+          Gen.map2 case (gen_word' s) (Gen.small_list (gen_case_item' s)) ;
+          Gen.map async (gen_command' s) ;
+          Gen.map2 seq (gen_command' s) (gen_command' s) ;
+          Gen.map2 and_ (gen_command' s) (gen_command' s) ;
+          Gen.map2 or_ (gen_command' s) (gen_command' s) ;
+          Gen.map not_ (gen_command' s) ;
+          Gen.map2 pipe (gen_command' s) (gen_command' s) ;
+          Gen.map subshell (gen_command' s) ;
+          Gen.map3 (fun name words command -> for_ name ?words command) gen_name (Gen.option (Gen.small_list (gen_word' s))) (gen_command' s) ;
+          Gen.map3 (fun test then_ else_ -> if_ test ~then_ ?else_) (gen_command' s) (gen_command' s) (Gen.option (gen_command' s)) ;
+          Gen.map2 while_ (gen_command' s) (gen_command' s) ;
+          Gen.map2 until (gen_command' s) (gen_command' s) ;
+          Gen.map2 function_ gen_name (gen_command' s) ;
+          gen_map4 redirection (gen_command' s) gen_descr gen_kind (gen_word' s) ;
+          Gen.map3 hereDocument (gen_command' s) gen_descr (gen_word' s) ;
         ]
     )
 
@@ -181,13 +181,13 @@ and gen_case_item : case_item Gen.sized = fun s ->
 
 and gen_kind : kind Gen.t =
   Gen.oneof [
-    Gen.pure Output ;
-    Gen.pure OutputDuplicate ;
-    Gen.pure OutputAppend ;
-    Gen.pure OutputClobber ;
-    Gen.pure Input ;
-    Gen.pure InputDuplicate ;
-    Gen.pure InputOutput ;
+    Gen.pure output ;
+    Gen.pure outputDuplicate ;
+    Gen.pure outputAppend ;
+    Gen.pure outputClobber ;
+    Gen.pure input ;
+    Gen.pure inputDuplicate ;
+    Gen.pure inputOutput ;
   ]
 
 and gen_word' = fun s -> Gen.map Location.locate (gen_word s)
