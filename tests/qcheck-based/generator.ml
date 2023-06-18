@@ -39,8 +39,24 @@ module Gen = struct
     else
       reject ~keep_if gen
 
+  (** Tries to map the exception-throwing function on the results of a generator
+      a certain amount of times. If it keeps throwing exceptions, fall back on
+      the other given generator. *)
+  let rec map_retry ?(max_retries=5) ~(fallback : 'b t) (f : 'a -> 'b) (gen : 'a t) : 'b t =
+    if max_retries < 0 then
+      fallback
+    else
+      gen >>= fun x ->
+      try pure (f x) with _ -> map_retry ~max_retries:(max_retries - 1) ~fallback f gen
+
+  let map2_retry ?max_retries ~fallback f g1 g2 =
+    map_retry ?max_retries ~fallback (fun (x1, x2) -> f x1 x2) (pair g1 g2)
+
+  let map3_retry ?max_retries ~fallback f g1 g2 g3 =
+    map_retry ?max_retries ~fallback (fun (x1, x2, x3) -> f x1 x2 x3) (triple g1 g2 g3)
+
   let very_small_nat = 0 -- 10
-  let very_small_list gen_x = list_size very_small_nat gen_x
+  let very_small_list gen = list_size very_small_nat gen
 end
 
 (* Infix synonyms for `map` and `ap`. *)
@@ -173,7 +189,8 @@ and gen_command : command Gen.sized = fun s ->
           until <$> gen_command' s <*> gen_command' s ;
           function_ <$> gen_name <*> gen_command' s ;
           redirection <$> gen_command' s <*> gen_descr <*> gen_kind <*> gen_word' s ;
-          hereDocument <$> gen_command' s <*> gen_descr <*> gen_word' s ;
+          Gen.map3_retry hereDocument (gen_command' s) gen_descr (gen_word' s)
+            ~fallback:(hereDocument <$> gen_command' s <*> gen_descr <*> Gen.pure (Location.locate [])) ;
         ]
     )
 
