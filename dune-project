@@ -13,6 +13,7 @@
  (synopsis "A concise AST for POSIX shell")
 
  (depends
+  (alcotest             :with-test)
   (dune                 :build)
    logs
    menhir
@@ -23,6 +24,7 @@
   (ppx_deriving_yojson  :build)
    ppx_import
   (qcheck               :with-test)
+  (qcheck-alcotest      :with-test)
    visitors
    yojson))
 

@@ -38,7 +38,7 @@
 
           doCheck = true;
 
-          checkInputs = with opkgs; [ qcheck ];
+          checkInputs = with opkgs; [ alcotest qcheck qcheck-alcotest ];
         };
     in {
       packages.with-nixpkgs = mk-with-nixpkgs { inclMorbig = false; };
