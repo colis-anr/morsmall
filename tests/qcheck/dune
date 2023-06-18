@@ -1,4 +1,4 @@
 (test
- (name qcheck_based)
+ (name qcheck)
  (libraries morsmall qcheck)
  (preprocess (staged_pps ppx_import)))
