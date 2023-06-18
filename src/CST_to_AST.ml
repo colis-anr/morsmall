@@ -511,13 +511,20 @@ and simple_command'__to__command (simple_command' : simple_command') : AST.comma
   List.fold_right
     (
       fun io_redirect' command ->
-      io_redirect'__to__command
-        io_redirect'
-        { value = command ;
-          position = simple_command'.position }
+      Some
+        (io_redirect'__to__command
+          io_redirect'
+          (Option.map
+             (fun value -> { value; position = simple_command'.position })
+             command))
     )
     io_redirect'_list
-    (AST.simple ~assignments:assignment'_list (word'_list))
+    (if assignment'_list = [] && word'_list = [] then
+       None
+     else
+       Some (AST.simple ~assignments:assignment'_list (word'_list)))
+  |> Option.get (* Should always succeed because there cannot be no assignments,
+                   words and redirections at the same point. *)
 
 (* CST.cmd_prefix -> CST.assignment_word' list * CST.io_redirect' list
 
@@ -611,9 +618,11 @@ and redirect_list__to__command redirect_list (command' : AST.command') : AST.com
   match redirect_list with
   | RedirectList_IoRedirect io_redirect' ->
      command'
+     |> Option.some
      |> io_redirect'__to__command io_redirect'
   | RedirectList_RedirectList_IoRedirect (redirect_list', io_redirect') ->
      command'
+     |> Option.some
      |> io_redirect'__to__command' io_redirect'
      |> redirect_list'__to__command redirect_list' (*FIXME: check order of the redirections*)
 
@@ -622,19 +631,19 @@ and redirect_list'__to__command (redirect_list' : redirect_list') (command' : AS
 
 (* CST.io_redirect -> AST.command' -> AST.command *)
 
-and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command') : AST.command =
+and io_redirect__to__command (io_redirect : io_redirect) (command'_option : AST.command' option) : AST.command =
   match io_redirect with
   | IoRedirect_IoFile io_file' ->
      let kind, word' = io_file'__to__kind_word' io_file' in
      AST.redirection
-         ~around:command'
+         ?around:command'_option
          (ASTUtils.default_redirection_descriptor kind)
          kind
          word'
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
      let kind, word' = io_file'__to__kind_word' io_file' in
      AST.redirection
-         ~around:command'
+         ?around:command'_option
          (io_number__to__int io_number)
          kind
          word'
@@ -642,22 +651,22 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
      let _strip, word' = io_here'__to__strip_word' io_here' in
      (* FIXME: strip that word if needed *)
      AST.hereDocument
-         ~around:command'
+         ?around:command'_option
          0
          (Location.map_located assert_remove_last_newline_from_word word')
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
      let _strip, word' = io_here'__to__strip_word' io_here' in
      (* FIXME: strip that word if needed *)
      AST.hereDocument
-         ~around:command'
+         ?around:command'_option
          (io_number__to__int io_number)
          (Location.map_located assert_remove_last_newline_from_word word')
 
-and io_redirect'__to__command (io_redirect' : io_redirect') (command' : AST.command') : AST.command =
-  erase_location io_redirect__to__command io_redirect' command'
+and io_redirect'__to__command (io_redirect' : io_redirect') (command'_option : AST.command' option) : AST.command =
+  erase_location io_redirect__to__command io_redirect' command'_option
 
-and io_redirect'__to__command' (io_redirect' : io_redirect') (command' : AST.command') : AST.command' =
-  convert_location_2 io_redirect__to__command io_redirect' command'
+and io_redirect'__to__command' (io_redirect' : io_redirect') (command'_option : AST.command' option) : AST.command' =
+  convert_location_2 io_redirect__to__command io_redirect' command'_option
 
 (* CST.io_file -> AST.redirection_kind * AST.word *)
 
