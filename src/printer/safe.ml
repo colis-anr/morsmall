@@ -25,31 +25,45 @@ open AST
 (* Function used when printing parameters. *)
 let colon_if = function true -> ":" | false -> ""
 
-let expand_here_document_delimiter_literal s =
+let expand_here_document_delimiter_literal ~double_quoted s =
   let buf = Buffer.create (String.length s) in
   let preceeded_by_slash = ref false in
   String.iter
     (
-      fun c ->
-        if c = '\\' then
-          if !preceeded_by_slash then
-            (
-              Buffer.add_char buf '\\';
-              preceeded_by_slash := false
-            )
-          else
-            preceeded_by_slash := true
-        else
-          Buffer.add_char buf c
+      function
+      | '$' when !preceeded_by_slash ->
+        Buffer.add_char buf '$';
+        preceeded_by_slash := false
+      | '`' when !preceeded_by_slash ->
+        Buffer.add_char buf '`';
+        preceeded_by_slash := false
+      | '"' when !preceeded_by_slash ->
+        Buffer.add_char buf '"';
+        preceeded_by_slash := false
+      | '\\' when !preceeded_by_slash ->
+        Buffer.add_char buf '\\';
+        preceeded_by_slash := false
+      | '\n' when !preceeded_by_slash ->
+        Buffer.add_char buf '\n';
+        preceeded_by_slash := false
+      | '\\' when not !preceeded_by_slash ->
+        preceeded_by_slash := true
+      | c when !preceeded_by_slash && double_quoted ->
+        Buffer.add_char buf '\\';
+        Buffer.add_char buf c;
+        preceeded_by_slash := false
+      | c ->
+        Buffer.add_char buf c;
+        preceeded_by_slash := false
     )
     s;
   Buffer.contents buf
 
-let rec expand_here_document_delimiter = function
+let rec expand_here_document_delimiter ?(double_quoted=false) = function
   | [] -> ""
-  | WUnquoted lit :: rest -> expand_here_document_delimiter_literal lit ^ expand_here_document_delimiter rest
-  | WSingleQuoted lit :: rest -> expand_here_document_delimiter_literal lit ^ expand_here_document_delimiter rest
-  | WDoubleQuoted word :: rest -> expand_here_document_delimiter word ^ expand_here_document_delimiter rest
+  | WUnquoted lit :: rest -> expand_here_document_delimiter_literal ~double_quoted lit ^ expand_here_document_delimiter ~double_quoted rest
+  | WSingleQuoted lit :: rest -> expand_here_document_delimiter_literal ~double_quoted lit ^ expand_here_document_delimiter ~double_quoted rest
+  | WDoubleQuoted word :: rest -> expand_here_document_delimiter ~double_quoted:true word ^ expand_here_document_delimiter ~double_quoted rest
   | _ -> assert false
 
 (* AST.name *)
