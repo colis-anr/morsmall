@@ -62,7 +62,7 @@ open QCheck2
 let make_test =
   Test.make
     ~count:2000
-    ~long_factor:2
+    ~long_factor:10
 
 let result_is_ok = function
   | Ok _ -> true
