@@ -32,3 +32,6 @@ let copy_location : 'a 'b. 'a located -> 'b -> 'b located =
 
 let on_located f v =
   f v.value
+
+let map_located f v =
+  { value = f v.value; position = v.position }

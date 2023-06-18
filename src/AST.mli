@@ -278,6 +278,10 @@ val while_ : command' -> command' -> command
 val until : command' -> command' -> command
 val function_ : name -> command' -> command
 val redirection : command' -> descr -> kind -> word' -> command
+
+(** [hereDocument c d w] creates a here-document redirection around [c], about
+    descriptor [d] and containing the word [w]. The last newline must not be
+    included. *)
 val hereDocument : command' -> descr -> word' -> command
 
 (** {3 Others} *)

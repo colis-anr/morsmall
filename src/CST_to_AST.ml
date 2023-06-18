@@ -33,6 +33,27 @@ let convert_location_2 : 'a 'b 'c. ('a -> 'b -> 'c) -> 'a located -> 'b -> 'c Lo
 let erase_location : 'a 'b. ('a -> 'b) -> 'a located -> 'b =
   fun f x -> f x.value
 
+let rec list_bd = function
+  | [] -> failwith "list_bd"
+  | [_] -> []
+  | h::t -> h :: list_bd t
+
+let rec list_ft_opt = function
+  | [] -> None
+  | [x] -> Some x
+  | _::t -> list_ft_opt t
+
+let assert_remove_last_newline_from_word word =
+  (* NOTE: Necessary for as long as Morbig will generate newlines at the end of
+     its here-documents. cf the following issue for more information.
+     https://github.com/colis-anr/morbig/issues/175 *)
+  match list_ft_opt word with
+  | Some (AST.WLiteral "") -> assert false
+  | Some (WLiteral "\n") -> list_bd word
+  | Some (WLiteral l) when l.[String.length l - 1] = '\n' ->
+    list_bd word @ [AST.wLiteral (String.sub l 0 (String.length l - 1))]
+  | _ -> assert false
+
 (* Convertion functions *)
 
 (* CST.program -> AST.program *)
@@ -610,7 +631,6 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
          (ASTUtils.default_redirection_descriptor kind)
          kind
          word'
-
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
      let kind, word' = io_file'__to__kind_word' io_file' in
      AST.redirection
@@ -620,16 +640,18 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
          word'
   | IoRedirect_IoHere io_here' ->
      let _strip, word' = io_here'__to__strip_word' io_here' in
+     (* FIXME: strip that word if needed *)
      AST.hereDocument
          command'
          0
-         word' (* FIXME: strip that word if needed *)
+         (Location.map_located assert_remove_last_newline_from_word word')
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
      let _strip, word' = io_here'__to__strip_word' io_here' in
+     (* FIXME: strip that word if needed *)
      AST.hereDocument
          command'
          (io_number__to__int io_number)
-         word' (* FIXME: strip that word if needed *)
+         (Location.map_located assert_remove_last_newline_from_word word')
 
 and io_redirect'__to__command (io_redirect' : io_redirect') (command' : AST.command') : AST.command =
   erase_location io_redirect__to__command io_redirect' command'

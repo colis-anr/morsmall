@@ -1,0 +1,4 @@
+(test
+ (name qcheck)
+ (libraries morsmall alcotest qcheck qcheck-alcotest)
+ (preprocess (staged_pps ppx_import)))

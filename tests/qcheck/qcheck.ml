@@ -59,10 +59,17 @@ let pp_print_parsed_ast fmt input =
 
 open QCheck2
 
-let make_test =
-  Test.make
-    ~count:2000
-    ~long_factor:10
+let make_test ~name ~print gen fun_ =
+  QCheck_alcotest.to_alcotest
+    (
+      Test.make
+        ~count:2000
+        ~long_factor:10
+        ~name
+        ~print
+        gen
+        fun_
+    )
 
 let result_is_ok = function
   | Ok _ -> true
@@ -99,7 +106,7 @@ let print_parse =
 
 let print_parse_equal =
   make_test
-    ~name:"print and parse; stay equal"
+    ~name:"print, parse and test equality"
     ~print:(
       fun program ->
         with_formatter_to_string @@ fun fmt ->
@@ -119,8 +126,13 @@ let print_parse_equal =
     ==> (Morsmall.equal_program_noloc input (Result.get_ok parsing_result))
   )
 
-let () = QCheck_runner.run_tests_main [
-    print ;
-    print_parse ;
-    print_parse_equal ;
-  ]
+let () =
+  Alcotest.run
+    "qcheck"
+    [
+      ("", [
+          print;
+          print_parse;
+          print_parse_equal
+        ])
+    ]

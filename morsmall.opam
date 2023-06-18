@@ -8,6 +8,7 @@ license: "GPL-3.0-or-later"
 homepage: "https://github.com/colis-anr/morsmall"
 bug-reports: "https://github.com/colis-anr/morsmall/issues"
 depends: [
+  "alcotest" {with-test}
   "dune" {>= "3.7" & build}
   "logs"
   "menhir"
@@ -18,6 +19,7 @@ depends: [
   "ppx_deriving_yojson" {build}
   "ppx_import"
   "qcheck" {with-test}
+  "qcheck-alcotest" {with-test}
   "visitors"
   "yojson"
 ]
