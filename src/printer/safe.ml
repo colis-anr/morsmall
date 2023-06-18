@@ -25,6 +25,32 @@ open AST
 (* Function used when printing parameters. *)
 let colon_if = function true -> ":" | false -> ""
 
+let expand_here_document_delimiter_literal s =
+  let buf = Buffer.create (String.length s) in
+  let preceeded_by_slash = ref false in
+  String.iter
+    (
+      fun c ->
+        if c = '\\' then
+          if !preceeded_by_slash then
+            (
+              Buffer.add_char buf '\\';
+              preceeded_by_slash := false
+            )
+          else
+            preceeded_by_slash := true
+        else
+          Buffer.add_char buf c
+    )
+    s;
+  Buffer.contents buf
+
+let rec expand_here_document_delimiter = function
+  | [] -> ""
+  | WLiteral lit :: rest -> expand_here_document_delimiter_literal lit ^ expand_here_document_delimiter rest
+  | WDoubleQuoted word :: rest -> expand_here_document_delimiter word ^ expand_here_document_delimiter rest
+  | _ -> assert false
+
 (* AST.name *)
 
 let rec pp_name ppf =
@@ -266,22 +292,19 @@ and pp_command ppf (command : command) =
          pp_redirection_kind kind
          pp_word' file
 
-    | HereDocument (Some command, descr, _delimiter, content) ->
-       let eof = "EOF" in (* FIXME: check that no line contains `EOF`, or get it from the grammar? *)
-       fpf ppf "%a %d<<%s\n%a\n%s\n"
+    | HereDocument (Some command, descr, delimiter, content) ->
+       fpf ppf "%a %d<<%a\n%a\n%s\n"
          pp_command' command
          descr
-         eof
+         pp_word delimiter
          pp_word' content
-         eof
-
-    | HereDocument (None, descr, _delimiter, content) ->
-       let eof = "EOF" in (* FIXME: check that no line contains `EOF`, or get it from the grammar? *)
-       fpf ppf "%d<<%s\n%a\n%s\n"
+         (expand_here_document_delimiter delimiter)
+    | HereDocument (None, descr, delimiter, content) ->
+       fpf ppf "%d<<%a\n%a\n%s\n"
          descr
-         eof
+         pp_word delimiter
          pp_word' content
-         eof
+         (expand_here_document_delimiter delimiter)
   );
   fpf ppf "%s}" (match command with Async _ -> "&" | HereDocument _ -> "" | _ -> ";")
 
