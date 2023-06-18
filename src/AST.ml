@@ -82,7 +82,7 @@ and command =
   | Until of command' * command'
   | Function of name * command'
   | Redirection of command' option * descr * kind * word'
-  | HereDocument of command' option * descr * word'
+  | HereDocument of command' option * descr * word * word'
 
 and command' = command located
 
@@ -185,7 +185,7 @@ let function_ name body = Function (name, body)
 let redirection ?around descr kind target =
   Redirection (around, descr, kind, target)
 
-let hereDocument ?around descr content =
+let hereDocument ?around ?(delimiter=[wLiteral "EOF"]) descr content =
   List.iter
     (
       function
@@ -197,7 +197,7 @@ let hereDocument ?around descr content =
       | _ -> ()
     )
     content.Location.value;
-  HereDocument (around, descr, content)
+  HereDocument (around, descr, delimiter, content)
 
 (* let simple' ?(loc=Location.dummy) ?assignments words = *)
 

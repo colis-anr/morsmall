@@ -266,7 +266,7 @@ and pp_command ppf (command : command) =
          pp_redirection_kind kind
          pp_word' file
 
-    | HereDocument (Some command, descr, content) ->
+    | HereDocument (Some command, descr, _delimiter, content) ->
        let eof = "EOF" in (* FIXME: check that no line contains `EOF`, or get it from the grammar? *)
        fpf ppf "%a %d<<%s\n%a\n%s\n"
          pp_command' command
@@ -275,7 +275,7 @@ and pp_command ppf (command : command) =
          pp_word' content
          eof
 
-    | HereDocument (None, descr, content) ->
+    | HereDocument (None, descr, _delimiter, content) ->
        let eof = "EOF" in (* FIXME: check that no line contains `EOF`, or get it from the grammar? *)
        fpf ppf "%d<<%s\n%a\n%s\n"
          descr

@@ -218,7 +218,7 @@ and command = private
 
   (* Redirection *)
   | Redirection of command' option * descr * kind * word'
-  | HereDocument of command' option * descr * word'
+  | HereDocument of command' option * descr * word * word'
 
 and command' = command located
 
@@ -282,7 +282,7 @@ val redirection : ?around:command' -> descr -> kind -> word' -> command
 (** [hereDocument c d w] creates a here-document redirection around [c], about
     descriptor [d] and containing the word [w]. The last newline must not be
     included. *)
-val hereDocument : ?around:command' -> descr -> word' -> command
+val hereDocument : ?around:command' -> ?delimiter:word -> descr -> word' -> command
 
 (** {3 Others} *)
 
