@@ -648,17 +648,19 @@ and io_redirect__to__command (io_redirect : io_redirect) (command'_option : AST.
          kind
          word'
   | IoRedirect_IoHere io_here' ->
-     let _strip, word' = io_here'__to__strip_word' io_here' in
+     let _strip, delimiter, word' = io_here'__to__strip_delim_word' io_here' in
      (* FIXME: strip that word if needed *)
      AST.hereDocument
          ?around:command'_option
+         ~delimiter
          0
          (Location.map_located assert_remove_last_newline_from_word word')
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
-     let _strip, word' = io_here'__to__strip_word' io_here' in
+     let _strip, delimiter, word' = io_here'__to__strip_delim_word' io_here' in
      (* FIXME: strip that word if needed *)
      AST.hereDocument
          ?around:command'_option
+         ~delimiter
          (io_number__to__int io_number)
          (Location.map_located assert_remove_last_newline_from_word word')
 
@@ -695,16 +697,24 @@ and filename__to__word' : filename -> AST.word' = function
 and filename'__to__word' (filename' : filename') : AST.word' =
   erase_location filename__to__word' filename'
 
-(* CST.io_here -> bool * AST.word *)
+(* CST.io_here -> bool * AST.word * AST.word *)
 
-and io_here__to__strip_word' : io_here -> bool * AST.word' = function
-  | IoHere_DLess_HereEnd (_, word'_ref) ->
-     (false, word'__to__word' !word'_ref)
-  | IoHere_DLessDash_HereEnd (_, word'_ref) ->
-     (true, word'__to__word' !word'_ref)
+and io_here__to__strip_delim_word' : io_here -> bool * AST.word * AST.word' = function
+  | IoHere_DLess_HereEnd (here_end', word'_ref) ->
+     (false, here_end'__to__word here_end', word'__to__word' !word'_ref)
+  | IoHere_DLessDash_HereEnd (here_end', word'_ref) ->
+     (true, here_end'__to__word here_end', word'__to__word' !word'_ref)
 
-and io_here'__to__strip_word' (io_here' : io_here') : bool * AST.word' =
-  erase_location io_here__to__strip_word' io_here'
+and io_here'__to__strip_delim_word' (io_here' : io_here') : bool * AST.word * AST.word' =
+  erase_location io_here__to__strip_delim_word' io_here'
+
+(* CST.here_end -> AST.word *)
+
+and here_end__to__word (HereEnd_Word word' : here_end) : AST.word =
+  (word'__to__word word')
+
+and here_end'__to__word (here_end' : here_end') : AST.word =
+  erase_location here_end__to__word here_end'
 
 (* CST.separator_op -> AST.command -> AST.command *)
 
