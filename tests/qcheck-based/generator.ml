@@ -113,7 +113,8 @@ and gen_word_component : word_component Gen.sized = fun s ->
     (
       fun s ->
         Gen.oneof [
-          wDoubleQuoted <$> gen_word s ;
+          Gen.map_retry wDoubleQuoted (gen_word s)
+            ~fallback:(wDoubleQuoted <$> (Gen.singleton (wLiteral <$> gen_name))) ;
           Gen.map2 (fun attribute -> wVariable ~attribute) (gen_attribute s) gen_name ;
           wSubshell <$> gen_program s ;
         ]
