@@ -26,6 +26,12 @@ open QCheck2
 let gen_map4 f g1 g2 g3 g4 =
   Gen.map (fun (x1, x2, x3, x4) -> f x1 x2 x3 x4) (Gen.quad g1 g2 g3 g4)
 
+(* Infix synonyms for `map` and `ap`. *)
+
+let (>|=) = Gen.(>|=)
+let (<$>) = Gen.(<$>)
+let (<*>) = Gen.(<*>)
+
 let gen_sized (s : int) (gen_0 : 'a Gen.t) (gen_n : int -> 'a Gen.t) : 'a Gen.t =
   if s <= 0 then gen_0 else gen_n (s - 1)
 
@@ -61,10 +67,10 @@ and gen_attribute : attribute Gen.sized = fun s ->
           Gen.map2 (fun also_for_null -> assignDefaultValues ~also_for_null) Gen.bool (gen_word s) ;
           Gen.map2 (fun also_for_null -> indicateErrorifNullorUnset ~also_for_null) Gen.bool (gen_word s) ;
           Gen.map2 (fun also_for_null -> useAlternativeValue ~also_for_null) Gen.bool (gen_word s) ;
-          Gen.map removeSmallestSuffixPattern (gen_word s) ;
-          Gen.map removeLargestSuffixPattern (gen_word s) ;
-          Gen.map removeSmallestPrefixPattern (gen_word s) ;
-          Gen.map removeLargestPrefixPattern (gen_word s) ;
+          removeSmallestSuffixPattern <$> gen_word s ;
+          removeLargestSuffixPattern <$> gen_word s ;
+          removeSmallestPrefixPattern <$> gen_word s ;
+          removeLargestPrefixPattern <$> gen_word s ;
         ]
     )
 
@@ -76,25 +82,23 @@ and gen_word_component : word_component Gen.sized = fun s ->
         Gen.pure wGlobAll ;
         Gen.pure wGlobAny ;
         (* Gen.pure WBracketExpression ; *)
-        Gen.map wTildePrefix gen_name ; (* FIXME: better than `gen_name` *)
-        Gen.map wLiteral gen_name ; (* FIXME: better than `gen_name` *)
+        wTildePrefix <$> gen_name ; (* FIXME: better than `gen_name` *)
+        wLiteral <$> gen_name ; (* FIXME: better than `gen_name` *)
       ]
     )
     (
       fun s ->
         Gen.oneof [
-          Gen.map wDoubleQuoted (gen_word s) ;
+          wDoubleQuoted <$> gen_word s ;
           Gen.map2 (fun attribute -> wVariable ~attribute) (gen_attribute s) gen_name ;
-          Gen.map wSubshell (gen_program s) ;
+          wSubshell <$> gen_program s ;
         ]
     )
 
 and gen_word : word Gen.sized = fun s ->
   gen_sized
     s
-    (
-      Gen.map (fun word_component -> [word_component]) (gen_word_component 0)
-    )
+    (gen_word_component 0 >|= fun word_component -> [word_component])
     (
       fun s ->
         (* FIXME: improper use of size *)
@@ -104,9 +108,7 @@ and gen_word : word Gen.sized = fun s ->
 and gen_pattern : pattern Gen.sized = fun s ->
   gen_sized
     s
-    (
-      Gen.pure []
-    )
+    (Gen.pure [])
     (
       fun s ->
         (* FIXME: improper use of size *)
@@ -116,9 +118,7 @@ and gen_pattern : pattern Gen.sized = fun s ->
 and gen_assignment : assignment Gen.sized = fun s ->
   gen_sized
     s
-    (
-      Gen.map (fun name -> (name, [])) gen_name
-    )
+    (gen_name >|= fun name -> (name, []))
     (
       fun s ->
         Gen.pair gen_name (gen_word s)
@@ -130,9 +130,7 @@ and gen_descr : descr Gen.t =
 and gen_program : program Gen.sized = fun s ->
   gen_sized
     s
-    (
-      Gen.pure []
-    )
+    (Gen.pure [])
     (
       fun s ->
         (* FIXME: improper use of size *)
@@ -142,9 +140,7 @@ and gen_program : program Gen.sized = fun s ->
 and gen_command : command Gen.sized = fun s ->
   gen_sized
     s
-    (
-      Gen.map (fun word -> simple [word]) (gen_word' 0)
-    )
+    (gen_word' 0 >|= fun word -> simple [word])
     (
       fun s ->
         Gen.oneof [
@@ -157,21 +153,21 @@ and gen_command : command Gen.sized = fun s ->
               (list_size (   d  -- 10) (gen_assignment' s))
               (list_size ((1-d) -- 10) (gen_word' s))
           ) ;
-          Gen.map2 case (gen_word' s) (Gen.small_list (gen_case_item' s)) ;
-          Gen.map async (gen_command' s) ;
-          Gen.map2 seq (gen_command' s) (gen_command' s) ;
-          Gen.map2 and_ (gen_command' s) (gen_command' s) ;
-          Gen.map2 or_ (gen_command' s) (gen_command' s) ;
-          Gen.map not_ (gen_command' s) ;
-          Gen.map2 pipe (gen_command' s) (gen_command' s) ;
-          Gen.map subshell (gen_command' s) ;
+          case <$> (gen_word' s) <*> (Gen.small_list (gen_case_item' s)) ;
+          async <$> (gen_command' s) ;
+          seq <$> (gen_command' s) <*> (gen_command' s) ;
+          and_ <$> (gen_command' s) <*> (gen_command' s) ;
+          or_ <$> (gen_command' s) <*> (gen_command' s) ;
+          not_ <$> (gen_command' s) ;
+          pipe <$> (gen_command' s) <*> (gen_command' s) ;
+          subshell <$> (gen_command' s) ;
           Gen.map3 (fun name words command -> for_ name ?words command) gen_name (Gen.option (Gen.small_list (gen_word' s))) (gen_command' s) ;
           Gen.map3 (fun test then_ else_ -> if_ test ~then_ ?else_) (gen_command' s) (gen_command' s) (Gen.option (gen_command' s)) ;
-          Gen.map2 while_ (gen_command' s) (gen_command' s) ;
-          Gen.map2 until (gen_command' s) (gen_command' s) ;
-          Gen.map2 function_ gen_name (gen_command' s) ;
-          gen_map4 redirection (gen_command' s) gen_descr gen_kind (gen_word' s) ;
-          Gen.map3 hereDocument (gen_command' s) gen_descr (gen_word' s) ;
+          while_ <$> (gen_command' s) <*> (gen_command' s) ;
+          until <$> (gen_command' s) <*> (gen_command' s) ;
+          function_ <$> gen_name <*> (gen_command' s) ;
+          redirection <$> (gen_command' s) <*> gen_descr <*> gen_kind <*> (gen_word' s) ;
+          hereDocument <$> (gen_command' s) <*> gen_descr <*> (gen_word' s) ;
         ]
     )
 
@@ -190,8 +186,8 @@ and gen_kind : kind Gen.t =
     Gen.pure inputOutput ;
   ]
 
-and gen_word' = fun s -> Gen.map Location.locate (gen_word s)
-and gen_pattern' = fun s -> Gen.map Location.locate (gen_pattern s)
-and gen_assignment' = fun s -> Gen.map Location.locate (gen_assignment s)
-and gen_command' = fun s -> Gen.map Location.locate (gen_command s)
-and gen_case_item' = fun s -> Gen.map Location.locate (gen_case_item s)
+and gen_word' = fun s -> Location.locate <$> gen_word s
+and gen_pattern' = fun s -> Location.locate <$> gen_pattern s
+and gen_assignment' = fun s -> Location.locate <$> gen_assignment s
+and gen_command' = fun s -> Location.locate <$> gen_command s
+and gen_case_item' = fun s -> Location.locate <$> gen_case_item s
