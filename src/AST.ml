@@ -45,7 +45,8 @@ and attribute =
 
 and word_component =
   | WTildePrefix of string
-  | WLiteral of string
+  | WUnquoted of string
+  | WSingleQuoted of string
   | WDoubleQuoted of word
   | WVariable of name * attribute
   | WSubshell of program
@@ -117,8 +118,11 @@ let wTildePrefix str =
   WTildePrefix str
 
 (* FIXME: check with a regexp *)
-let wLiteral str =
-  WLiteral str
+let wUnquoted str =
+  WUnquoted str
+
+let wSingleQuoted str =
+  WSingleQuoted str
 
 let wVariable ?(attribute=noAttribute) name =
   WVariable (name, attribute)
@@ -185,7 +189,7 @@ let function_ name body = Function (name, body)
 let redirection ?around descr kind target =
   Redirection (around, descr, kind, target)
 
-let hereDocument ?around ?(delimiter=[wLiteral "EOF"]) descr content =
+let hereDocument ?around ?(delimiter=[wUnquoted "EOF"]) descr content =
   List.iter
     (
       function

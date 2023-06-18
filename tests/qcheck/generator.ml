@@ -110,14 +110,14 @@ and gen_word_component : word_component Gen.sized = fun s ->
         Gen.pure wGlobAny ;
         (* Gen.pure WBracketExpression ; *)
         wTildePrefix <$> gen_name ; (* FIXME: better than `gen_name` *)
-        wLiteral <$> gen_name ; (* FIXME: better than `gen_name` *)
+        wUnquoted <$> gen_name ; (* FIXME: better than `gen_name` *)
       ]
     )
     (
       fun s ->
         Gen.oneof [
           Gen.map_retry wDoubleQuoted (gen_word s)
-            ~fallback:(wDoubleQuoted <$> (Gen.singleton (wLiteral <$> gen_name))) ;
+            ~fallback:(wDoubleQuoted <$> (Gen.singleton (wUnquoted <$> gen_name))) ;
           Gen.map2 (fun attribute -> wVariable ~attribute) (gen_attribute s) gen_name ;
           wSubshell <$> gen_program s ;
         ]
@@ -188,8 +188,8 @@ and gen_command : command Gen.sized = fun s ->
           until <$> gen_command' s <*> gen_command' s ;
           function_ <$> gen_name <*> gen_command' s ;
           (fun around -> redirection ~around) <$> gen_command' s <*> gen_descr <*> gen_kind <*> gen_word' s ;
-          Gen.map4_retry (fun around delimiter -> hereDocument ~around ~delimiter) (gen_command' s) (Gen.singleton (wLiteral <$> gen_name)) gen_descr (gen_word' s)
-            ~fallback:((fun around delimiter -> hereDocument ~around ~delimiter) <$> gen_command' s <*> (Gen.singleton (wLiteral <$> gen_name)) <*> gen_descr <*> Gen.pure (Location.locate [])) ;
+          Gen.map4_retry (fun around delimiter -> hereDocument ~around ~delimiter) (gen_command' s) (Gen.singleton (wUnquoted <$> gen_name)) gen_descr (gen_word' s)
+            ~fallback:((fun around delimiter -> hereDocument ~around ~delimiter) <$> gen_command' s <*> (Gen.singleton (wUnquoted <$> gen_name)) <*> gen_descr <*> Gen.pure (Location.locate [])) ;
         ]
     )
 

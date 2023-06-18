@@ -48,10 +48,10 @@ let assert_remove_last_newline_from_word word =
      its here-documents. cf the following issue for more information.
      https://github.com/colis-anr/morbig/issues/175 *)
   match list_ft_opt word with
-  | Some (AST.WLiteral "") -> assert false
-  | Some (WLiteral "\n") -> list_bd word
-  | Some (WLiteral l) when l.[String.length l - 1] = '\n' ->
-    list_bd word @ [AST.wLiteral (String.sub l 0 (String.length l - 1))]
+  | Some (AST.WUnquoted "") -> assert false
+  | Some (WUnquoted "\n") -> list_bd word
+  | Some (WUnquoted l) when l.[String.length l - 1] = '\n' ->
+    list_bd word @ [AST.wUnquoted (String.sub l 0 (String.length l - 1))]
   | _ -> assert false
 
 (* Convertion functions *)
@@ -784,18 +784,18 @@ and word_component__to__word = function
   | WordEmpty ->
     []
   | WordName name ->
-    [AST.wLiteral name]
+    [AST.wUnquoted name]
   | WordTildePrefix prefix ->
     [AST.wTildePrefix prefix]
   | WordLiteral literal ->
-    [AST.wLiteral literal]
+    [AST.wUnquoted literal]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
-    [AST.wLiteral name; AST.wLiteral "="]
+    [AST.wUnquoted name; AST.wUnquoted "="]
     @ word_cst__to__word word_cst
   | WordSingleQuoted (Word (_, [WordLiteral literal])) ->
-    [AST.wLiteral literal]
+    [AST.wSingleQuoted literal]
   | WordSingleQuoted (Word (_, [])) ->
-    [AST.wLiteral ""]
+    [AST.wSingleQuoted ""]
   | WordSingleQuoted _ ->
     assert false
   | WordSubshell (_, program') ->
@@ -815,11 +815,11 @@ and word_component_double_quoted__to__word = function
   | WordEmpty ->
     []
   | WordName literal | WordLiteral literal | WordTildePrefix literal ->
-    [AST.wLiteral literal]
+    [AST.wUnquoted literal]
   | WordSubshell (_, program') ->
     [AST.wSubshell (program'__to__program program')]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
-    [AST.wLiteral name; AST.wLiteral "="]
+    [AST.wUnquoted name; AST.wUnquoted "="]
     @ word_cst_double_quoted__to__word word_cst
   | WordVariable (VariableAtom (name, variable_attribute)) ->
     [AST.wVariable name ~attribute:(variable_attribute__to__attribute variable_attribute)]

@@ -48,7 +48,8 @@ and attribute = private
 
 and word_component = private
   | WTildePrefix of string
-  | WLiteral of string
+  | WUnquoted of string
+  | WSingleQuoted of string
   | WDoubleQuoted of word
   | WVariable of name * attribute
   | WSubshell of program
@@ -251,7 +252,8 @@ val removeSmallestPrefixPattern : word -> attribute
 val removeLargestPrefixPattern : word -> attribute
 
 val wTildePrefix : string -> word_component
-val wLiteral : string -> word_component
+val wUnquoted : string -> word_component
+val wSingleQuoted : string -> word_component
 val wVariable : ?attribute:attribute -> name -> word_component
 val wSubshell : program -> word_component
 val wGlobAll : word_component

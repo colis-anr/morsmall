@@ -47,7 +47,8 @@ let expand_here_document_delimiter_literal s =
 
 let rec expand_here_document_delimiter = function
   | [] -> ""
-  | WLiteral lit :: rest -> expand_here_document_delimiter_literal lit ^ expand_here_document_delimiter rest
+  | WUnquoted lit :: rest -> expand_here_document_delimiter_literal lit ^ expand_here_document_delimiter rest
+  | WSingleQuoted lit :: rest -> expand_here_document_delimiter_literal lit ^ expand_here_document_delimiter rest
   | WDoubleQuoted word :: rest -> expand_here_document_delimiter word ^ expand_here_document_delimiter rest
   | _ -> assert false
 
@@ -59,8 +60,10 @@ let rec pp_name ppf =
 (* AST.word_component *)
 
 and pp_word_component ppf = function (*FIXME*)
-  | WLiteral literal ->
+  | WUnquoted literal ->
      fpf ppf "%s" literal
+  | WSingleQuoted literal ->
+     fpf ppf "'%s'" literal
   | WTildePrefix tilde_prefix ->
     fpf ppf "~%s" tilde_prefix
   | WDoubleQuoted word ->
