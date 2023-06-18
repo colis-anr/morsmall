@@ -38,6 +38,9 @@ module Gen = struct
       pure x
     else
       reject ~keep_if gen
+
+  let very_small_nat = 0 -- 10
+  let very_small_list gen_x = list_size very_small_nat gen_x
 end
 
 (* Infix synonyms for `map` and `ap`. *)
@@ -105,7 +108,7 @@ and gen_word : word Gen.sized = fun s ->
     (
       fun s ->
         (* FIXME: improper use of size *)
-        Gen.small_list (gen_word_component s)
+        Gen.very_small_list (gen_word_component s)
     )
 
 and gen_pattern : pattern Gen.sized = fun s ->
@@ -115,7 +118,7 @@ and gen_pattern : pattern Gen.sized = fun s ->
     (
       fun s ->
         (* FIXME: improper use of size *)
-        Gen.small_list (gen_word s)
+        Gen.very_small_list (gen_word s)
     )
 
 and gen_assignment : assignment Gen.sized = fun s ->
@@ -128,7 +131,7 @@ and gen_assignment : assignment Gen.sized = fun s ->
     )
 
 and gen_descr : descr Gen.t =
-  Gen.small_nat
+  Gen.(0 -- 9)
 
 and gen_program : program Gen.sized = fun s ->
   Gen.sized
@@ -137,7 +140,7 @@ and gen_program : program Gen.sized = fun s ->
     (
       fun s ->
         (* FIXME: improper use of size *)
-        Gen.small_list (gen_command' s)
+        Gen.very_small_list (gen_command' s)
     )
 
 and gen_command : command Gen.sized = fun s ->
@@ -156,7 +159,7 @@ and gen_command : command Gen.sized = fun s ->
               (list_size (   d  -- 10) (gen_assignment' s))
               (list_size ((1-d) -- 10) (gen_word' s))
           ) ;
-          case <$> (gen_word' s) <*> (Gen.small_list (gen_case_item' s)) ;
+          case <$> (gen_word' s) <*> (Gen.very_small_list (gen_case_item' s)) ;
           async <$> (gen_command' s) ;
           seq <$> (gen_command' s) <*> (gen_command' s) ;
           and_ <$> (gen_command' s) <*> (gen_command' s) ;
@@ -164,7 +167,7 @@ and gen_command : command Gen.sized = fun s ->
           not_ <$> (gen_command' s) ;
           pipe <$> (gen_command' s) <*> (gen_command' s) ;
           subshell <$> (gen_command' s) ;
-          Gen.map3 (fun name words command -> for_ name ?words command) gen_name (Gen.option (Gen.small_list (gen_word' s))) (gen_command' s) ;
+          Gen.map3 (fun name words command -> for_ name ?words command) gen_name (Gen.option (Gen.very_small_list (gen_word' s))) (gen_command' s) ;
           Gen.map3 (fun test then_ else_ -> if_ test ~then_ ?else_) (gen_command' s) (gen_command' s) (Gen.option (gen_command' s)) ;
           while_ <$> (gen_command' s) <*> (gen_command' s) ;
           until <$> (gen_command' s) <*> (gen_command' s) ;
