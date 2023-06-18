@@ -74,11 +74,10 @@ and complete_command'__to__command' (complete_command' : complete_command') : AS
 
 and clist__to__command : clist -> AST.command = function
   | CList_CList_SeparatorOp_AndOr (clist', sep_op', and_or') ->
-     AST.Seq (
-         clist'__to__command' clist'
-         |> separator_op'__to__command' sep_op',
-         and_or'__to__command' and_or'
-       )
+     AST.seq
+       (clist'__to__command' clist'
+         |> separator_op'__to__command' sep_op')
+       (and_or'__to__command' and_or')
   | CList_AndOr and_or' ->
      and_or'__to__command and_or'
 
@@ -94,15 +93,13 @@ and and_or__to__command : and_or -> AST.command = function
   | AndOr_Pipeline pipeline' ->
      pipeline'__to__command pipeline'
   | AndOr_AndOr_AndIf_LineBreak_Pipeline (and_or', _, pipeline') ->
-     AST.And (
-         and_or'__to__command' and_or',
-         pipeline'__to__command' pipeline'
-       )
+     AST.and_
+         (and_or'__to__command' and_or')
+         (pipeline'__to__command' pipeline')
   | AndOr_AndOr_OrIf_LineBreak_Pipeline (and_or', _, pipeline') ->
-     AST.Or (
-         and_or'__to__command' and_or',
-         pipeline'__to__command' pipeline'
-       )
+     AST.or_
+         (and_or'__to__command' and_or')
+         (pipeline'__to__command' pipeline')
 
 and and_or'__to__command (and_or' : and_or') : AST.command =
   erase_location and_or__to__command and_or'
@@ -116,7 +113,7 @@ and pipeline__to__command : pipeline -> AST.command = function
   | Pipeline_PipeSequence pipe_sequence' ->
      pipe_sequence'__to__command pipe_sequence'
   | Pipeline_Bang_PipeSequence pipe_sequence' ->
-     AST.Not (pipe_sequence'__to__command' pipe_sequence')
+     AST.not_ (pipe_sequence'__to__command' pipe_sequence')
 
 and pipeline'__to__command (pipeline' : pipeline') : AST.command =
   erase_location pipeline__to__command pipeline'
@@ -130,10 +127,9 @@ and pipe_sequence__to__command : pipe_sequence -> AST.command = function
   | PipeSequence_Command command' ->
      command'__to__command command'
   | PipeSequence_PipeSequence_Pipe_LineBreak_Command (pipe_sequence', _, command') ->
-     AST.Pipe (
-         pipe_sequence'__to__command' pipe_sequence',
-         command'__to__command' command'
-       )
+     AST.pipe
+         (pipe_sequence'__to__command' pipe_sequence')
+         (command'__to__command' command')
 
 and pipe_sequence'__to__command (pipe_sequence') : AST.command =
   erase_location pipe_sequence__to__command pipe_sequence'
@@ -188,7 +184,7 @@ and compound_command'__to__command' (compound_command' : compound_command') : AS
 
 and subshell__to__command : subshell -> AST.command  = function
   | Subshell_Lparen_CompoundList_Rparen compound_list' ->
-     AST.Subshell (compound_list'__to__command' compound_list')
+     AST.subshell (compound_list'__to__command' compound_list')
 
 and subshell'__to__command (subshell' : subshell') : AST.command =
   erase_location subshell__to__command subshell'
@@ -212,11 +208,10 @@ and compound_list'__to__command' (compound_list' : compound_list') : AST.command
 
 and term__to__command : term -> AST.command = function
   | Term_Term_Separator_AndOr (term', sep', and_or') ->
-     AST.Seq (
-         term'__to__command' term'
-         |> separator'__to__command' sep',
-         and_or'__to__command' and_or'
-       )
+     AST.seq
+         (term'__to__command' term'
+         |> separator'__to__command' sep')
+         (and_or'__to__command' and_or')
   | Term_AndOr and_or' ->
      and_or'__to__command and_or'
 
@@ -231,23 +226,19 @@ and term'__to__command' (term' : term') : AST.command' =
 and for_clause__to__command : for_clause -> AST.command = function
   | ForClause_For_Name_DoGroup (name', do_group')
   | ForClause_For_Name_SequentialSep_DoGroup (name', _, do_group') ->
-     AST.For (
-         name'__to__name name' ,
-         None ,
-         do_group'__to__command' do_group'
-       )
+    AST.for_
+      (name'__to__name name')
+      (do_group'__to__command' do_group')
   | ForClause_For_Name_LineBreak_In_SequentialSep_DoGroup (name', _, _, do_group') ->
-     AST.For (
-         name'__to__name name' ,
-         Some [] ,
-         do_group'__to__command' do_group'
-     )
+    AST.for_
+      (name'__to__name name')
+      ~words:[]
+      (do_group'__to__command' do_group')
   | ForClause_For_Name_LineBreak_In_WordList_SequentialSep_DoGroup (name', _, wordlist', _, do_group') ->
-     AST.For (
-         name'__to__name name' ,
-         Some (wordlist'__to__word'_list wordlist') ,
-         do_group'__to__command' do_group'
-       )
+    AST.for_
+      (name'__to__name name')
+      ~words:(wordlist'__to__word'_list wordlist')
+      (do_group'__to__command' do_group')
 
 and for_clause'__to__command (for_clause' : for_clause') : AST.command =
   erase_location for_clause__to__command for_clause'
@@ -268,20 +259,17 @@ and wordlist'__to__word'_list (wordlist' : wordlist') : AST.word' list =
 
 and case_clause__to__command : case_clause -> AST.command = function
   | CaseClause_Case_Word_LineBreak_In_LineBreak_CaseList_Esac (word', _, _, case_list') ->
-     AST.Case (
-         word'__to__word' word' ,
-         case_list'__to__case_item'_list case_list'
-       )
+     AST.case
+         (word'__to__word' word')
+         (case_list'__to__case_item'_list case_list')
   | CaseClause_Case_Word_LineBreak_In_LineBreak_CaseListNS_Esac (word', _, _, case_list_ns') ->
-     AST.Case (
-         word'__to__word' word' ,
-         case_list_ns'__to__case_item'_list case_list_ns'
-       )
+     AST.case
+         (word'__to__word' word' )
+         (case_list_ns'__to__case_item'_list case_list_ns')
   | CaseClause_Case_Word_LineBreak_In_LineBreak_Esac (word', _, _) ->
-     AST.Case (
-         word'__to__word' word' ,
-         []
-       )
+     AST.case
+       (word'__to__word' word')
+       []
 
 and case_clause'__to__command (case_clause' : case_clause') : AST.command =
   erase_location case_clause__to__command case_clause'
@@ -355,17 +343,14 @@ and pattern'__to__pattern' (pattern' : pattern') : AST.pattern' =
 
 and if_clause__to__command : if_clause -> AST.command = function
   | IfClause_If_CompoundList_Then_CompoundList_ElsePart_Fi (compound_list', compound_list2', else_part') ->
-     AST.If (
-         compound_list'__to__command' compound_list' ,
-         compound_list'__to__command' compound_list2' ,
-         Some (else_part'__to__command' else_part')
-       )
+    AST.if_
+      (compound_list'__to__command' compound_list')
+      ~then_:(compound_list'__to__command' compound_list2')
+      ~else_:(else_part'__to__command' else_part')
   | IfClause_If_CompoundList_Then_CompoundList_Fi (compound_list', compound_list2') ->
-     AST.If (
-         compound_list'__to__command' compound_list' ,
-         compound_list'__to__command' compound_list2' ,
-         None
-       )
+    AST.if_
+      (compound_list'__to__command' compound_list')
+      ~then_:(compound_list'__to__command' compound_list2')
 
 and if_clause'__to__command (if_clause' : if_clause') : AST.command =
   erase_location if_clause__to__command if_clause'
@@ -374,17 +359,14 @@ and if_clause'__to__command (if_clause' : if_clause') : AST.command =
 
 and else_part__to__command : else_part -> AST.command = function
   | ElsePart_Elif_CompoundList_Then_CompoundList (compound_list', compound_list2') ->
-     AST.If (
-         compound_list'__to__command' compound_list' ,
-         compound_list'__to__command' compound_list2' ,
-         None
-       )
+    AST.if_
+      (compound_list'__to__command' compound_list')
+      ~then_:(compound_list'__to__command' compound_list2')
   | ElsePart_Elif_CompoundList_Then_CompoundList_ElsePart (compound_list', compound_list2', else_part') ->
-     AST.If (
-         compound_list'__to__command' compound_list' ,
-         compound_list'__to__command' compound_list2' ,
-         Some (else_part'__to__command' else_part')
-       )
+    AST.if_
+      (compound_list'__to__command' compound_list')
+      ~then_:(compound_list'__to__command' compound_list2' )
+      ~else_:(else_part'__to__command' else_part')
   | ElsePart_Else_CompoundList compound_list' ->
      compound_list'__to__command compound_list'
 
@@ -395,10 +377,9 @@ and else_part'__to__command' (else_part' : else_part') : AST.command' =
 
 and while_clause__to__command : while_clause -> AST.command = function
   | WhileClause_While_CompoundList_DoGroup (compound_list', do_group') ->
-     AST.While (
-         compound_list'__to__command' compound_list' ,
-         do_group'__to__command' do_group'
-       )
+    AST.while_
+      (compound_list'__to__command' compound_list')
+      (do_group'__to__command' do_group')
 
 and while_clause'__to__command (while_clause' : while_clause') : AST.command =
   erase_location while_clause__to__command while_clause'
@@ -407,10 +388,9 @@ and while_clause'__to__command (while_clause' : while_clause') : AST.command =
 
 and until_clause__to__command : until_clause -> AST.command = function
   | UntilClause_Until_CompoundList_DoGroup (compound_list', do_group') ->
-     AST.Until (
-         compound_list'__to__command' compound_list' ,
-         do_group'__to__command' do_group'
-       )
+    AST.until
+      (compound_list'__to__command' compound_list')
+      (do_group'__to__command' do_group')
 
 and until_clause'__to__command (until_clause' : until_clause') : AST.command =
   erase_location until_clause__to__command until_clause'
@@ -419,10 +399,9 @@ and until_clause'__to__command (until_clause' : until_clause') : AST.command =
 
 and function_definition__to__command : function_definition -> AST.command = function
   | FunctionDefinition_Fname_Lparen_Rparen_LineBreak_FunctionBody (fname', _, function_body') ->
-     AST.Function (
-         fname'__to__name fname' ,
-         function_body'__to__command' function_body'
-       )
+     AST.function_
+       (fname'__to__name fname')
+       (function_body'__to__command' function_body')
 
 and function_definition'__to__command (function_definition' : function_definition') : AST.command =
   erase_location function_definition__to__command function_definition'
@@ -517,7 +496,7 @@ and simple_command'__to__command (simple_command' : simple_command') : AST.comma
           position = simple_command'.position }
     )
     io_redirect'_list
-    (AST.Simple (assignment'_list, word'_list ))
+    (AST.simple ~assignments:assignment'_list (word'_list))
 
 (* CST.cmd_prefix -> CST.assignment_word' list * CST.io_redirect' list
 
@@ -626,34 +605,31 @@ and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command
   match io_redirect with
   | IoRedirect_IoFile io_file' ->
      let kind, word' = io_file'__to__kind_word' io_file' in
-     AST.Redirection (
-         command' ,
-         (ASTUtils.default_redirection_descriptor kind) ,
-         kind ,
+     AST.redirection
+         command'
+         (ASTUtils.default_redirection_descriptor kind)
+         kind
          word'
-       )
+
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
      let kind, word' = io_file'__to__kind_word' io_file' in
-     AST.Redirection (
-         command' ,
-         (io_number__to__int io_number) ,
-         kind ,
+     AST.redirection
+         command'
+         (io_number__to__int io_number)
+         kind
          word'
-       )
   | IoRedirect_IoHere io_here' ->
      let _strip, word' = io_here'__to__strip_word' io_here' in
-     AST.HereDocument (
-         command' ,
-         0 ,
+     AST.hereDocument
+         command'
+         0
          word' (* FIXME: strip that word if needed *)
-       )
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
      let _strip, word' = io_here'__to__strip_word' io_here' in
-     AST.HereDocument (
-         command' ,
-         (io_number__to__int io_number) ,
+     AST.hereDocument
+         command'
+         (io_number__to__int io_number)
          word' (* FIXME: strip that word if needed *)
-       )
 
 and io_redirect'__to__command (io_redirect' : io_redirect') (command' : AST.command') : AST.command =
   erase_location io_redirect__to__command io_redirect' command'
@@ -666,13 +642,13 @@ and io_redirect'__to__command' (io_redirect' : io_redirect') (command' : AST.com
 and io_file__to__kind_word' io_file =
   let kind, filename' =
     match io_file with
-    | IoFile_Less_FileName filename' -> AST.Input, filename'
-    | IoFile_LessAnd_FileName filename' -> AST.InputDuplicate, filename'
-    | IoFile_Great_FileName filename' -> AST.Output, filename'
-    | IoFile_GreatAnd_FileName filename' -> AST.OutputDuplicate, filename'
-    | IoFile_DGreat_FileName filename' -> AST.OutputAppend, filename'
-    | IoFile_LessGreat_FileName filename' -> AST.InputOutput, filename'
-    | IoFile_Clobber_FileName filename' -> AST.OutputClobber, filename'
+    | IoFile_Less_FileName filename' -> AST.input, filename'
+    | IoFile_LessAnd_FileName filename' -> AST.inputDuplicate, filename'
+    | IoFile_Great_FileName filename' -> AST.output, filename'
+    | IoFile_GreatAnd_FileName filename' -> AST.outputDuplicate, filename'
+    | IoFile_DGreat_FileName filename' -> AST.outputAppend, filename'
+    | IoFile_LessGreat_FileName filename' -> AST.inputOutput, filename'
+    | IoFile_Clobber_FileName filename' -> AST.outputClobber, filename'
   in
   ( kind , filename'__to__word' filename' )
 
@@ -703,7 +679,7 @@ and io_here'__to__strip_word' (io_here' : io_here') : bool * AST.word' =
 
 and separator_op__to__command (sep_op : separator_op) (command' : AST.command') : AST.command =
   match sep_op with
-  | SeparatorOp_Uppersand -> AST.Async command'
+  | SeparatorOp_Uppersand -> AST.async command'
   | SeparatorOp_Semicolon -> command'.value
 
 and separator_op'__to__command (sep_op' : separator_op') (command' : AST.command') : AST.command =
@@ -767,30 +743,30 @@ and word_component__to__word = function
   | WordEmpty ->
     []
   | WordName name ->
-    [AST.WLiteral name]
+    [AST.wLiteral name]
   | WordTildePrefix prefix ->
-    [AST.WTildePrefix prefix]
+    [AST.wTildePrefix prefix]
   | WordLiteral literal ->
-    [AST.WLiteral literal]
+    [AST.wLiteral literal]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
-    [AST.WLiteral name; AST.WLiteral "="]
+    [AST.wLiteral name; AST.wLiteral "="]
     @ word_cst__to__word word_cst
   | WordSingleQuoted (Word (_, [WordLiteral literal])) ->
-    [AST.WLiteral literal]
+    [AST.wLiteral literal]
   | WordSingleQuoted (Word (_, [])) ->
-    [AST.WLiteral ""]
+    [AST.wLiteral ""]
   | WordSingleQuoted _ ->
     assert false
   | WordSubshell (_, program') ->
-    [AST.WSubshell (program'__to__program program')]
+    [AST.wSubshell (program'__to__program program')]
   | WordDoubleQuoted word ->
-    [AST.WDoubleQuoted (word_double_quoted__to__word word)]
+    [AST.wDoubleQuoted (word_double_quoted__to__word word)]
   | WordVariable (VariableAtom (name, variable_attribute)) ->
-    [AST.WVariable (name, variable_attribute__to__attribute variable_attribute)]
+    [AST.wVariable name ~attribute:(variable_attribute__to__attribute variable_attribute)]
   | WordGlobAll ->
-    [AST.WGlobAll]
+    [AST.wGlobAll]
   | WordGlobAny ->
-    [AST.WGlobAny]
+    [AST.wGlobAny]
   | WordReBracketExpression _bracket_expression ->
     assert false (* FIXME: [AST.WBracketExpression] *)
 
@@ -798,14 +774,14 @@ and word_component_double_quoted__to__word = function
   | WordEmpty ->
     []
   | WordName literal | WordLiteral literal | WordTildePrefix literal ->
-    [AST.WLiteral literal]
+    [AST.wLiteral literal]
   | WordSubshell (_, program') ->
-    [AST.WSubshell (program'__to__program program')]
+    [AST.wSubshell (program'__to__program program')]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
-    [AST.WLiteral name; AST.WLiteral "="]
+    [AST.wLiteral name; AST.wLiteral "="]
     @ word_cst_double_quoted__to__word word_cst
   | WordVariable (VariableAtom (name, variable_attribute)) ->
-    [AST.WVariable (name, variable_attribute__to__attribute variable_attribute)]
+    [AST.wVariable name ~attribute:(variable_attribute__to__attribute variable_attribute)]
   | WordReBracketExpression _bracket_expression ->
     assert false (* FIXME: [AST.WBracketExpression] *)
   | WordDoubleQuoted _ | WordSingleQuoted _
@@ -814,25 +790,25 @@ and word_component_double_quoted__to__word = function
 
 and variable_attribute__to__attribute = function
   | NoAttribute ->
-    AST.NoAttribute
+    AST.noAttribute
   | ParameterLength ->
-    AST.ParameterLength
+    AST.parameterLength
   | UseDefaultValues (p, word) ->
-    AST.UseDefaultValues (word__to__word word, p.[0] = ':')
+    AST.useDefaultValues ~also_for_null:(p.[0] = ':') (word__to__word word)
   | AssignDefaultValues (p, word) ->
-    AST.AssignDefaultValues (word__to__word word, p.[0] = ':')
+    AST.assignDefaultValues ~also_for_null:(p.[0] = ':') (word__to__word word)
   | IndicateErrorifNullorUnset (p, word) ->
-    AST.IndicateErrorifNullorUnset (word__to__word word, p.[0] = ':')
+    AST.indicateErrorifNullorUnset ~also_for_null:(p.[0] = ':') (word__to__word word)
   | UseAlternativeValue (p, word) ->
-    AST.UseAlternativeValue (word__to__word word, p.[0] = ':')
+    AST.useAlternativeValue ~also_for_null:(p.[0] = ':') (word__to__word word)
   | RemoveSmallestSuffixPattern word ->
-    AST.RemoveSmallestSuffixPattern (word__to__word word)
+    AST.removeSmallestSuffixPattern (word__to__word word)
   | RemoveLargestSuffixPattern word ->
-    AST.RemoveLargestSuffixPattern (word__to__word word)
+    AST.removeLargestSuffixPattern (word__to__word word)
   | RemoveSmallestPrefixPattern word ->
-    AST.RemoveSmallestPrefixPattern (word__to__word word)
+    AST.removeSmallestPrefixPattern (word__to__word word)
   | RemoveLargestPrefixPattern word ->
-    AST.RemoveLargestPrefixPattern (word__to__word word)
+    AST.removeLargestPrefixPattern (word__to__word word)
 
 (* CST.name -> AST.name *)
 
