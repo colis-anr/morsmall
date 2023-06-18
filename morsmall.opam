@@ -8,7 +8,7 @@ license: "GPL-3.0-or-later"
 homepage: "https://github.com/colis-anr/morsmall"
 bug-reports: "https://github.com/colis-anr/morsmall/issues"
 depends: [
-  "dune" {build}
+  "dune" {>= "3.7" & build}
   "logs"
   "menhir"
   "morbig"
@@ -22,7 +22,7 @@ depends: [
   "yojson"
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"

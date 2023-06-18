@@ -38,14 +38,14 @@ let parse_file filename =
   )
   |> from_CST
 
-let pp_print_safe = SafePrinter.pp_program
-let pp_print_json = JsonPrinter.pp_program
-let pp_print_json_noloc = JsonNonLocatedPrinter.pp_program
-let pp_print_debug = DebugPrinter.pp_program
-let pp_print_debug_noloc = DebugNonLocatedPrinter.pp_program
+let pp_print_safe = Printer.Safe.pp_program
+let pp_print_json = Printer.Json.pp_program
+let pp_print_json_noloc = Printer.JsonNonLocated.pp_program
+let pp_print_debug = Printer.Debug.pp_program
+let pp_print_debug_noloc = Printer.DebugNonLocated.pp_program
 
-let equal_program = LocatedEquality.equal_program
-let equal_program_noloc = NonLocatedEquality.equal_program
+let equal_program = Equality.Located.equal_program
+let equal_program_noloc = Equality.NonLocated.equal_program
 
 include ASTUtils
 
@@ -53,18 +53,7 @@ include ASTUtils
 
 module Location = Location
 module CST_to_AST = CST_to_AST
-module Utilities = Morsmall_utilities
+module Utilities = Utilities
 module Visitors = Visitors
-
-module Printer = struct
-  module Safe = SafePrinter
-  module Json = JsonPrinter
-  module JsonNonLocated = JsonNonLocatedPrinter
-  module Debug = DebugPrinter
-  module DebugNonLocated = DebugNonLocatedPrinter
-end
-
-module Equality = struct
-  module Located = LocatedEquality
-  module NonLocated = NonLocatedEquality
-end
+module Printer = Printer
+module Equality = Equality

@@ -65,22 +65,12 @@ val pp_print_debug_noloc : Format.formatter -> t -> unit
 (** Prints a representation of the AST in OCaml-style, ignoring the locations of
     the various elements of the AST. *)
 
-module Printer : sig
-  module Safe = SafePrinter
-  module Json = JsonPrinter
-  module JsonNonLocated = JsonNonLocatedPrinter
-  module Debug = DebugPrinter
-  module DebugNonLocated = DebugNonLocatedPrinter
-end
+module Printer = Printer
 
 (** {2 Other Modules} *)
 
 module Location = Location
 module CST_to_AST = CST_to_AST
-module Utilities = Morsmall_utilities
+module Utilities = Utilities
 module Visitors = Visitors
-
-module Equality : sig
-  module Located = LocatedEquality
-  module NonLocated = NonLocatedEquality
-end
+module Equality = Equality
