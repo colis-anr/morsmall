@@ -26,8 +26,6 @@ module AST = AST
 type t = AST.program
 (** A type alias for a Shell program. *)
 
-include module type of Constructors
-
 (** {2 Parsers and Converters} *)
 
 exception SyntaxError of Location.lexing_position
