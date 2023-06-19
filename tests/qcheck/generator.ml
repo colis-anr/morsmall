@@ -55,6 +55,9 @@ module Gen = struct
   let map3_retry ?max_retries ~fallback f g1 g2 g3 =
     map_retry ?max_retries ~fallback (fun (x1, x2, x3) -> f x1 x2 x3) (triple g1 g2 g3)
 
+  let map4_retry ?max_retries ~fallback f g1 g2 g3 g4 =
+    map_retry ?max_retries ~fallback (fun (x1, x2, x3, x4) -> f x1 x2 x3 x4) (quad g1 g2 g3 g4)
+
   let very_small_nat = 0 -- 10
   let very_small_list gen = list_size very_small_nat gen
 
@@ -107,14 +110,14 @@ and gen_word_component : word_component Gen.sized = fun s ->
         Gen.pure wGlobAny ;
         (* Gen.pure WBracketExpression ; *)
         wTildePrefix <$> gen_name ; (* FIXME: better than `gen_name` *)
-        wLiteral <$> gen_name ; (* FIXME: better than `gen_name` *)
+        wUnquoted <$> gen_name ; (* FIXME: better than `gen_name` *)
       ]
     )
     (
       fun s ->
         Gen.oneof [
           Gen.map_retry wDoubleQuoted (gen_word s)
-            ~fallback:(wDoubleQuoted <$> (Gen.singleton (wLiteral <$> gen_name))) ;
+            ~fallback:(wDoubleQuoted <$> (Gen.singleton (wUnquoted <$> gen_name))) ;
           Gen.map2 (fun attribute -> wVariable ~attribute) (gen_attribute s) gen_name ;
           wSubshell <$> gen_program s ;
         ]
@@ -184,9 +187,9 @@ and gen_command : command Gen.sized = fun s ->
           while_ <$> gen_command' s <*> gen_command' s ;
           until <$> gen_command' s <*> gen_command' s ;
           function_ <$> gen_name <*> gen_command' s ;
-          redirection <$> gen_command' s <*> gen_descr <*> gen_kind <*> gen_word' s ;
-          Gen.map3_retry hereDocument (gen_command' s) gen_descr (gen_word' s)
-            ~fallback:(hereDocument <$> gen_command' s <*> gen_descr <*> Gen.pure (Location.locate [])) ;
+          (fun around -> redirection ~around) <$> gen_command' s <*> gen_descr <*> gen_kind <*> gen_word' s ;
+          Gen.map4_retry (fun around delimiter -> hereDocument ~around ~delimiter) (gen_command' s) (Gen.singleton (wUnquoted <$> gen_name)) gen_descr (gen_word' s)
+            ~fallback:((fun around delimiter -> hereDocument ~around ~delimiter) <$> gen_command' s <*> (Gen.singleton (wUnquoted <$> gen_name)) <*> gen_descr <*> Gen.pure (Location.locate [])) ;
         ]
     )
 

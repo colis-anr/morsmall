@@ -48,7 +48,8 @@ and attribute = private
 
 and word_component = private
   | WTildePrefix of string
-  | WLiteral of string
+  | WUnquoted of string
+  | WSingleQuoted of string
   | WDoubleQuoted of word
   | WVariable of name * attribute
   | WSubshell of program
@@ -217,8 +218,8 @@ and command = private
   | Function of name * command'
 
   (* Redirection *)
-  | Redirection of command' * descr * kind * word'
-  | HereDocument of command' * descr * word'
+  | Redirection of command' option * descr * kind * word'
+  | HereDocument of command' option * descr * word * word'
 
 and command' = command located
 
@@ -251,7 +252,8 @@ val removeSmallestPrefixPattern : word -> attribute
 val removeLargestPrefixPattern : word -> attribute
 
 val wTildePrefix : string -> word_component
-val wLiteral : string -> word_component
+val wUnquoted : string -> word_component
+val wSingleQuoted : string -> word_component
 val wVariable : ?attribute:attribute -> name -> word_component
 val wSubshell : program -> word_component
 val wGlobAll : word_component
@@ -277,12 +279,12 @@ val if_ : then_:command' -> ?else_:command' -> command' -> command
 val while_ : command' -> command' -> command
 val until : command' -> command' -> command
 val function_ : name -> command' -> command
-val redirection : command' -> descr -> kind -> word' -> command
+val redirection : ?around:command' -> descr -> kind -> word' -> command
 
 (** [hereDocument c d w] creates a here-document redirection around [c], about
     descriptor [d] and containing the word [w]. The last newline must not be
     included. *)
-val hereDocument : command' -> descr -> word' -> command
+val hereDocument : ?around:command' -> ?delimiter:word -> descr -> word' -> command
 
 (** {3 Others} *)
 

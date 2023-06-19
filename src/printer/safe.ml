@@ -25,6 +25,47 @@ open AST
 (* Function used when printing parameters. *)
 let colon_if = function true -> ":" | false -> ""
 
+let expand_here_document_delimiter_literal ~double_quoted s =
+  let buf = Buffer.create (String.length s) in
+  let preceeded_by_slash = ref false in
+  String.iter
+    (
+      function
+      | '$' when !preceeded_by_slash ->
+        Buffer.add_char buf '$';
+        preceeded_by_slash := false
+      | '`' when !preceeded_by_slash ->
+        Buffer.add_char buf '`';
+        preceeded_by_slash := false
+      | '"' when !preceeded_by_slash ->
+        Buffer.add_char buf '"';
+        preceeded_by_slash := false
+      | '\\' when !preceeded_by_slash ->
+        Buffer.add_char buf '\\';
+        preceeded_by_slash := false
+      | '\n' when !preceeded_by_slash ->
+        Buffer.add_char buf '\n';
+        preceeded_by_slash := false
+      | '\\' when not !preceeded_by_slash ->
+        preceeded_by_slash := true
+      | c when !preceeded_by_slash && double_quoted ->
+        Buffer.add_char buf '\\';
+        Buffer.add_char buf c;
+        preceeded_by_slash := false
+      | c ->
+        Buffer.add_char buf c;
+        preceeded_by_slash := false
+    )
+    s;
+  Buffer.contents buf
+
+let rec expand_here_document_delimiter ?(double_quoted=false) = function
+  | [] -> ""
+  | WUnquoted lit :: rest -> expand_here_document_delimiter_literal ~double_quoted lit ^ expand_here_document_delimiter ~double_quoted rest
+  | WSingleQuoted lit :: rest -> expand_here_document_delimiter_literal ~double_quoted lit ^ expand_here_document_delimiter ~double_quoted rest
+  | WDoubleQuoted word :: rest -> expand_here_document_delimiter ~double_quoted:true word ^ expand_here_document_delimiter ~double_quoted rest
+  | _ -> assert false
+
 (* AST.name *)
 
 let rec pp_name ppf =
@@ -33,8 +74,10 @@ let rec pp_name ppf =
 (* AST.word_component *)
 
 and pp_word_component ppf = function (*FIXME*)
-  | WLiteral literal ->
+  | WUnquoted literal ->
      fpf ppf "%s" literal
+  | WSingleQuoted literal ->
+     fpf ppf "'%s'" literal
   | WTildePrefix tilde_prefix ->
     fpf ppf "~%s" tilde_prefix
   | WDoubleQuoted word ->
@@ -252,7 +295,7 @@ and pp_command ppf (command : command) =
          pp_assignments' assignments
          pp_words' words
 
-    | Redirection (command, descr, kind, file) ->
+    | Redirection (Some command, descr, kind, file) ->
        (* The space is required because "the [descriptor] must be delimited from any preceding text". *)
        fpf ppf "%a %d%a%a"
          pp_command' command
@@ -260,14 +303,25 @@ and pp_command ppf (command : command) =
          pp_redirection_kind kind
          pp_word' file
 
-    | HereDocument (command, descr, content) ->
-       let eof = "EOF" in (* FIXME: check that no line contains `EOF`, or get it from the grammar? *)
-       fpf ppf "%a %d<<%s\n%a\n%s\n"
+    | Redirection (None, descr, kind, file) ->
+       fpf ppf "%d%a%a"
+         descr
+         pp_redirection_kind kind
+         pp_word' file
+
+    | HereDocument (Some command, descr, delimiter, content) ->
+       fpf ppf "%a %d<<%a\n%a\n%s\n"
          pp_command' command
          descr
-         eof
+         pp_word delimiter
          pp_word' content
-         eof
+         (expand_here_document_delimiter delimiter)
+    | HereDocument (None, descr, delimiter, content) ->
+       fpf ppf "%d<<%a\n%a\n%s\n"
+         descr
+         pp_word delimiter
+         pp_word' content
+         (expand_here_document_delimiter delimiter)
   );
   fpf ppf "%s}" (match command with Async _ -> "&" | HereDocument _ -> "" | _ -> ";")
 

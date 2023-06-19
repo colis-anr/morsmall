@@ -48,10 +48,11 @@ let assert_remove_last_newline_from_word word =
      its here-documents. cf the following issue for more information.
      https://github.com/colis-anr/morbig/issues/175 *)
   match list_ft_opt word with
-  | Some (AST.WLiteral "") -> assert false
-  | Some (WLiteral "\n") -> list_bd word
-  | Some (WLiteral l) when l.[String.length l - 1] = '\n' ->
-    list_bd word @ [AST.wLiteral (String.sub l 0 (String.length l - 1))]
+  | Some (AST.WUnquoted "") -> assert false
+  | Some (WUnquoted "\n") -> list_bd word
+  | Some (WUnquoted l) when l.[String.length l - 1] = '\n' ->
+    list_bd word @ [AST.wUnquoted (String.sub l 0 (String.length l - 1))]
+  | None -> []
   | _ -> assert false
 
 (* Convertion functions *)
@@ -511,13 +512,20 @@ and simple_command'__to__command (simple_command' : simple_command') : AST.comma
   List.fold_right
     (
       fun io_redirect' command ->
-      io_redirect'__to__command
-        io_redirect'
-        { value = command ;
-          position = simple_command'.position }
+      Some
+        (io_redirect'__to__command
+          io_redirect'
+          (Option.map
+             (fun value -> { value; position = simple_command'.position })
+             command))
     )
     io_redirect'_list
-    (AST.simple ~assignments:assignment'_list (word'_list))
+    (if assignment'_list = [] && word'_list = [] then
+       None
+     else
+       Some (AST.simple ~assignments:assignment'_list (word'_list)))
+  |> Option.get (* Should always succeed because there cannot be no assignments,
+                   words and redirections at the same point. *)
 
 (* CST.cmd_prefix -> CST.assignment_word' list * CST.io_redirect' list
 
@@ -611,9 +619,11 @@ and redirect_list__to__command redirect_list (command' : AST.command') : AST.com
   match redirect_list with
   | RedirectList_IoRedirect io_redirect' ->
      command'
+     |> Option.some
      |> io_redirect'__to__command io_redirect'
   | RedirectList_RedirectList_IoRedirect (redirect_list', io_redirect') ->
      command'
+     |> Option.some
      |> io_redirect'__to__command' io_redirect'
      |> redirect_list'__to__command redirect_list' (*FIXME: check order of the redirections*)
 
@@ -622,42 +632,44 @@ and redirect_list'__to__command (redirect_list' : redirect_list') (command' : AS
 
 (* CST.io_redirect -> AST.command' -> AST.command *)
 
-and io_redirect__to__command (io_redirect : io_redirect) (command' : AST.command') : AST.command =
+and io_redirect__to__command (io_redirect : io_redirect) (command'_option : AST.command' option) : AST.command =
   match io_redirect with
   | IoRedirect_IoFile io_file' ->
      let kind, word' = io_file'__to__kind_word' io_file' in
      AST.redirection
-         command'
+         ?around:command'_option
          (ASTUtils.default_redirection_descriptor kind)
          kind
          word'
   | IoRedirect_IoNumber_IoFile (io_number, io_file') ->
      let kind, word' = io_file'__to__kind_word' io_file' in
      AST.redirection
-         command'
+         ?around:command'_option
          (io_number__to__int io_number)
          kind
          word'
   | IoRedirect_IoHere io_here' ->
-     let _strip, word' = io_here'__to__strip_word' io_here' in
+     let _strip, delimiter, word' = io_here'__to__strip_delim_word' io_here' in
      (* FIXME: strip that word if needed *)
      AST.hereDocument
-         command'
+         ?around:command'_option
+         ~delimiter
          0
          (Location.map_located assert_remove_last_newline_from_word word')
   | IoRedirect_IoNumber_IoHere (io_number, io_here') ->
-     let _strip, word' = io_here'__to__strip_word' io_here' in
+     let _strip, delimiter, word' = io_here'__to__strip_delim_word' io_here' in
      (* FIXME: strip that word if needed *)
      AST.hereDocument
-         command'
+         ?around:command'_option
+         ~delimiter
          (io_number__to__int io_number)
          (Location.map_located assert_remove_last_newline_from_word word')
 
-and io_redirect'__to__command (io_redirect' : io_redirect') (command' : AST.command') : AST.command =
-  erase_location io_redirect__to__command io_redirect' command'
+and io_redirect'__to__command (io_redirect' : io_redirect') (command'_option : AST.command' option) : AST.command =
+  erase_location io_redirect__to__command io_redirect' command'_option
 
-and io_redirect'__to__command' (io_redirect' : io_redirect') (command' : AST.command') : AST.command' =
-  convert_location_2 io_redirect__to__command io_redirect' command'
+and io_redirect'__to__command' (io_redirect' : io_redirect') (command'_option : AST.command' option) : AST.command' =
+  convert_location_2 io_redirect__to__command io_redirect' command'_option
 
 (* CST.io_file -> AST.redirection_kind * AST.word *)
 
@@ -686,16 +698,24 @@ and filename__to__word' : filename -> AST.word' = function
 and filename'__to__word' (filename' : filename') : AST.word' =
   erase_location filename__to__word' filename'
 
-(* CST.io_here -> bool * AST.word *)
+(* CST.io_here -> bool * AST.word * AST.word *)
 
-and io_here__to__strip_word' : io_here -> bool * AST.word' = function
-  | IoHere_DLess_HereEnd (_, word'_ref) ->
-     (false, word'__to__word' !word'_ref)
-  | IoHere_DLessDash_HereEnd (_, word'_ref) ->
-     (true, word'__to__word' !word'_ref)
+and io_here__to__strip_delim_word' : io_here -> bool * AST.word * AST.word' = function
+  | IoHere_DLess_HereEnd (here_end', word'_ref) ->
+     (false, here_end'__to__word here_end', word'__to__word' !word'_ref)
+  | IoHere_DLessDash_HereEnd (here_end', word'_ref) ->
+     (true, here_end'__to__word here_end', word'__to__word' !word'_ref)
 
-and io_here'__to__strip_word' (io_here' : io_here') : bool * AST.word' =
-  erase_location io_here__to__strip_word' io_here'
+and io_here'__to__strip_delim_word' (io_here' : io_here') : bool * AST.word * AST.word' =
+  erase_location io_here__to__strip_delim_word' io_here'
+
+(* CST.here_end -> AST.word *)
+
+and here_end__to__word (HereEnd_Word word' : here_end) : AST.word =
+  (word'__to__word word')
+
+and here_end'__to__word (here_end' : here_end') : AST.word =
+  erase_location here_end__to__word here_end'
 
 (* CST.separator_op -> AST.command -> AST.command *)
 
@@ -765,18 +785,18 @@ and word_component__to__word = function
   | WordEmpty ->
     []
   | WordName name ->
-    [AST.wLiteral name]
+    [AST.wUnquoted name]
   | WordTildePrefix prefix ->
     [AST.wTildePrefix prefix]
   | WordLiteral literal ->
-    [AST.wLiteral literal]
+    [AST.wUnquoted literal]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
-    [AST.wLiteral name; AST.wLiteral "="]
+    [AST.wUnquoted name; AST.wUnquoted "="]
     @ word_cst__to__word word_cst
   | WordSingleQuoted (Word (_, [WordLiteral literal])) ->
-    [AST.wLiteral literal]
+    [AST.wSingleQuoted literal]
   | WordSingleQuoted (Word (_, [])) ->
-    [AST.wLiteral ""]
+    [AST.wSingleQuoted ""]
   | WordSingleQuoted _ ->
     assert false
   | WordSubshell (_, program') ->
@@ -796,11 +816,11 @@ and word_component_double_quoted__to__word = function
   | WordEmpty ->
     []
   | WordName literal | WordLiteral literal | WordTildePrefix literal ->
-    [AST.wLiteral literal]
+    [AST.wUnquoted literal]
   | WordSubshell (_, program') ->
     [AST.wSubshell (program'__to__program program')]
   | WordAssignmentWord (Name name, Word (_, word_cst)) ->
-    [AST.wLiteral name; AST.wLiteral "="]
+    [AST.wUnquoted name; AST.wUnquoted "="]
     @ word_cst_double_quoted__to__word word_cst
   | WordVariable (VariableAtom (name, variable_attribute)) ->
     [AST.wVariable name ~attribute:(variable_attribute__to__attribute variable_attribute)]

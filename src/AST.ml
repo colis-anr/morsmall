@@ -45,7 +45,8 @@ and attribute =
 
 and word_component =
   | WTildePrefix of string
-  | WLiteral of string
+  | WUnquoted of string
+  | WSingleQuoted of string
   | WDoubleQuoted of word
   | WVariable of name * attribute
   | WSubshell of program
@@ -81,8 +82,8 @@ and command =
   | While of command' * command'
   | Until of command' * command'
   | Function of name * command'
-  | Redirection of command' * descr * kind * word'
-  | HereDocument of command' * descr * word'
+  | Redirection of command' option * descr * kind * word'
+  | HereDocument of command' option * descr * word * word'
 
 and command' = command located
 
@@ -117,8 +118,11 @@ let wTildePrefix str =
   WTildePrefix str
 
 (* FIXME: check with a regexp *)
-let wLiteral str =
-  WLiteral str
+let wUnquoted str =
+  WUnquoted str
+
+let wSingleQuoted str =
+  WSingleQuoted str
 
 let wVariable ?(attribute=noAttribute) name =
   WVariable (name, attribute)
@@ -181,9 +185,11 @@ let if_ ~then_ ?else_ test = If (test, then_, else_)
 let while_ test body = While (test, body)
 let until test body = Until (test, body)
 let function_ name body = Function (name, body)
-let redirection command descr kind target = Redirection (command, descr, kind, target)
 
-let hereDocument command descr content =
+let redirection ?around descr kind target =
+  Redirection (around, descr, kind, target)
+
+let hereDocument ?around ?(delimiter=[wUnquoted "EOF"]) descr content =
   List.iter
     (
       function
@@ -195,7 +201,7 @@ let hereDocument command descr content =
       | _ -> ()
     )
     content.Location.value;
-  HereDocument (command, descr, content)
+  HereDocument (around, descr, delimiter, content)
 
 (* let simple' ?(loc=Location.dummy) ?assignments words = *)
 
