@@ -34,7 +34,7 @@
         packages.default = self'.packages.with-nixpkgs;
 
         devShells.default = pkgs.mkShell {
-          buildInputs = (with pkgs; [ headache ])
+          buildInputs = (with pkgs; [ headache topiary ])
             ++ (with pkgs.ocamlPackages; [ ocaml-lsp ocp-indent ]);
           inputsFrom = [ self'.packages.default ];
           shellHook = config.pre-commit.installationScript;
@@ -47,6 +47,7 @@
           dune-opam-sync.enable = true;
           opam-lint.enable = true;
           checkmake.enable = true;
+          topiary.enable = true;
         };
       };
 
