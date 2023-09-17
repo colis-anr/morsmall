@@ -26,12 +26,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v23
+      - name: Setup Nix
+        uses: ./.github/composites/setup-nix
         with:
-          extra_nix_config: |
-            ## Access token to avoid triggering GitHub's rate limiting.
-            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+          githubAccessToken: ${{ secrets.GITHUB_TOKEN }}
+          cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Install dependencies
         run: |
@@ -66,12 +65,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v23
+      - name: Setup Nix
+        uses: ./.github/composites/setup-nix
         with:
-          extra_nix_config: |
-            ## Access token to avoid triggering GitHub's rate limiting.
-            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+          githubAccessToken: ${{ secrets.GITHUB_TOKEN }}
+          cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Build
         run: |
@@ -85,12 +83,11 @@ jobs:
       - name: Check out repository code.
         uses: actions/checkout@v4
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v23
+      - name: Setup Nix
+        uses: ./.github/composites/setup-nix
         with:
-          extra_nix_config: |
-            ## Access token to avoid triggering GitHub's rate limiting.
-            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+          githubAccessToken: ${{ secrets.GITHUB_TOKEN }}
+          cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Run flake checks
         run: |
