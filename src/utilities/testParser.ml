@@ -23,27 +23,28 @@
 
 type expression =
   | And of expression * expression
-  | Or  of expression * expression
+  | Or of expression * expression
   | Not of expression
-  | Binary of string * string * string   (* (op,arg_left,arg_right) *)
-  | Unary  of string * string            (* (op,arg) *)
-  | Single of string                     (* arg *)
+  | Binary of string * string * string (* (op,arg_left,arg_right) *)
+  | Unary of string * string (* (op,arg) *)
+  | Single of string (* arg *)
 
 exception Parse_error
 
 type token =
-  | UnOp of string    (* unary operators -e, -f, etc. *)
-  | BinOp of string   (* binary operators -eq, =, etc. *)
-  | AndOp             (* -a *)
-  | OrOp              (* -o *)
-  | NotOp             (* ! *)
-  | ParL              (* ( *)
-  | ParR              (* ) *)
-  | BracketR          (* ] *)
-  | String of string  (* all the rest *)
+  | UnOp of string (* unary operators -e, -f, etc. *)
+  | BinOp of string (* binary operators -eq, =, etc. *)
+  | AndOp (* -a *)
+  | OrOp (* -o *)
+  | NotOp (* ! *)
+  | ParL (* ( *)
+  | ParR (* ) *)
+  | BracketR (* ] *)
+  | String of string (* all the rest *)
   | EOF
 
-let to_token s = match s with
+let to_token s =
+  match s with
   (* file existence and type *)
   | "-e" | "-d" | "-f" | "-b" | "-c" | "-h" | "-L" | "-p" | "-S" -> UnOp s
   (* file attributes *)
@@ -62,13 +63,13 @@ let to_token s = match s with
   | "-t" -> UnOp s
   | "-a" -> AndOp
   | "-o" -> OrOp
-  | "("  -> ParL
-  | ")"  -> ParR
-  | "]"  -> BracketR
-  | "!"  -> NotOp
-  | _    -> String s
+  | "(" -> ParL
+  | ")" -> ParR
+  | "]" -> BracketR
+  | "!" -> NotOp
+  | _ -> String s
 
-let parse ?(bracket=false) wl =
+let parse ?(bracket = false) wl =
   let tokenbuf =
     wl
     |> List.map Morbig.remove_quotes
@@ -77,15 +78,14 @@ let parse ?(bracket=false) wl =
   in
   let lookup () =
     match !tokenbuf with
-    | h::_ -> h
+    | h :: _ -> h
     | [] -> EOF
   in
   let pop () =
     match !tokenbuf with
-    | _::r -> tokenbuf := r
+    | _ :: r -> tokenbuf := r
     | [] -> assert false
   in
-
   let rec parse_S () =
     let exp = parse_S' () in
     if bracket then
@@ -107,7 +107,7 @@ let parse ?(bracket=false) wl =
     let head = parse_conj () in
     match parse_disj' () with
     | None -> head
-    | Some rest -> Or (head,rest)
+    | Some rest -> Or (head, rest)
 
   and parse_disj' () =
     match lookup () with
@@ -119,7 +119,7 @@ let parse ?(bracket=false) wl =
     let head = parse_literal () in
     match parse_conj' () with
     | None -> head
-    | Some rest ->  And (head, rest)
+    | Some rest -> And (head, rest)
 
   and parse_conj' () =
     match lookup () with
@@ -136,37 +136,43 @@ let parse ?(bracket=false) wl =
   and parse_atom () =
     match lookup () with
     | UnOp op ->
-       pop ();
-       (match lookup () with
-        | String s -> pop (); Unary (op,s)
-        | _ -> raise Parse_error)
+      pop ();
+      (
+        match lookup () with
+        | String s -> pop (); Unary (op, s)
+        | _ -> raise Parse_error
+      )
     | ParL ->
-       pop ();
-       let exp = parse_disj () in
-       (match lookup () with
+      pop ();
+      let exp = parse_disj () in
+      (
+        match lookup () with
         | ParR -> pop (); exp
-        | _ -> raise Parse_error)
+        | _ -> raise Parse_error
+      )
     | String s ->
-       pop ();
-       (match parse_atom' () with
+      pop ();
+      (
+        match parse_atom' () with
         | None -> Single s
-        | Some (binop,rightarg) -> Binary (binop,s,rightarg))
+        | Some (binop, rightarg) -> Binary (binop, s, rightarg)
+      )
     | _ -> raise Parse_error
 
   and parse_atom' () =
     match lookup () with
     | AndOp | OrOp | EOF | BracketR -> None
     | BinOp binop ->
-       pop ();
-       (match lookup () with
-        | String rightarg | UnOp rightarg | BinOp rightarg
-          -> pop (); Some (binop,rightarg)
-        | _ -> raise Parse_error)
+      pop ();
+      (
+        match lookup () with
+        | String rightarg | UnOp rightarg | BinOp rightarg ->
+          pop (); Some (binop, rightarg)
+        | _ -> raise Parse_error
+      )
     | _ -> raise Parse_error
   in
-
   parse_S ()
-
 
 (*
 

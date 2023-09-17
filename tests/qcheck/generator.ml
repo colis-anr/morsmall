@@ -33,21 +33,23 @@ module Gen = struct
     if s <= 0 then gen_0 else gen_n (s - 1)
 
   let rec reject ~(keep_if : 'a -> bool) (gen : 'a t) : 'a t =
-    gen >>= fun x ->
-    if keep_if x then
-      pure x
-    else
-      reject ~keep_if gen
+    gen
+    >>= fun x ->
+      if keep_if x then
+        pure x
+      else
+        reject ~keep_if gen
 
   (** Tries to map the exception-throwing function on the results of a generator
       a certain amount of times. If it keeps throwing exceptions, fall back on
       the other given generator. *)
-  let rec map_retry ?(max_retries=5) ~(fallback : 'b t) (f : 'a -> 'b) (gen : 'a t) : 'b t =
+  let rec map_retry ?(max_retries = 5) ~(fallback : 'b t) (f : 'a -> 'b) (gen : 'a t) : 'b t =
     if max_retries < 0 then
       fallback
     else
-      gen >>= fun x ->
-      try pure (f x) with _ -> map_retry ~max_retries:(max_retries - 1) ~fallback f gen
+      gen
+      >>= fun x ->
+        try pure (f x) with _ -> map_retry ~max_retries: (max_retries - 1) ~fallback f gen
 
   let map2_retry ?max_retries ~fallback f g1 g2 =
     map_retry ?max_retries ~fallback (fun (x1, x2) -> f x1 x2) (pair g1 g2)
@@ -66,147 +68,177 @@ end
 
 (* Infix synonyms for `map` and `ap`. *)
 
-let (>|=) = Gen.(>|=)
-let (<$>) = Gen.(<$>)
-let (<*>) = Gen.(<*>)
+let ( >|= ) = Gen.( >|= )
+let ( <$> ) = Gen.( <$> )
+let ( <*> ) = Gen.( <*> )
 
-let keywords = [ "for"; "in"; "do"; "done"; "if"; "then"; "else"; "fi"; "while";
-                 "case"; "esac"; "elif"; "until" ]
+let keywords =
+  [
+    "for";
+    "in";
+    "do";
+    "done";
+    "if";
+    "then";
+    "else";
+    "fi";
+    "while";
+    "case";
+    "esac";
+    "elif";
+    "until"
+  ]
 
 let rec gen_name : name Gen.t =
   Gen.reject
-    ~keep_if:(fun name -> not (List.mem name keywords))
-    Gen.(string_size ~gen:(char_range 'a' 'z') (int_range 1 20))
+    ~keep_if: (fun name -> not (List.mem name keywords))
+    Gen.(string_size ~gen: (char_range 'a' 'z') (int_range 1 20))
 
 and gen_attribute : attribute Gen.sized = fun s ->
-  Gen.sized
-    s
-    (
-      Gen.oneof [
-        Gen.pure noAttribute ;
-        Gen.pure parameterLength ;
-      ]
-    )
-    (
-      fun s ->
-        Gen.oneof [
-          Gen.map2 (fun also_for_null -> useDefaultValues ~also_for_null) Gen.bool (gen_word s) ;
-          Gen.map2 (fun also_for_null -> assignDefaultValues ~also_for_null) Gen.bool (gen_word s) ;
-          Gen.map2 (fun also_for_null -> indicateErrorifNullorUnset ~also_for_null) Gen.bool (gen_word s) ;
-          Gen.map2 (fun also_for_null -> useAlternativeValue ~also_for_null) Gen.bool (gen_word s) ;
-          removeSmallestSuffixPattern <$> gen_word s ;
-          removeLargestSuffixPattern <$> gen_word s ;
-          removeSmallestPrefixPattern <$> gen_word s ;
-          removeLargestPrefixPattern <$> gen_word s ;
-        ]
-    )
+    Gen.sized
+      s
+      (
+        Gen.oneof
+          [
+            Gen.pure noAttribute;
+            Gen.pure parameterLength;
+          ]
+      )
+      (
+        fun s ->
+          Gen.oneof
+            [
+              Gen.map2 (fun also_for_null -> useDefaultValues ~also_for_null) Gen.bool (gen_word s);
+              Gen.map2 (fun also_for_null -> assignDefaultValues ~also_for_null) Gen.bool (gen_word s);
+              Gen.map2 (fun also_for_null -> indicateErrorifNullorUnset ~also_for_null) Gen.bool (gen_word s);
+              Gen.map2 (fun also_for_null -> useAlternativeValue ~also_for_null) Gen.bool (gen_word s);
+              removeSmallestSuffixPattern <$> gen_word s;
+              removeLargestSuffixPattern <$> gen_word s;
+              removeSmallestPrefixPattern <$> gen_word s;
+              removeLargestPrefixPattern <$> gen_word s;
+            ]
+      )
 
 and gen_word_component : word_component Gen.sized = fun s ->
-  Gen.sized
-    s
-    (
-      Gen.oneof [
-        Gen.pure wGlobAll ;
-        Gen.pure wGlobAny ;
-        (* Gen.pure WBracketExpression ; *)
-        wTildePrefix <$> gen_name ; (* FIXME: better than `gen_name` *)
-        wUnquoted <$> gen_name ; (* FIXME: better than `gen_name` *)
-      ]
-    )
-    (
-      fun s ->
-        Gen.oneof [
-          Gen.map_retry wDoubleQuoted (gen_word s)
-            ~fallback:(wDoubleQuoted <$> (Gen.singleton (wUnquoted <$> gen_name))) ;
-          Gen.map2 (fun attribute -> wVariable ~attribute) (gen_attribute s) gen_name ;
-          wSubshell <$> gen_program s ;
-        ]
-    )
+    Gen.sized
+      s
+      (
+        Gen.oneof
+          [
+            Gen.pure wGlobAll;
+            Gen.pure wGlobAny;
+            (* Gen.pure WBracketExpression ; *)
+            wTildePrefix <$> gen_name; (* FIXME: better than `gen_name` *)
+            wUnquoted <$> gen_name; (* FIXME: better than `gen_name` *)
+          ]
+      )
+      (
+        fun s ->
+          Gen.oneof
+            [
+              Gen.map_retry
+                wDoubleQuoted
+                (gen_word s)
+                ~fallback: (wDoubleQuoted <$> (Gen.singleton (wUnquoted <$> gen_name)));
+              Gen.map2 (fun attribute -> wVariable ~attribute) (gen_attribute s) gen_name;
+              wSubshell <$> gen_program s;
+            ]
+      )
 
 and gen_word : word Gen.sized = fun s ->
-  Gen.sized
-    s
-    (gen_word_component 0 >|= fun word_component -> [word_component])
-    (
-      fun s ->
-        (* FIXME: improper use of size *)
-        Gen.very_small_list (gen_word_component s)
-    )
+    Gen.sized
+      s
+      (gen_word_component 0 >|= fun word_component -> [word_component])
+      (
+        fun s ->
+          (* FIXME: improper use of size *)
+          Gen.very_small_list (gen_word_component s)
+      )
 
 and gen_pattern : pattern Gen.sized = fun s ->
-  Gen.sized
-    s
-    (Gen.pure [])
-    (
-      fun s ->
-        (* FIXME: improper use of size *)
-        Gen.very_small_list (gen_word s)
-    )
+    Gen.sized
+      s
+      (Gen.pure [])
+      (
+        fun s ->
+          (* FIXME: improper use of size *)
+          Gen.very_small_list (gen_word s)
+      )
 
 and gen_assignment : assignment Gen.sized = fun s ->
-  Gen.sized
-    s
-    (gen_name >|= fun name -> (name, []))
-    (
-      fun s ->
-        Gen.pair gen_name (gen_word s)
-    )
+    Gen.sized
+      s
+      (gen_name >|= fun name -> (name, []))
+      (
+        fun s ->
+          Gen.pair gen_name (gen_word s)
+      )
 
 and gen_descr : descr Gen.t =
   Gen.(0 -- 9)
 
 and gen_program : program Gen.sized = fun s ->
-  Gen.sized
-    s
-    (Gen.pure [])
-    (
-      fun s ->
-        (* FIXME: improper use of size *)
-        Gen.very_small_list (gen_command' s)
-    )
+    Gen.sized
+      s
+      (Gen.pure [])
+      (
+        fun s ->
+          (* FIXME: improper use of size *)
+          Gen.very_small_list (gen_command' s)
+      )
 
 and gen_command : command Gen.sized = fun s ->
-  Gen.sized
-    s
-    (gen_word' 0 >|= fun word -> simple [word])
-    (
-      fun s ->
-        Gen.oneof [
-          Gen.map2_retry (fun assignments -> simple ~assignments) (Gen.very_small_list (gen_assignment' s)) (Gen.very_small_list (gen_word' s))
-            ~fallback:(simple ~assignments:[] <$> (Gen.singleton (gen_word' s))) ;
-          case <$> gen_word' s <*> Gen.very_small_list (gen_case_item' s) ;
-          async <$> gen_command' s ;
-          seq <$> gen_command' s <*> gen_command' s ;
-          and_ <$> gen_command' s <*> gen_command' s ;
-          or_ <$> gen_command' s <*> gen_command' s ;
-          not_ <$> gen_command' s ;
-          pipe <$> gen_command' s <*> gen_command' s ;
-          subshell <$> gen_command' s ;
-          Gen.map3 (fun name words command -> for_ name ?words command) gen_name (Gen.option (Gen.very_small_list (gen_word' s))) (gen_command' s) ;
-          Gen.map3 (fun test then_ else_ -> if_ test ~then_ ?else_) (gen_command' s) (gen_command' s) (Gen.option (gen_command' s)) ;
-          while_ <$> gen_command' s <*> gen_command' s ;
-          until <$> gen_command' s <*> gen_command' s ;
-          function_ <$> gen_name <*> gen_command' s ;
-          (fun around -> redirection ~around) <$> gen_command' s <*> gen_descr <*> gen_kind <*> gen_word' s ;
-          Gen.map4_retry (fun around delimiter -> hereDocument ~around ~delimiter) (gen_command' s) (Gen.singleton (wUnquoted <$> gen_name)) gen_descr (gen_word' s)
-            ~fallback:((fun around delimiter -> hereDocument ~around ~delimiter) <$> gen_command' s <*> (Gen.singleton (wUnquoted <$> gen_name)) <*> gen_descr <*> Gen.pure (Location.locate [])) ;
-        ]
-    )
+    Gen.sized
+      s
+      (gen_word' 0 >|= fun word -> simple [word])
+      (
+        fun s ->
+          Gen.oneof
+            [
+              Gen.map2_retry
+                (fun assignments -> simple ~assignments)
+                (Gen.very_small_list (gen_assignment' s))
+                (Gen.very_small_list (gen_word' s))
+                ~fallback: (simple ~assignments: [] <$> (Gen.singleton (gen_word' s)));
+              case <$> gen_word' s <*> Gen.very_small_list (gen_case_item' s);
+              async <$> gen_command' s;
+              seq <$> gen_command' s <*> gen_command' s;
+              and_ <$> gen_command' s <*> gen_command' s;
+              or_ <$> gen_command' s <*> gen_command' s;
+              not_ <$> gen_command' s;
+              pipe <$> gen_command' s <*> gen_command' s;
+              subshell <$> gen_command' s;
+              Gen.map3 (fun name words command -> for_ name ?words command) gen_name (Gen.option (Gen.very_small_list (gen_word' s))) (gen_command' s);
+              Gen.map3 (fun test then_ else_ -> if_ test ~then_ ?else_) (gen_command' s) (gen_command' s) (Gen.option (gen_command' s));
+              while_ <$> gen_command' s <*> gen_command' s;
+              until <$> gen_command' s <*> gen_command' s;
+              function_ <$> gen_name <*> gen_command' s;
+              (fun around -> redirection ~around) <$> gen_command' s <*> gen_descr <*> gen_kind <*> gen_word' s;
+              Gen.map4_retry
+                (fun around delimiter -> hereDocument ~around ~delimiter)
+                (gen_command' s)
+                (Gen.singleton (wUnquoted <$> gen_name))
+                gen_descr
+                (gen_word' s)
+                ~fallback: ((fun around delimiter -> hereDocument ~around ~delimiter) <$> gen_command' s <*> (Gen.singleton (wUnquoted <$> gen_name)) <*> gen_descr <*> Gen.pure (Location.locate []));
+            ]
+      )
 
 and gen_case_item : case_item Gen.sized = fun s ->
-  (* FIXME: improper use of size *)
-  Gen.pair (gen_pattern' s) (Gen.option (gen_command' s))
+    (* FIXME: improper use of size *)
+    Gen.pair (gen_pattern' s) (Gen.option (gen_command' s))
 
 and gen_kind : kind Gen.t =
-  Gen.oneof [
-    Gen.pure output ;
-    Gen.pure outputDuplicate ;
-    Gen.pure outputAppend ;
-    Gen.pure outputClobber ;
-    Gen.pure input ;
-    Gen.pure inputDuplicate ;
-    Gen.pure inputOutput ;
-  ]
+  Gen.oneof
+    [
+      Gen.pure output;
+      Gen.pure outputDuplicate;
+      Gen.pure outputAppend;
+      Gen.pure outputClobber;
+      Gen.pure input;
+      Gen.pure inputDuplicate;
+      Gen.pure inputOutput;
+    ]
 
 and gen_word' = fun s -> Location.locate <$> gen_word s
 and gen_pattern' = fun s -> Location.locate <$> gen_pattern s

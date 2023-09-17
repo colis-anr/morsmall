@@ -34,7 +34,8 @@ type name = string
 (** The type {!word} is a description of words in Shell. {e See POSIX,
    2 Shell & Utilities, 2.3 Token Recognition} *)
 
-and attribute = private
+and attribute =
+  private
   | NoAttribute
   | ParameterLength
   | UseDefaultValues of word * bool
@@ -46,7 +47,8 @@ and attribute = private
   | RemoveSmallestPrefixPattern of word
   | RemoveLargestPrefixPattern of word
 
-and word_component = private
+and word_component =
+  private
   | WTildePrefix of string
   | WUnquoted of string
   | WSingleQuoted of string
@@ -193,33 +195,33 @@ and descr = int
 and program = command' list
 
 and command = private
-  (* Simple Commands *)
-  | Simple of assignment' list * word' list
+(* Simple Commands *)
+| Simple of assignment' list * word' list
 
-  (* Lists *)
-  | Async of command'
-  | Seq of command' * command'
-  | And of command' * command'
-  | Or of command' * command'
+(* Lists *)
+| Async of command'
+| Seq of command' * command'
+| And of command' * command'
+| Or of command' * command'
 
-  (* Pipelines *)
-  | Not of command'
-  | Pipe of command' * command'
+(* Pipelines *)
+| Not of command'
+| Pipe of command' * command'
 
-  (* Compound Command's *)
-  | Subshell of command'
-  | For of name * word' list option * command'
-  | Case of word' * case_item' list
-  | If of command' * command' * command' option
-  | While of command' * command'
-  | Until of command' * command'
+(* Compound Command's *)
+| Subshell of command'
+| For of name * word' list option * command'
+| Case of word' * case_item' list
+| If of command' * command' * command' option
+| While of command' * command'
+| Until of command' * command'
 
-  (* Function Definition Command' *)
-  | Function of name * command'
+(* Function Definition Command' *)
+| Function of name * command'
 
-  (* Redirection *)
-  | Redirection of command' option * descr * kind * word'
-  | HereDocument of command' option * descr * word * word'
+(* Redirection *)
+| Redirection of command' option * descr * kind * word'
+| HereDocument of command' option * descr * word * word'
 
 and command' = command located
 
@@ -227,14 +229,15 @@ and case_item = pattern' * command' option
 
 and case_item' = case_item located
 
-and kind = private
-  | Output          (*  > *)
+and kind =
+  private
+  | Output (* > *)
   | OutputDuplicate (* >& *)
-  | OutputAppend    (* >> *)
-  | OutputClobber   (* >| *)
-  | Input           (*  < *)
-  | InputDuplicate  (* <& *)
-  | InputOutput     (* <> *)
+  | OutputAppend (* >> *)
+  | OutputClobber (* >| *)
+  | Input (* < *)
+  | InputDuplicate (* <& *)
+  | InputOutput (* <> *)
 
 (** {2 Smart Constructors} *)
 
@@ -242,10 +245,10 @@ and kind = private
 
 val noAttribute : attribute
 val parameterLength : attribute
-val useDefaultValues : also_for_null:bool -> word -> attribute
-val assignDefaultValues : also_for_null:bool -> word -> attribute
-val indicateErrorifNullorUnset : also_for_null:bool -> word -> attribute
-val useAlternativeValue : also_for_null:bool -> word -> attribute
+val useDefaultValues : also_for_null: bool -> word -> attribute
+val assignDefaultValues : also_for_null: bool -> word -> attribute
+val indicateErrorifNullorUnset : also_for_null: bool -> word -> attribute
+val useAlternativeValue : also_for_null: bool -> word -> attribute
 val removeSmallestSuffixPattern : word -> attribute
 val removeLargestSuffixPattern : word -> attribute
 val removeSmallestPrefixPattern : word -> attribute
@@ -254,7 +257,7 @@ val removeLargestPrefixPattern : word -> attribute
 val wTildePrefix : string -> word_component
 val wUnquoted : string -> word_component
 val wSingleQuoted : string -> word_component
-val wVariable : ?attribute:attribute -> name -> word_component
+val wVariable : ?attribute: attribute -> name -> word_component
 val wSubshell : program -> word_component
 val wGlobAll : word_component
 val wGlobAny : word_component
@@ -265,7 +268,7 @@ val word : word_component list -> word
 
 (** {3 Commands} *)
 
-val simple : ?assignments:assignment' list -> word' list -> command
+val simple : ?assignments: assignment' list -> word' list -> command
 val async : command' -> command
 val seq : command' -> command' -> command
 val and_ : command' -> command' -> command
@@ -273,18 +276,18 @@ val or_ : command' -> command' -> command
 val not_ : command' -> command
 val pipe : command' -> command' -> command
 val subshell : command' -> command
-val for_ : name -> ?words:word' list -> command' -> command
+val for_ : name -> ?words: word' list -> command' -> command
 val case : word' -> case_item' list -> command
-val if_ : then_:command' -> ?else_:command' -> command' -> command
+val if_ : then_: command' -> ?else_: command' -> command' -> command
 val while_ : command' -> command' -> command
 val until : command' -> command' -> command
 val function_ : name -> command' -> command
-val redirection : ?around:command' -> descr -> kind -> word' -> command
+val redirection : ?around: command' -> descr -> kind -> word' -> command
 
 (** [hereDocument c d w] creates a here-document redirection around [c], about
     descriptor [d] and containing the word [w]. The last newline must not be
     included. *)
-val hereDocument : ?around:command' -> ?delimiter:word -> descr -> word' -> command
+val hereDocument : ?around: command' -> ?delimiter: word -> descr -> word' -> command
 
 (** {3 Others} *)
 

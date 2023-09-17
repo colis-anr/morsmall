@@ -22,7 +22,6 @@
 type lexing_position = [%import: Location.lexing_position]
 and position = [%import: Location.position]
 and 'a located = [%import: 'a Location.located]
-
 [@@deriving to_yojson]
 
 type name = [%import: AST.name]
@@ -42,7 +41,6 @@ and pattern' = [%import: AST.pattern']
 and assignment' = [%import: AST.assignment']
 and command' = [%import: AST.command']
 and case_item' = [%import: AST.case_item']
-
 [@@deriving to_yojson]
 
 let pp_program fmt program =

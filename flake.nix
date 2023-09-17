@@ -15,6 +15,8 @@
     pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
+
+    topiary.url = "github:tweag/topiary";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -28,13 +30,14 @@
         inputs.pre-commit-hooks.flakeModule
       ];
 
-      perSystem = { self', pkgs, config, ... }: {
+      perSystem = { self', inputs', pkgs, config, ... }: {
         formatter = pkgs.nixfmt;
 
         packages.default = self'.packages.with-nixpkgs;
 
         devShells.default = pkgs.mkShell {
-          buildInputs = (with pkgs; [ headache topiary ])
+          buildInputs =
+            (with pkgs; [ headache inputs'.topiary.packages.default ])
             ++ (with pkgs.ocamlPackages; [ ocaml-lsp ocp-indent ]);
           inputsFrom = [ self'.packages.default ];
           shellHook = config.pre-commit.installationScript;
@@ -47,7 +50,9 @@
           dune-opam-sync.enable = true;
           opam-lint.enable = true;
           checkmake.enable = true;
-          topiary.enable = true;
+          topiary-latest = inputs'.topiary.lib.pre-commit-hook // {
+            types = [ "ocaml" ];
+          };
         };
       };
 

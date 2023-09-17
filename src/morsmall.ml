@@ -32,9 +32,9 @@ let parse_file filename =
     try
       Morbig.parse_file filename
     with
-    | Errors.DuringParsing position
-    | Errors.DuringLexing (position, _) ->
-       raise (SyntaxError position)
+      | Errors.DuringParsing position
+      | Errors.DuringLexing (position, _) ->
+        raise (SyntaxError position)
   )
   |> from_CST
 

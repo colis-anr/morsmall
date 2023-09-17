@@ -22,8 +22,10 @@
 let fpf = Format.fprintf
 
 let parse_file fname =
-  try Ok (Morsmall.parse_file fname)
-  with exn -> Error exn
+  try
+    Ok (Morsmall.parse_file fname)
+  with
+    | exn -> Error exn
 
 let print_to_temp_file program =
   let (fname, ochan) = Filename.open_temp_file "morsmall-test-input" ".sh" in
@@ -34,10 +36,10 @@ let print_to_temp_file program =
     Stdlib.close_out ochan;
     Ok fname
   with
-    exn ->
-    Format.pp_print_flush fmt ();
-    Stdlib.close_out ochan;
-    Error exn
+    | exn ->
+      Format.pp_print_flush fmt ();
+      Stdlib.close_out ochan;
+      Error exn
 
 let with_formatter_to_string f =
   let buf = Buffer.create 8 in
@@ -63,8 +65,8 @@ let make_test ~name ~print gen fun_ =
   QCheck_alcotest.to_alcotest
     (
       Test.make
-        ~count:2000
-        ~long_factor:10
+        ~count: 2000
+        ~long_factor: 10
         ~name
         ~print
         gen
@@ -77,62 +79,79 @@ let result_is_ok = function
 
 let print =
   make_test
-    ~name:"print"
-    ~print:(fun program ->
-        with_formatter_to_string @@ fun fmt ->
-        fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n"
-          pp_print_input_ast program)
-    (Generator.gen_program 4)
-  @@
-  fun input ->
-  result_is_ok (print_to_temp_file input)
+    ~name: "print"
+    ~print: (
+      fun program ->
+        with_formatter_to_string @@
+          fun fmt ->
+            fpf
+              fmt
+              "Input AST:@\n@\n@[<2>  %a@]@\n"
+              pp_print_input_ast
+              program
+    )
+    (Generator.gen_program 4) @@
+    fun input ->
+      result_is_ok (print_to_temp_file input)
 
 let print_parse =
   make_test
-    ~name:"print and parse"
-    ~print:(
+    ~name: "print and parse"
+    ~print: (
       fun program ->
-        with_formatter_to_string @@ fun fmt ->
-        fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n@\nAs a Shell script:@\n@\n@[<2>  %a@]@\n"
-          pp_print_input_ast program
-          pp_print_concrete program
+        with_formatter_to_string @@
+          fun fmt ->
+            fpf
+              fmt
+              "Input AST:@\n@\n@[<2>  %a@]@\n@\nAs a Shell script:@\n@\n@[<2>  %a@]@\n"
+              pp_print_input_ast
+              program
+              pp_print_concrete
+              program
     )
-    (Generator.gen_program 1)
-  @@
-  fun input ->
-  let printing_result = print_to_temp_file input in
-  Result.is_ok printing_result
-  ==> result_is_ok (parse_file (Result.get_ok printing_result))
+    (Generator.gen_program 1) @@
+    fun input ->
+      let printing_result = print_to_temp_file input in
+      Result.is_ok printing_result
+      ==> result_is_ok (parse_file (Result.get_ok printing_result))
 
 let print_parse_equal =
   make_test
-    ~name:"print, parse and test equality"
-    ~print:(
+    ~name: "print, parse and test equality"
+    ~print: (
       fun program ->
-        with_formatter_to_string @@ fun fmt ->
-        fpf fmt "Input AST:@\n@\n@[<2>  %a@]@\n@\nAs a Shell script:@\n@\n@[<2>  %a@]@\n@\nParsed AST:@\n@\n@[<2>  %a@]@\n"
-          pp_print_input_ast program
-          pp_print_concrete program
-          pp_print_parsed_ast program
+        with_formatter_to_string @@
+          fun fmt ->
+            fpf
+              fmt
+              "Input AST:@\n@\n@[<2>  %a@]@\n@\nAs a Shell script:@\n@\n@[<2>  %a@]@\n@\nParsed AST:@\n@\n@[<2>  %a@]@\n"
+              pp_print_input_ast
+              program
+              pp_print_concrete
+              program
+              pp_print_parsed_ast
+              program
     )
-    (Generator.gen_program 1)
-  @@
-  fun input ->
-  let printing_result = print_to_temp_file input in
-  Result.is_ok printing_result
-  ==> (
-    let parsing_result = parse_file (Result.get_ok printing_result) in
-    Result.is_ok parsing_result
-    ==> (Morsmall.equal_program_noloc input (Result.get_ok parsing_result))
-  )
+    (Generator.gen_program 1) @@
+    fun input ->
+      let printing_result = print_to_temp_file input in
+      Result.is_ok printing_result
+      ==> (
+        let parsing_result = parse_file (Result.get_ok printing_result) in
+        Result.is_ok parsing_result
+        ==> (Morsmall.equal_program_noloc input (Result.get_ok parsing_result))
+      )
 
 let () =
   Alcotest.run
     "qcheck"
     [
-      ("", [
+      (
+        "",
+        [
           print;
           print_parse;
           print_parse_equal
-        ])
+        ]
+      )
     ]
