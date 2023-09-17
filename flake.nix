@@ -56,4 +56,19 @@
       perInput = system: flake:
         if flake ? lib.${system} then { lib = flake.lib.${system}; } else { };
     };
+
+  nixConfig = {
+    extra-trusted-substituters = [
+      "https://pre-commit-hooks.cachix.org/"
+      "https://tweag-topiary.cachix.org"
+      "https://morbig.cachix.org/"
+      "https://morsmall.cachix.org/"
+    ];
+    extra-trusted-public-keys = [
+      "pre-commit-hooks.cachix.org-1:Pkk3Panw5AW24TOv6kz3PvLhlH8puAsJTBbOPmBo7Rc="
+      "tweag-topiary.cachix.org-1:8TKqya43LAfj4qNHnljLpuBnxAY/YwEBfzo3kzXxNY0="
+      "morbig.cachix.org-1:l6jrpCfkt03SwhxnK7VNDgrnMDW9OA92BTcuZTNw60I="
+      "morsmall.cachix.org-1:3/pcLgvBMI1hkxOLsY5+NLsRyueJZTkULnQwvjhzThY="
+    ];
+  };
 }
