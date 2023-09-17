@@ -38,10 +38,12 @@ let bat_or_cat path =
         cat %s
       fi
     |}
-    (Filename.quote path) (Filename.quote path)
+    (Filename.quote path)
+    (Filename.quote path)
 
 let print_test_info ~name ~from_morbig =
-  pf "Test is:@\n@\n  %s `%s`@\n@."
+  pf
+    "Test is:@\n@\n  %s `%s`@\n@."
     (if from_morbig then "Morbig's" else "")
     name
 
@@ -66,7 +68,8 @@ let with_formatter_to_file file f =
   close_out ochan
 
 let print_input_ast path ast =
-  with_formatter_to_file (Filename.concat path "input-ast.txt")
+  with_formatter_to_file
+    (Filename.concat path "input-ast.txt")
     (fun fmt -> Morsmall.pp_print_debug_noloc fmt ast);
   pf "Parsed AST is:@\n@.";
   bat_or_cat (Filename.concat path "input-ast.txt");
@@ -78,27 +81,29 @@ let print_output path =
   pf "@."
 
 let print_output_ast path ast =
-  with_formatter_to_file (Filename.concat path "output-ast.txt")
+  with_formatter_to_file
+    (Filename.concat path "output-ast.txt")
     (fun fmt -> Morsmall.pp_print_debug_noloc fmt ast);
   pf "Parsed AST is:@\n@.";
   bat_or_cat (Filename.concat path "output-ast.txt");
   pf "@."
 
 let check_test_case ~from_morbig name path = fun () ->
-  print_test_info ~name ~from_morbig;
-  skip_if_no_input path;
-  print_input path;
-  let ast = Morsmall.parse_file (Filename.concat path "input.sh") in
-  print_input_ast path ast;
-  with_formatter_to_file (Filename.concat path "output.sh")
-    (fun fmt -> Morsmall.pp_print_safe fmt ast);
-  print_output path;
-  let ast2 = Morsmall.parse_file (Filename.concat path "output.sh") in
-  print_output_ast path ast2;
-  if not (Morsmall.equal_program_noloc ast ast2) then
-    (
-      Alcotest.fail "The outputs are not equal"
-    )
+    print_test_info ~name ~from_morbig;
+    skip_if_no_input path;
+    print_input path;
+    let ast = Morsmall.parse_file (Filename.concat path "input.sh") in
+    print_input_ast path ast;
+    with_formatter_to_file
+      (Filename.concat path "output.sh")
+      (fun fmt -> Morsmall.pp_print_safe fmt ast);
+    print_output path;
+    let ast2 = Morsmall.parse_file (Filename.concat path "output.sh") in
+    print_output_ast path ast2;
+    if not (Morsmall.equal_program_noloc ast ast2) then
+      (
+        Alcotest.fail "The outputs are not equal"
+      )
 
 let rec collect_test_paths name dir =
   List.flatten
@@ -120,14 +125,16 @@ let rec collect_test_paths name dir =
 
 let morbig_test_cases =
   List.map
-    (fun (name, path) ->
-       Alcotest.(test_case name `Quick (check_test_case name path ~from_morbig:true))
+    (
+      fun (name, path) ->
+        Alcotest.(test_case name `Quick (check_test_case name path ~from_morbig: true))
     )
     (collect_test_paths "" "morbig/tests/golden/good")
 
 let () =
   Alcotest.run
-    ~argv:[|"unused"|] (* FIXME: quick hack; cf top of this file *)
+    ~argv: [|"unused"|]
+    (* FIXME: quick hack; cf top of this file *)
     "golden"
     [
       ("morbig", morbig_test_cases);

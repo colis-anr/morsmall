@@ -92,13 +92,13 @@ and case_item = pattern' * command' option
 and case_item' = case_item located
 
 and kind =
-  | Output          (*  > *)
+  | Output (* > *)
   | OutputDuplicate (* >& *)
-  | OutputAppend    (* >> *)
-  | OutputClobber   (* >| *)
-  | Input           (*  < *)
-  | InputDuplicate  (* <& *)
-  | InputOutput     (* <> *)
+  | OutputAppend (* >> *)
+  | OutputClobber (* >| *)
+  | Input (* < *)
+  | InputDuplicate (* <& *)
+  | InputOutput (* <> *)
 
 (* Smart constructors *)
 
@@ -124,7 +124,7 @@ let wUnquoted str =
 let wSingleQuoted str =
   WSingleQuoted str
 
-let wVariable ?(attribute=noAttribute) name =
+let wVariable ?(attribute = noAttribute) name =
   WVariable (name, attribute)
 
 let wSubshell program =
@@ -167,7 +167,7 @@ let program commands = commands
 
 (** {3 Commands} *)
 
-let simple ?(assignments=[]) words =
+let simple ?(assignments = []) words =
   if assignments = [] && words = [] then
     failwith "simple: assignments and words cannot both be empty";
   Simple (assignments, words)
@@ -189,7 +189,7 @@ let function_ name body = Function (name, body)
 let redirection ?around descr kind target =
   Redirection (around, descr, kind, target)
 
-let hereDocument ?around ?(delimiter=[wUnquoted "EOF"]) descr content =
+let hereDocument ?around ?(delimiter = [wUnquoted "EOF"]) descr content =
   List.iter
     (
       function

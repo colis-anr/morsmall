@@ -42,5 +42,4 @@ and pattern' = [%import: AST.pattern']
 and assignment' = [%import: AST.assignment']
 and command' = [%import: AST.command']
 and case_item' = [%import: AST.case_item']
-
 [@@deriving eq]
